@@ -1,16 +1,813 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23eb6c36' stroke-width='2'><path d='M19.82 2H4.18C2.97 2 2 2.97 2 4.18v15.64C2 21.03 2.97 22 4.18 22h15.64c1.21 0 2.18-.97 2.18-2.18V4.18C22 2.97 21.03 2 19.82 2Z'/><path d='M7 2v20'/><path d='M17 2v20'/><path d='M2 12h20'/><path d='M2 7h5'/><path d='M2 17h5'/><path d='M17 17h5'/><path d='M17 7h5'/></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RVU Campus Cinema | Real-Time Seat Booking</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <meta name="description" content="Film Production Society of RV University — create, learn, discuss, connect." />
+    <title>FPS — Film Production Society of RV University</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700&display=swap" rel="stylesheet" />
+    <style>
+      :root{
+        --ink:#11100f;--paper:#eee9df;--red:#d83128;--mute:#9f9b94;--line:#c9c3b8;
+        --serif:'Playfair Display', Georgia, serif;--sans:'DM Sans', Arial, sans-serif;--mono:'DM Mono', monospace;
+        --ease-out:cubic-bezier(.23, 1, .32, 1);--ease-out-expo:cubic-bezier(0.16, 1, 0.3, 1);--ease-in-out-cubic:cubic-bezier(0.65, 0, 0.35, 1)
+      }
+      *{box-sizing:border-box;cursor:none!important}
+      html{scroll-behavior:smooth;scroll-snap-type:y mandatory;scroll-padding-top:0}
+      body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);overflow-x:hidden;cursor:none!important}
+      .noise{position:fixed;inset:0;pointer-events:none;opacity:.13;z-index:20;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E")}
+      .site-header{height:78px;position:fixed;z-index:10;top:0;left:0;right:0;padding:0 4.5vw;color:#fff;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ffffff1a;background:transparent;transition:background-color .4s ease,backdrop-filter .4s ease,border-color .4s ease,height .4s ease}
+      .site-header.scrolled{height:64px;background-color:rgba(17,16,15,.85);backdrop-filter:blur(12px);border-bottom-color:rgba(255,255,255,.08)}
+      .brand{font:500 11px var(--mono);letter-spacing:.1em;color:inherit;text-decoration:none;display:flex;gap:9px;align-items:center}
+      .brand span{font-weight:bold}
+      .brand i{width:17px;height:17px;border:1px solid currentColor;border-radius:50%;display:inline-block}
+      .nav{display:flex;align-items:center;gap:28px}
+      .nav a{color:inherit;text-decoration:none;font:500 11px var(--mono);text-transform:uppercase;position:relative;padding:4px 0}
+      .nav a::after{content:'';position:absolute;bottom:0;left:0;width:100%;height:1px;background-color:currentColor;transform:scaleX(0);transform-origin:right;transition:transform .4s var(--ease-out-expo)}
+      .nav a:hover::after{transform:scaleX(1);transform-origin:left}
+      .nav-join{border:1px solid #ffffffa0;padding:12px 15px;margin-left:12px;transition:background-color .3s ease,color .3s ease,border-color .3s ease}
+      .nav-join:hover{background-color:#fff;color:#111;border-color:#fff}
+      .nav-join b{font-size:16px;margin-left:8px}
+      .menu-toggle{display:none;background:none;border:0;color:#fff;font:11px var(--mono);cursor:pointer}
+      main>section{scroll-snap-align:start;scroll-snap-stop:always;min-height:100svh}
+
+      /* ===== ANIMATION SYSTEM ===== */
+      .anim-fade{opacity:0;transform:translateY(30px);transition:opacity 1.2s var(--ease-out-expo),transform 1.2s var(--ease-out-expo)}
+      .anim-fade.is-visible{opacity:1;transform:translateY(0)}
+      .anim-fade-delay-1{transition-delay:.1s}.anim-fade-delay-2{transition-delay:.2s}.anim-fade-delay-3{transition-delay:.3s}
+      .anim-fade-delay-4{transition-delay:.4s}.anim-fade-delay-5{transition-delay:.5s}.anim-fade-delay-6{transition-delay:.6s}
+      .anim-scale{opacity:0;transform:scale(.95) translateY(20px);transition:opacity 1.4s var(--ease-out-expo),transform 1.4s var(--ease-out-expo)}
+      .anim-scale.is-visible{opacity:1;transform:scale(1) translateY(0)}
+      .anim-img{opacity:0;transform:scale(1.06) translateY(30px);transition:opacity 1.6s var(--ease-out-expo),transform 1.6s var(--ease-out-expo),filter .6s ease}
+      .anim-img.is-visible{opacity:1;transform:scale(1) translateY(0)}
+
+      .hero{height:100svh;background:#0b0b0b;position:relative;color:#fff;overflow:hidden}
+      .hero-image{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=2400&q=90') center/cover;filter:grayscale(1) contrast(1.18);transform:scale(1.15);opacity:0;transition:transform 2.5s var(--ease-out-expo),opacity 2s var(--ease-out-expo)}
+      .motion-ready .hero-image{opacity:1;transform:scale(1.015);animation:breathe 11s ease-in-out infinite alternate 2.5s}
+      .hero-shade{position:absolute;inset:0;background:linear-gradient(90deg,#090909cb 5%,#08080888 44%,transparent 79%),linear-gradient(0deg,#050505aa,transparent 40%)}
+      .hero-copy{position:absolute;left:12.5vw;bottom:14vh;max-width:650px}
+      .hero-copy>*{opacity:0;transform:translateY(30px);transition:transform 1.2s var(--ease-out-expo),opacity 1.2s var(--ease-out-expo)}
+      .motion-ready .hero-copy p.eyebrow{opacity:1;transform:translateY(0);transition-delay:.3s}
+      .motion-ready .hero-copy h1{opacity:1;transform:translateY(0);transition-delay:.5s}
+      .motion-ready .hero-copy .hero-intro{opacity:1;transform:translateY(0);transition-delay:.7s}
+      .motion-ready .hero-copy .text-link{opacity:1;transform:translateY(0);transition-delay:.9s}
+      .eyebrow{font:11px var(--mono);letter-spacing:.11em;margin:0 0 25px;color:#37342f}
+      .eyebrow span{display:inline-block;width:23px;border-top:1px solid currentColor;vertical-align:middle;margin-right:9px}
+      .eyebrow.light{color:#f0ece4}
+      .hero h1,h2{font:700 clamp(55px,7.4vw,118px)/.88 var(--serif);letter-spacing:-.06em;margin:0}
+      .hero h1 em,h2 em{font-weight:600}
+      .hero-intro{font-size:16px;line-height:1.5;max-width:375px;margin:28px 0}
+      .text-link{display:inline-flex;color:inherit;font:500 11px var(--mono);gap:20px;text-decoration:none;text-transform:uppercase;position:relative;padding-bottom:9px}
+      .text-link::after{content:'';position:absolute;bottom:0;left:0;width:100%;height:1px;background-color:currentColor;transform:scaleX(1);transform-origin:left;transition:transform .4s var(--ease-out-expo)}
+      .text-link:hover::after{transform:scaleX(0);transform-origin:right}
+      .text-link b{font-size:18px;line-height:8px;display:inline-block;transition:transform .3s var(--ease-out-expo)}
+      .text-link:hover b{transform:translateY(3px)}
+      .hero-meta{position:absolute;bottom:24px;left:4.5vw;right:4.5vw;font:10px var(--mono);letter-spacing:.1em;display:flex;justify-content:space-between;opacity:0;transition:opacity 1.5s var(--ease-out-expo) 1s}
+      .motion-ready .hero-meta{opacity:1}
+      .hero-stamp{position:absolute;right:7vw;bottom:13vh;width:145px;height:145px;border:1px solid #fff;border-radius:50%;display:grid;place-content:center;text-align:center;font:10px/1.4 var(--mono);letter-spacing:.08em;opacity:0;transform:scale(.8);transition:opacity 1.5s var(--ease-out-expo) .8s,transform 1.5s var(--ease-out-expo) .8s}
+      .motion-ready .hero-stamp{opacity:1;transform:scale(1);animation:stamp-spin 35s linear infinite}
+      @keyframes stamp-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+      @keyframes breathe{to{transform:scale(1.08)}}
+
+      .split-section{padding:130px 12.5vw 105px;display:grid;grid-template-columns:1fr 2.1fr .7fr;gap:55px;border-bottom:1px solid var(--line);align-items:center}
+      .split-section h2{font-size:clamp(44px,5.3vw,82px)}
+      .body-copy{font-size:17px;line-height:1.6;max-width:450px;margin:35px 0}
+      .manifesto-count{align-self:end;border-top:1px solid var(--ink);padding-top:13px}
+      .manifesto-count strong{display:block;font:700 64px/.9 var(--serif);letter-spacing:-.08em}
+      .manifesto-count span{font:11px/1.5 var(--mono);text-transform:uppercase}
+      .manifesto-img{display:none}
+
+      .latest{padding:74px 4.5vw;display:flex;flex-direction:column;justify-content:center}
+      .section-head{display:flex;align-items:start;justify-content:space-between;margin:0 0 34px}
+      .film-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:16px}
+      .film-card{height:min(54svh,505px);position:relative;overflow:hidden;background:#333;color:white;cursor:pointer}
+      .film-card.feature-film{height:min(62svh,590px)}
+      .film-card img{width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.1);transition:.6s transform,.6s filter}
+      .film-card:hover img{transform:scale(1.05);filter:grayscale(.25) contrast(1.05)}
+      .film-card:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#080808d9,transparent 60%)}
+      .film-title{position:absolute;z-index:1;left:25px;right:25px;bottom:24px}
+      .film-title p,.film-title span{font:10px var(--mono);letter-spacing:.08em}
+      .film-title h3{font:700 36px/.92 var(--serif);letter-spacing:-.06em;margin:12px 0}
+      .feature-film .film-title h3{font-size:59px}
+      .film-overlay{position:absolute;z-index:2;left:25px;right:25px;top:25px;display:flex;justify-content:space-between;align-items:center;font:10px var(--mono);letter-spacing:.1em;opacity:0;transition:.3s}
+      .film-card:hover .film-overlay{opacity:1}
+      .film-overlay button{width:45px;height:45px;border-radius:50%;border:1px solid white;background:#d83128;color:white;cursor:pointer}
+
+      .process{color:#fff;background:#14110f;display:grid;grid-template-columns:1.15fr 1fr;position:relative}
+      .process-photo{height:100svh;overflow:hidden}
+      .process-photo img{width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.1)}
+      .process-copy{padding:100px 6vw;align-self:center}
+      .process-copy h2{font-size:clamp(48px,5vw,78px)}
+      .process-copy>p:not(.eyebrow){font-size:16px;line-height:1.6;max-width:360px;margin:30px 0}
+      .process-list{position:absolute;bottom:30px;right:6vw;display:grid;grid-template-columns:35px auto;gap:10px 10px;font:10px var(--mono);letter-spacing:.08em}
+      .process-list span{color:#aaa}
+
+      .people{padding:75px 4.5vw;display:flex;flex-direction:column;justify-content:center}
+      .section-note{font:11px/1.5 var(--mono);margin:0}
+      .people-row{display:grid;grid-template-columns:repeat(4,1fr);gap:17px}
+      .people article:not(.join-card){border-top:1px solid var(--ink);padding-top:13px}
+      .people img{width:100%;height:min(48svh,430px);object-fit:cover;filter:grayscale(1);margin-bottom:15px}
+      .people h3{font:700 27px/1 var(--serif);margin:0 0 7px;letter-spacing:-.04em}
+      .people article p{margin:0;font:10px var(--mono);letter-spacing:.07em}
+      .join-card{background:var(--red);color:#fff;padding:22px;min-height:335px;display:flex;flex-direction:column;justify-content:space-between}
+      .people .join-card p{font:700 35px/.91 var(--serif);letter-spacing:-.05em}
+      .join-card a{font:30px var(--serif);color:white;text-decoration:none;align-self:flex-end}
+
+      .events{background:#d83128;color:white;padding:88px 12.5vw;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden}
+      .events-bg{position:absolute;inset:0;opacity:.08;background:url('https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=1600&q=80') center/cover;filter:grayscale(1);pointer-events:none}
+      .events .eyebrow{color:#fff}
+      .events h2{font-size:clamp(55px,7vw,105px);margin-bottom:58px}
+      .event-list{border-top:1px solid #ffffff94;position:relative;z-index:1}
+      .event-list a{min-height:88px;display:grid;grid-template-columns:90px 130px 1fr 150px 20px;align-items:center;gap:15px;color:white;text-decoration:none;border-bottom:1px solid #ffffff94;transition:.25s padding}
+      .event-list a:hover{padding-left:12px}
+      .event-list time{display:flex;align-items:baseline;gap:7px}
+      .event-list time b{font:700 43px/.8 var(--serif);letter-spacing:-.06em}
+      .event-list time span,.event-type,.event-place{font:10px var(--mono);letter-spacing:.06em}
+      .event-list strong{font:700 25px var(--serif);letter-spacing:-.04em}
+      .event-list i{font-style:normal;font-size:21px}
+
+      .gallery{padding:75px 4.5vw;display:grid;grid-template-columns:1.1fr .9fr .9fr;gap:16px;align-items:start}
+      .gallery-copy h2{font-size:clamp(46px,5vw,75px)}
+      .gallery figure{margin:0}
+      .gallery img{width:100%;height:min(58svh,495px);object-fit:cover;display:block;filter:grayscale(1);transition:.4s filter}
+      .gallery figure:hover img{filter:grayscale(0)}
+      .gallery .g1{margin-top:87px}
+      .gallery .g3{margin-top:185px}
+      .gallery figcaption{font:10px var(--mono);letter-spacing:.08em;padding-top:10px}
+
+      .school{padding:88px 12.5vw;display:grid;grid-template-columns:1.2fr 1fr;gap:9vw;align-content:center}
+      .school h2{font-size:clamp(54px,6vw,91px)}
+      .lesson-list{border-top:1px solid var(--ink);align-self:center}
+      .lesson-list a{min-height:104px;display:grid;grid-template-columns:40px 1fr 48px 18px;align-items:center;gap:16px;color:inherit;text-decoration:none;border-bottom:1px solid var(--ink);transition:padding .25s ease}
+      .lesson-list a:hover{padding-left:10px}
+      .lesson-list span,.lesson-list i,.school-note{font:10px var(--mono);letter-spacing:.08em;font-style:normal}
+      .lesson-list strong{font:700 25px/.98 var(--serif);letter-spacing:-.04em}
+      .lesson-list b{font:20px var(--serif)}
+      .school-note{grid-column:2;line-height:1.6;max-width:320px;margin:0}
+
+      .join{background:#11100f;color:#fff;padding:100px 12.5vw;display:grid;grid-template-columns:1.25fr .75fr;gap:10vw;align-items:center}
+      .join h2{font-size:clamp(56px,6.8vw,103px)}
+      .join>div>p:not(.eyebrow){max-width:380px;font-size:16px;line-height:1.6;margin-top:27px}
+      .join form{align-self:center}
+      .join label{display:block;color:#a9a59e;font:10px var(--mono);letter-spacing:.08em;margin:0 0 27px}
+      .join input,.join select{display:block;width:100%;border:0;border-bottom:1px solid #777;background:transparent;color:#fff;padding:12px 0;font:16px var(--sans);outline:none}
+      .join select option{color:#111}
+      .join button{width:100%;margin-top:8px;border:0;background:var(--red);color:#fff;padding:17px;font:500 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;text-align:left;cursor:pointer}
+      .join button span{float:right;font-size:17px}
+      .form-status{font:12px var(--mono);color:#f1dedb}
+      .join-img{display:none}
+
+      footer{padding:43px 4.5vw 25px;background:#11100f;color:#f4f0e8;display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:25px;border-top:1px solid #555}
+      footer p,footer a,footer small{font:10px/1.6 var(--mono);letter-spacing:.08em;margin:0}
+      footer div{display:flex;gap:15px}
+      footer div a{color:#fff;text-decoration:none}
+      footer small{grid-column:1/-1;color:#96928c;margin-top:55px}
+
+      dialog{max-width:570px;width:calc(100% - 40px);border:0;background:#eee9df;color:#111;padding:55px;box-shadow:0 20px 70px #0009;opacity:0;transform:scale(.94) translateY(15px);transition:opacity .4s var(--ease-out-expo),transform .4s var(--ease-out-expo),display .4s allow-discrete,overlay .4s allow-discrete}
+      dialog[open]{opacity:1;transform:scale(1) translateY(0)}
+      @starting-style{dialog[open]{opacity:0;transform:scale(.94) translateY(15px)}}
+      dialog::backdrop{background:rgba(0,0,0,0);backdrop-filter:blur(0px);transition:background-color .4s ease,backdrop-filter .4s ease,display .4s allow-discrete,overlay .4s allow-discrete}
+      dialog[open]::backdrop{background:rgba(0,0,0,.75);backdrop-filter:blur(8px)}
+      @starting-style{dialog[open]::backdrop{background:rgba(0,0,0,0);backdrop-filter:blur(0px)}}
+      .close-dialog{border:0;background:none;font-size:31px;position:absolute;right:17px;top:13px;cursor:pointer}
+      .dialog-meta{font:10px var(--mono);letter-spacing:.1em}
+      .dialog-info{line-height:1.6;max-width:460px}
+      .watch{border:0;background:#d83128;color:white;padding:14px 19px;font:11px var(--mono);letter-spacing:.08em;cursor:pointer}
+
+      .chapter-screen{padding:90px 12.5vw;position:relative}
+
+      .quote-chapter{display:flex;flex-direction:column;justify-content:center;background:#e7e0d5;position:relative;overflow:hidden}
+      .quote-bg{position:absolute;inset:0;opacity:.06;background:url('https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&w=1600&q=80') center/cover;filter:grayscale(1);pointer-events:none}
+      .quote-chapter blockquote{font:700 clamp(52px,7vw,110px)/.9 var(--serif);letter-spacing:-.07em;margin:0;max-width:900px;position:relative;z-index:1}
+      .quote-credit{font:11px var(--mono);letter-spacing:.1em;margin-top:45px;position:relative;z-index:1}
+
+      .journal-chapter{display:grid;grid-template-columns:1fr 1fr;padding:0;background:#17130f;color:white}
+      .journal-image img{width:100%;height:100svh;object-fit:cover;filter:grayscale(1) contrast(1.1)}
+      .journal-copy{align-self:center;padding:8vw}
+      .journal-copy h2{font-size:clamp(52px,6vw,94px)}
+      .journal-copy>p:not(.eyebrow){max-width:370px;line-height:1.6;margin:28px 0}
+
+      .departments-chapter{display:grid;grid-template-columns:1fr 1fr;gap:10vw;align-items:center}
+      .departments-chapter h2{font-size:clamp(47px,5.6vw,86px)}
+      .department-grid{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--ink)}
+      .department-grid span{border-bottom:1px solid var(--ink);padding:22px 0;font:10px var(--mono);letter-spacing:.08em}
+      .department-grid b{display:block;font:700 26px var(--serif);letter-spacing:-.04em;margin-top:8px}
+
+      .poster-chapter{display:grid;grid-template-columns:.85fr 1.15fr;gap:10vw;align-items:center;background:#d83128;color:#fff}
+      .poster-art{height:68svh;background:#f3e5c7;color:#1a2434;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;font:700 clamp(52px,6vw,92px)/.78 var(--serif);letter-spacing:-.08em}
+      .poster-art small{font:9px var(--mono);letter-spacing:.13em;margin-top:35px}
+      .poster-copy h2{font-size:clamp(52px,6vw,94px)}
+      .poster-copy>p:not(.eyebrow){line-height:1.6;max-width:350px;margin:28px 0}
+      .poster-copy .eyebrow{color:#fff}
+
+      .toolkit-chapter{background:#11100f;color:#fff;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden}
+      .toolkit-bg{position:absolute;inset:0;opacity:.04;background:url('https://images.unsplash.com/photo-1518676590629-3dcbd9c5a5c9?auto=format&fit=crop&w=1600&q=80') center/cover;filter:grayscale(1);pointer-events:none}
+      .toolkit-chapter .eyebrow{color:#fff}
+      .toolkit-chapter h2{font-size:clamp(58px,7vw,108px);margin-bottom:9vh}
+      .toolkit-list{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #777;position:relative;z-index:1}
+      .toolkit-list div{padding:20px 25px 0 0}
+      .toolkit-list b,.toolkit-list span{display:block;font:10px var(--mono);letter-spacing:.08em}
+      .toolkit-list strong{display:block;font:700 33px var(--serif);letter-spacing:-.05em;margin:15px 0}
+      .toolkit-list span{color:#bbb;line-height:1.6;max-width:200px}
+      .toolkit-img{width:100%;height:180px;object-fit:cover;filter:grayscale(1) contrast(1.1);margin-bottom:18px;border-radius:2px;transition:filter .5s ease}
+      .toolkit-list div:hover .toolkit-img{filter:grayscale(0) contrast(1)}
+
+      .story-chapter{display:grid;grid-template-columns:.7fr 1.2fr .4fr;align-items:center;gap:6vw;background:#e0e8e2}
+      .story-number{font:700 clamp(55px,7vw,112px)/.8 var(--serif);letter-spacing:-.08em;transform:rotate(-90deg)}
+      .story-chapter h2{font-size:clamp(49px,5.8vw,88px)}
+      .story-chapter p:not(.eyebrow){line-height:1.6;max-width:350px}
+      .round-link{width:130px;height:130px;border:1px solid var(--ink);border-radius:50%;display:grid;place-content:center;text-align:center;color:inherit;text-decoration:none;font:10px/1.5 var(--mono);letter-spacing:.08em}
+
+      .awards-chapter{display:flex;flex-direction:column;justify-content:center}
+      .award-rail{display:grid;grid-template-columns:repeat(3,1fr);margin-top:8vh;border-top:1px solid var(--ink)}
+      .award-rail article{padding:22px 24px 0 0;min-height:255px}
+      .award-rail b,.award-rail span,.award-rail p{font:10px var(--mono);letter-spacing:.1em}
+      .award-rail span{margin-left:14px}
+      .award-rail h3{font:700 40px/.88 var(--serif);letter-spacing:-.06em;margin:42px 0 25px}
+
+      .alumni-chapter{display:grid;grid-template-columns:1fr 1fr;gap:10vw;align-items:center;padding-left:4.5vw}
+      .alumni-photo{height:72svh}
+      .alumni-photo img{width:100%;height:100%;object-fit:cover;filter:grayscale(1)}
+      .alumni-chapter h2{font-size:clamp(46px,5.2vw,79px)}
+      .alumni-chapter p:not(.eyebrow){line-height:1.6;max-width:410px;margin:28px 0}
+      .alumni-chapter .alumni-name{font:10px var(--mono);letter-spacing:.09em}
+
+      .cinema-chapter{display:grid;grid-template-columns:1fr 1fr;gap:8vw;align-items:center;background:#291b2b;color:#fff}
+      .cinema-chapter .eyebrow{color:#fff}
+      .cinema-chapter h2{font-size:clamp(54px,6.4vw,95px)}
+      .recommendations{border-top:1px solid #fff}
+      .recommendations span{display:grid;grid-template-columns:40px 1fr;gap:5px;padding:15px 0;border-bottom:1px solid #fff}
+      .recommendations b,.recommendations i{font:10px var(--mono);letter-spacing:.08em;font-style:normal}
+      .recommendations strong{font:700 26px var(--serif);letter-spacing:-.04em}
+      .recommendations i{grid-column:2;color:#b9a8ba}
+
+      .ideas-chapter{display:flex;flex-direction:column;justify-content:center}
+      .ideas-chapter h2{font-size:clamp(47px,5.5vw,85px);margin-bottom:7vh}
+      .idea-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+      .idea-cards article{min-height:255px;padding:25px;background:#d6cbbd;display:flex;flex-direction:column;justify-content:space-between}
+      .idea-cards article:nth-child(2){background:#c6d4cd}
+      .idea-cards article:nth-child(3){background:#d83128;color:#fff}
+      .idea-cards span,.idea-cards p{font:10px var(--mono);letter-spacing:.08em}
+      .idea-cards h3{font:700 33px/.92 var(--serif);letter-spacing:-.06em;margin:25px 0}
+
+      .numbers-chapter{background:#d83128;color:#fff;display:grid;grid-template-columns:repeat(3,1fr);gap:5vw;align-content:center;position:relative;overflow:hidden}
+      .numbers-bg{position:absolute;inset:0;opacity:.07;background:url('https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=1600&q=80') center/cover;filter:grayscale(1);pointer-events:none}
+      .numbers-chapter .eyebrow{grid-column:1/-1;color:#fff}
+      .numbers-chapter strong{display:block;font:700 clamp(65px,8vw,128px)/.8 var(--serif);letter-spacing:-.09em}
+      .numbers-chapter span{font:11px/1.5 var(--mono);letter-spacing:.08em}
+      .numbers-chapter>div{position:relative;z-index:1}
+
+      .contact-chapter{display:grid;grid-template-columns:1fr 1fr;align-content:center;gap:9vw}
+      .contact-chapter h2{font-size:clamp(55px,6.5vw,101px)}
+      .contact-details{align-self:end}
+      .contact-details p,.contact-details a{display:block;font:11px/1.7 var(--mono);letter-spacing:.09em;color:inherit;margin:0 0 20px}
+      .contact-details a{border-bottom:1px solid var(--ink);padding-bottom:10px;text-decoration:none}
+      .contact-img{display:none}
+
+      @media(max-width:900px){
+        .site-header{height:65px;padding:0 20px}
+        .nav{position:absolute;top:65px;left:0;right:0;background:#111;color:white;padding:24px 20px;display:none;flex-direction:column;align-items:flex-start;gap:20px;border-bottom:1px solid #333;box-shadow:0 20px 40px rgba(0,0,0,.4)}
+        .nav.open{display:flex}
+        .nav-join{margin:0;width:100%;text-align:center;border-color:#fff}
+        .menu-toggle{display:block}
+        .hero{min-height:620px}
+        .hero-copy{left:7vw;bottom:13vh;max-width:85vw}
+        .hero h1{font-size:clamp(48px,12vw,70px)}
+        .hero-stamp{right:5vw;bottom:8vh;width:90px;height:90px;font-size:7px;line-height:1.2}
+        .hero-meta{font-size:8px}
+        .split-section{padding:70px 7vw 60px;display:block;min-height:auto}
+        .split-section>.eyebrow{margin-bottom:40px}
+        .manifesto-count{margin-top:50px;width:160px}
+        .manifesto-img{display:block;width:100%;height:220px;object-fit:cover;filter:grayscale(1) contrast(1.1);margin-top:30px;border-radius:2px}
+        .latest,.people{padding:60px 20px}
+        .film-grid{grid-template-columns:1fr;gap:14px}
+        .film-card,.film-card.feature-film{height:320px}
+        .feature-film .film-title h3{font-size:38px}
+        .film-title h3{font-size:28px}
+        .process{display:block}
+        .process-photo{height:300px}
+        .process-copy{padding:50px 7vw}
+        .process-list{position:static;padding:0 7vw 30px;grid-template-columns:30px auto;gap:6px 10px}
+        .people-row{grid-template-columns:1fr 1fr;gap:20px}
+        .join-card{min-height:200px}
+        .people .join-card p{font-size:26px}
+        .events{padding:60px 7vw}
+        .events h2{font-size:clamp(40px,10vw,60px);margin-bottom:30px}
+        .event-list a{grid-template-columns:50px 1fr 18px;gap:10px;padding:16px 0;min-height:70px}
+        .event-type,.event-place{display:none}
+        .event-list strong{font-size:18px}
+        .event-list time b{font-size:30px}
+        .gallery{padding:60px 20px;grid-template-columns:1fr 1fr;gap:12px}
+        .gallery-copy{grid-column:1/-1;margin-bottom:10px}
+        .gallery .g1,.gallery .g3{margin-top:0}
+        .gallery .g3{grid-column:2}
+        .gallery img{height:200px}
+        .school{padding:60px 7vw;grid-template-columns:1fr;gap:30px}
+        .school h2{font-size:clamp(40px,10vw,60px)}
+        .school-note{grid-column:1;max-width:100%;margin-top:10px}
+        .lesson-list a{min-height:80px;grid-template-columns:30px 1fr 40px 16px;gap:10px}
+        .lesson-list strong{font-size:20px}
+        .join{padding:60px 7vw;grid-template-columns:1fr;gap:40px}
+        .join h2{font-size:clamp(40px,10vw,60px)}
+        .join>div>p:not(.eyebrow){max-width:100%}
+        .join-img{display:block;width:100%;height:250px;object-fit:cover;filter:grayscale(1) contrast(1.1);border-radius:2px;margin-bottom:20px}
+        footer{padding:30px 20px 20px;grid-template-columns:1fr 1fr;gap:15px}
+        footer small{margin-top:20px}
+        footer div{flex-wrap:wrap;gap:10px}
+        .chapter-screen{padding:50px 7vw;min-height:auto}
+        .journal-chapter,.departments-chapter,.poster-chapter,.alumni-chapter,.cinema-chapter,.contact-chapter{display:flex;flex-direction:column;gap:30px;padding:50px 7vw}
+        .journal-chapter{padding:0}
+        .journal-image img{height:40svh}
+        .journal-copy{padding:30px 7vw}
+        .department-grid,.toolkit-list,.idea-cards,.numbers-chapter{grid-template-columns:1fr}
+        .department-grid span{padding:14px 0}
+        .poster-art{width:100%;height:40svh;font-size:clamp(40px,10vw,60px)}
+        .poster-copy h2{font-size:clamp(40px,10vw,60px)}
+        .toolkit-list{gap:10px}
+        .toolkit-list div{padding:12px 0}
+        .toolkit-list strong{font-size:26px}
+        .toolkit-img{height:140px}
+        .story-chapter{grid-template-columns:1fr;gap:25px;padding:50px 7vw}
+        .story-number{transform:none;font-size:clamp(40px,10vw,60px)}
+        .story-chapter h2{font-size:clamp(38px,9vw,55px)}
+        .award-rail{grid-template-columns:1fr;gap:0;margin-top:20px}
+        .award-rail article{min-height:120px;border-bottom:1px solid var(--ink);padding:16px 0}
+        .award-rail h3{font-size:30px;margin:20px 0 10px}
+        .alumni-chapter{padding-left:7vw}
+        .alumni-photo{height:35svh;width:100%}
+        .alumni-chapter h2{font-size:clamp(38px,9vw,55px)}
+        .cinema-chapter h2{font-size:clamp(38px,9vw,55px)}
+        .recommendations{width:100%}
+        .recommendations strong{font-size:20px}
+        .numbers-chapter{gap:20px;padding:50px 7vw}
+        .numbers-chapter strong{font-size:clamp(50px,12vw,80px)}
+        .contact-chapter{gap:25px}
+        .contact-chapter h2{font-size:clamp(40px,10vw,60px)}
+        .contact-details{align-self:start}
+        .contact-img{display:block;width:100%;height:220px;object-fit:cover;filter:grayscale(1) contrast(1.1);border-radius:2px;margin-bottom:20px}
+        .quote-chapter blockquote{font-size:clamp(32px,8vw,50px)}
+        .round-link{width:100px;height:100px;font-size:9px}
+        .hero-stamp{display:none}
+        .hero-meta span:last-child{display:none}
+        .section-head{flex-direction:column;gap:15px;align-items:flex-start}
+        .brand{font-size:10px;gap:6px}
+        .brand i{width:14px;height:14px}
+      }
+      @media(max-width:500px){
+        .hero-copy{left:5vw;bottom:10vh;max-width:90vw}
+        .hero h1{font-size:clamp(36px,14vw,50px)}
+        .hero-intro{font-size:14px;max-width:100%}
+        .people-row{grid-template-columns:1fr;gap:25px}
+        .people img{height:280px}
+        .film-card,.film-card.feature-film{height:250px}
+        .feature-film .film-title h3{font-size:30px}
+        .gallery{grid-template-columns:1fr}
+        .gallery .g3{grid-column:1}
+        .gallery img{height:180px}
+        .event-list a{grid-template-columns:40px 1fr 16px;gap:8px;min-height:60px}
+        .event-list time b{font-size:24px}
+        .event-list strong{font-size:15px}
+        .join input,.join select{font-size:14px;padding:10px 0}
+        footer{grid-template-columns:1fr;gap:10px;text-align:center}
+        footer div{justify-content:center}
+        .toolkit-list div{padding:10px 0}
+        .toolkit-img{height:120px}
+        .idea-cards article{min-height:180px;padding:18px}
+        .idea-cards h3{font-size:24px}
+        .department-grid b{font-size:20px}
+        .poster-art{height:30svh;font-size:clamp(30px,12vw,45px)}
+        .poster-art small{font-size:8px;margin-top:15px}
+        .award-rail h3{font-size:24px}
+        .story-number{font-size:clamp(30px,10vw,45px)}
+        .round-link{width:80px;height:80px;font-size:8px}
+        .brand{font-size:9px}
+        .brand span{font-size:12px}
+        .menu-toggle{font-size:10px}
+        .nav a{font-size:10px}
+        .eyebrow{font-size:10px;margin-bottom:15px}
+        .eyebrow span{width:16px;margin-right:6px}
+        .text-link{font-size:10px;gap:12px}
+        .text-link b{font-size:14px}
+        .split-section{padding:40px 5vw 40px}
+        .split-section h2{font-size:clamp(30px,8vw,40px)}
+        .body-copy{font-size:15px}
+        .manifesto-count strong{font-size:40px}
+        .manifesto-count span{font-size:10px}
+        .section-note{font-size:10px}
+        .join-card{min-height:150px;padding:16px}
+        .people .join-card p{font-size:22px}
+        .join-card a{font-size:24px}
+        .process-copy h2{font-size:clamp(30px,8vw,40px)}
+        .process-copy>p:not(.eyebrow){font-size:14px}
+        .lesson-list strong{font-size:17px}
+        .school h2{font-size:clamp(30px,8vw,40px)}
+        .events h2{font-size:clamp(30px,8vw,40px)}
+        .gallery-copy h2{font-size:clamp(30px,8vw,40px)}
+        .join h2{font-size:clamp(30px,8vw,40px)}
+        .chapter-screen h2{font-size:clamp(28px,7vw,38px)!important}
+        .quote-chapter blockquote{font-size:clamp(24px,7vw,36px)}
+        .quote-credit{font-size:10px;margin-top:20px}
+        .contact-details p,.contact-details a{font-size:10px}
+        .numbers-chapter strong{font-size:clamp(40px,12vw,60px)}
+        .numbers-chapter span{font-size:10px}
+        dialog{padding:20px 18px}
+        dialog h2{font-size:22px!important}
+        .close-dialog{font-size:24px;right:12px;top:8px}
+        .watch{padding:10px 14px;font-size:10px}
+        .form-status{font-size:11px}
+        .hero-stamp{display:none}
+        .hero-meta span:last-child{display:none}
+        .hero-meta span:first-child{font-size:7px}
+        .site-header{height:56px;padding:0 14px}
+        .site-header.scrolled{height:52px}
+        .nav{top:56px;padding:18px 16px;gap:14px}
+        .nav-join{padding:10px;font-size:10px}
+      }
+      @media (prefers-reduced-motion:reduce){
+        html{scroll-behavior:auto;scroll-snap-type:y proximity}
+        .hero-image{animation:none}
+        .anim-fade,.anim-scale,.anim-img{opacity:1!important;transform:none!important;transition:opacity 200ms ease}
+      }
+      #star-cursor{position:fixed;pointer-events:none;z-index:9999;font-size:28px;line-height:1;transform:translate(-50%,-50%);transition:transform .1s ease;filter:drop-shadow(0 0 6px rgba(255,215,0,.6));user-select:none}
+      .sprinkle{position:fixed;pointer-events:none;z-index:9998;font-size:10px;line-height:1;transform:translate(-50%,-50%);opacity:.9;animation:sprinkleFall 1s ease-out forwards;user-select:none}
+      @keyframes sprinkleFall{0%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0deg)}100%{opacity:0;transform:translate(-50%,80px) scale(.3) rotate(360deg)}}
+      a,button,input,select,textarea,[role="button"],.film-card,.nav a,.text-link,.round-link,.join-card a{cursor:none!important}
+      @media (pointer:coarse){#star-cursor,.sprinkle{display:none!important}*{cursor:auto!important}a,button,input,select,textarea,[role="button"],.film-card,.nav a,.text-link,.round-link,.join-card a{cursor:pointer!important}body{cursor:auto!important}}
+    </style>
   </head>
-  <body class="bg-rvu-dark text-slate-100 min-h-screen antialiased selection:bg-rvu-accent selection:text-white">
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+  <body>
+    <div class="noise"></div>
+    <div id="star-cursor">&#10022;</div>
+
+    <header class="site-header">
+      <a class="brand" href="#home" aria-label="Film Production Society home"><span>FPS</span><i></i> FILM PRODUCTION SOCIETY</a>
+      <button class="menu-toggle" aria-label="Open menu" aria-expanded="false">MENU <span></span></button>
+      <nav class="nav" aria-label="Main navigation">
+        <a href="#films">Create</a><a href="#learn">Learn</a><a href="#events">Discuss</a><a href="#gallery">Showcase</a>
+        <a class="nav-join" href="#join">Join FPS <b>&#8599;</b></a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" id="home">
+        <div class="hero-image" role="img" aria-label="Students filming on a dramatic outdoor set"></div>
+        <div class="hero-shade"></div>
+        <div class="hero-copy">
+          <p class="eyebrow light"><span></span> RV UNIVERSITY &middot; FILM PRODUCTION SOCIETY</p>
+          <h1>Create.<br /><em>Learn.</em> Connect.</h1>
+          <p class="hero-intro">A student-led filmmaking community for creating, discussing and exploring cinema and storytelling.</p>
+          <a class="text-link light" href="#films">Explore FPS <b>&#8595;</b></a>
+        </div>
+        <div class="hero-meta"><span>SCROLL TO ENTER</span><span>01 / 05</span></div>
+        <div class="hero-stamp"><span>CREATE &middot; LEARN<br />DISCUSS &middot; CONNECT</span></div>
+      </section>
+
+      <section class="manifesto split-section">
+        <p class="eyebrow anim-fade"><span></span> THE GAP WE ADDRESS</p>
+        <div>
+          <h2 class="anim-fade anim-fade-delay-1">Ideas + talent.<br /><em>One</em> common platform.</h2>
+          <p class="body-copy anim-fade anim-fade-delay-2">FPS brings filmmakers together to create, collaborate and tell stories. It is open to beginners, enthusiasts and experienced creators from every discipline.</p>
+          <a class="text-link anim-fade anim-fade-delay-3" href="#join">Find your role <b>&#8600;</b></a>
+        </div>
+        <div class="manifesto-count anim-fade anim-fade-delay-2">
+          <strong>4</strong><span>ways to engage:<br />create &middot; learn &middot; discuss &middot; connect</span>
+        </div>
+        <img class="manifesto-img anim-img" src="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=800&q=80" alt="Film set behind the scenes" />
+      </section>
+
+      <section class="latest" id="films">
+        <div class="section-head">
+          <p class="eyebrow anim-fade"><span></span> WHAT FPS CREATES</p>
+          <a class="text-link anim-fade anim-fade-delay-1" href="#ideas">See the ideas board <b>&#8599;</b></a>
+        </div>
+        <div class="film-grid" id="film-archive">
+          <article class="film-card feature-film anim-scale" data-title="FPS Originals" data-info="Original short and micro films developed by FPS members—an opportunity to move from first idea to a finished, credited production." data-meta="ORIGINAL CONTENT &middot; YEAR-ROUND">
+            <img src="https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=1600&q=85" alt="Person holding a film camera" />
+            <div class="film-overlay"><span>EXPLORE FORMAT</span><button aria-label="Explore FPS Originals">&#9654;</button></div>
+            <div class="film-title"><p>01 / ORIGINAL CONTENT</p><h3>FPS<br /><em>Originals</em></h3><span>Short &amp; micro films</span></div>
+          </article>
+          <article class="film-card anim-scale anim-fade-delay-1" data-title="Campus Stories" data-info="RVU perspectives told through cinema: documentaries, campus stories and student-led work that records the life around us." data-meta="RVU PERSPECTIVES &middot; YEAR-ROUND">
+            <img src="https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=1000&q=85" alt="Cinema screen in a dark theater" />
+            <div class="film-title"><p>02 / RVU</p><h3>Campus<br /><em>Stories</em></h3><span>RVU perspectives</span></div>
+          </article>
+          <article class="film-card anim-scale anim-fade-delay-2" data-title="Experimental" data-info="Visual challenges and new storytelling forms that let members test ideas, genres and production approaches." data-meta="VISUAL CHALLENGES &middot; YEAR-ROUND">
+            <img src="https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1000&q=85" alt="Film reels in a cinema" />
+            <div class="film-title"><p>03 / EXPERIMENT</p><h3>Visual<br /><em>Challenges</em></h3><span>Experimental film</span></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="process" id="process">
+        <div class="process-photo"><img class="anim-img" src="https://images.unsplash.com/photo-1586899028174-e7098604235b?auto=format&fit=crop&w=1500&q=85" alt="Film crew preparing a camera" /></div>
+        <div class="process-copy">
+          <p class="eyebrow light anim-fade"><span></span> BEHIND THE FRAME</p>
+          <h2 class="anim-fade anim-fade-delay-1">From an idea<br />to a <em>showcase.</em></h2>
+          <p class="anim-fade anim-fade-delay-2">FPS supports the full journey: story labs and script development, original productions, and a platform to screen and share the finished work.</p>
+          <a class="text-link light anim-fade anim-fade-delay-3" href="#gallery">See the process <b>&#8599;</b></a>
+        </div>
+        <div class="process-list anim-fade anim-fade-delay-2"><span>01</span><b>Develop</b><span>02</span><b>Create</b><span>03</span><b>Publish &amp; share</b></div>
+      </section>
+
+      <section class="people" id="people">
+        <div class="section-head">
+          <p class="eyebrow anim-fade"><span></span> OPEN TO EVERY DISCIPLINE</p>
+          <p class="section-note anim-fade anim-fade-delay-1">Beginners, enthusiasts<br />and experienced creators.</p>
+        </div>
+        <div class="people-row">
+          <article class="anim-fade"><img class="anim-img" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=700&q=85" alt="Student creator" /><h3>Story &amp; performance</h3><p>WRITERS &middot; DIRECTORS &middot; ACTORS</p></article>
+          <article class="anim-fade anim-fade-delay-1"><img class="anim-img anim-fade-delay-1" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=700&q=85" alt="Student creator" /><h3>Image &amp; edit</h3><p>CINEMATOGRAPHERS &middot; EDITORS</p></article>
+          <article class="anim-fade anim-fade-delay-2"><img class="anim-img anim-fade-delay-2" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=700&q=85" alt="Student creator" /><h3>Sound &amp; production</h3><p>SOUND &middot; MUSIC &middot; PRODUCTION</p></article>
+          <article class="join-card anim-fade anim-fade-delay-3"><p>DESIGN<br />AND MEDIA<br /><em>BELONG HERE.</em></p><a href="#join" aria-label="Join FPS">&#8599;</a></article>
+        </div>
+      </section>
+
+      <section class="events" id="events">
+        <div class="events-bg"></div>
+        <p class="eyebrow light anim-fade"><span></span> FPS PROGRAMMING</p>
+        <h2 class="anim-fade anim-fade-delay-1">Watch. Discuss.<br /><em>Make.</em></h2>
+        <div class="event-list">
+          <a class="anim-fade anim-fade-delay-1" href="#join"><time><b>01</b><span>FPS</span></time><span class="event-type">WORKSHOPS</span><strong>Direction, writing, camera, edit, sound &amp; acting</strong><span class="event-place">PRACTICAL CRAFT</span><i>&#8599;</i></a>
+          <a class="anim-fade anim-fade-delay-2" href="#join"><time><b>02</b><span>FPS</span></time><span class="event-type">SCREENINGS</span><strong>Curated cinema with discussion and analysis</strong><span class="event-place">CINEMA CULTURE</span><i>&#8599;</i></a>
+          <a class="anim-fade anim-fade-delay-3" href="#join"><time><b>03</b><span>FPS</span></time><span class="event-type">CHALLENGES</span><strong>24hr &middot; 48hr &middot; genre &middot; silent &middot; smartphone</strong><span class="event-place">MAKE TO LEARN</span><i>&#8599;</i></a>
+        </div>
+      </section>
+
+      <section class="gallery" id="gallery">
+        <div class="gallery-copy"><p class="eyebrow anim-fade"><span></span> FROM THE FLOOR</p><h2 class="anim-fade anim-fade-delay-1">The work<br />between <em>takes.</em></h2></div>
+        <figure class="g1 anim-scale"><img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1100&q=85" alt="Camera on a mountain shoot" /><figcaption>LOCATION SCOUT &middot; 07:12 AM</figcaption></figure>
+        <figure class="g2 anim-scale anim-fade-delay-1"><img src="https://images.unsplash.com/photo-1531058020387-3be344556be6?auto=format&fit=crop&w=900&q=85" alt="Audience in a film theater" /><figcaption>FIRST SCREENING &middot; SOLD OUT</figcaption></figure>
+        <figure class="g3 anim-scale anim-fade-delay-2"><img src="https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=900&q=85" alt="Camera close-up on set" /><figcaption>ON SET &middot; DAY 03</figcaption></figure>
+      </section>
+
+      <section class="school" id="learn">
+        <div class="school-lead"><p class="eyebrow anim-fade"><span></span> FILM SCHOOL</p><h2 class="anim-fade anim-fade-delay-1">Learn the<br /><em>language</em><br />of light.</h2></div>
+        <div class="lesson-list">
+          <a class="anim-fade anim-fade-delay-1" href="#join"><span>01</span><strong>Write a scene<br />that breathes</strong><i>12 MIN</i><b>&#8599;</b></a>
+          <a class="anim-fade anim-fade-delay-2" href="#join"><span>02</span><strong>Frame before<br />you shoot</strong><i>18 MIN</i><b>&#8599;</b></a>
+          <a class="anim-fade anim-fade-delay-3" href="#join"><span>03</span><strong>Turn sound into<br />atmosphere</strong><i>15 MIN</i><b>&#8599;</b></a>
+        </div>
+        <p class="school-note anim-fade anim-fade-delay-2">A growing library of short, no-jargon guides made by members, for the moment you decide to start.</p>
+      </section>
+
+      <section class="chapter-screen quote-chapter">
+        <div class="quote-bg"></div>
+        <p class="eyebrow anim-fade"><span></span> FROM THE ARCHIVE &middot; 2021</p>
+        <blockquote class="anim-fade anim-fade-delay-1">&ldquo;The first cut<br />was <em>terrible.</em><br />That&rsquo;s how we knew<br />we had started.&rdquo;</blockquote>
+        <p class="quote-credit anim-fade anim-fade-delay-2">&mdash; MIRA JOSHI, FOUNDING MEMBER</p>
+      </section>
+
+      <section class="chapter-screen journal-chapter">
+        <div class="journal-image"><img class="anim-img" src="https://images.unsplash.com/photo-1492724441997-5dc865305da7?auto=format&fit=crop&w=1400&q=85" alt="Handwriting in a production notebook" /></div>
+        <div class="journal-copy"><p class="eyebrow light anim-fade"><span></span> PRODUCTION JOURNAL</p><h2 class="anim-fade anim-fade-delay-1">Day 14.<br /><em>Still</em> chasing<br />the light.</h2><p class="anim-fade anim-fade-delay-2">Every film leaves behind a trail: location notes, coffee stains, backup drives and tiny breakthroughs. Read the notebooks that never make the credits.</p><a class="text-link light anim-fade anim-fade-delay-3" href="#join">Open the journal <b>&#8599;</b></a></div>
+      </section>
+
+      <section class="chapter-screen departments-chapter">
+        <div><p class="eyebrow anim-fade"><span></span> FIND YOUR DEPARTMENT</p><h2 class="anim-fade anim-fade-delay-1">There&rsquo;s more<br />than one way<br />to <em>make a film.</em></h2></div>
+        <div class="department-grid">
+          <span class="anim-fade anim-fade-delay-1">01 <b>Direction</b></span>
+          <span class="anim-fade anim-fade-delay-2">02 <b>Camera</b></span>
+          <span class="anim-fade anim-fade-delay-3">03 <b>Sound</b></span>
+          <span class="anim-fade anim-fade-delay-4">04 <b>Production</b></span>
+          <span class="anim-fade anim-fade-delay-5">05 <b>Art &amp; costume</b></span>
+          <span class="anim-fade anim-fade-delay-6">06 <b>Edit &amp; colour</b></span>
+        </div>
+      </section>
+
+      <section class="chapter-screen poster-chapter">
+        <div class="poster-art anim-scale"><span>THE<br />LAST<br /><em>LOCAL</em></span><small>A FILM BY AANYA VERMA</small></div>
+        <div class="poster-copy"><p class="eyebrow anim-fade"><span></span> POSTER OF THE MONTH</p><h2 class="anim-fade anim-fade-delay-1">Designing<br />the <em>first</em><br />impression.</h2><p class="anim-fade anim-fade-delay-2">Before anyone sees a frame, they see the poster. Our art team turns a film&rsquo;s pulse into one unforgettable image.</p><a class="text-link anim-fade anim-fade-delay-3" href="#join">See the poster wall <b>&#8599;</b></a></div>
+      </section>
+
+      <section class="chapter-screen toolkit-chapter">
+        <div class="toolkit-bg"></div>
+        <p class="eyebrow light anim-fade"><span></span> THE TOOLKIT</p>
+        <h2 class="anim-fade anim-fade-delay-1">Make more<br />with <em>less.</em></h2>
+        <div class="toolkit-list">
+          <div class="anim-fade anim-fade-delay-1">
+            <img class="toolkit-img" src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&q=80" alt="Smartphone camera" />
+            <b>01</b><strong>Your phone</strong><span>A complete camera, in your pocket.</span>
+          </div>
+          <div class="anim-fade anim-fade-delay-2">
+            <img class="toolkit-img" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80" alt="Window light portrait" />
+            <b>02</b><strong>Window light</strong><span>The oldest lighting setup in the world.</span>
+          </div>
+          <div class="anim-fade anim-fade-delay-3">
+            <img class="toolkit-img" src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?auto=format&fit=crop&w=600&q=80" alt="Sound recording" />
+            <b>03</b><strong>One honest sound</strong><span>The fastest route into a scene.</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="chapter-screen story-chapter">
+        <div class="story-number anim-fade">06:42</div>
+        <div><p class="eyebrow anim-fade anim-fade-delay-1"><span></span> MICRO FILM SERIES</p><h2 class="anim-fade anim-fade-delay-2">Stories that fit<br />between two<br /><em>classes.</em></h2><p class="anim-fade anim-fade-delay-3">Six-minute films made in a week. No budget, no excuses, a lot of imagination.</p></div>
+        <a class="round-link anim-fade anim-fade-delay-2" href="#join">WATCH<br />THE<br />SERIES &#8599;</a>
+      </section>
+
+      <section class="chapter-screen awards-chapter">
+        <p class="eyebrow anim-fade"><span></span> AWARDS &amp; MILESTONES</p>
+        <div class="award-rail">
+          <article class="anim-fade"><b>01</b><span>2024</span><h3>Best Student<br /><em>Film</em></h3><p>MONSOON SHORTS</p></article>
+          <article class="anim-fade anim-fade-delay-1"><b>02</b><span>2023</span><h3>Jury&rsquo;s<br /><em>Choice</em></h3><p>COLLEGE ARTS FEST</p></article>
+          <article class="anim-fade anim-fade-delay-2"><b>03</b><span>2022</span><h3>Best<br /><em>Sound</em></h3><p>FRAMEWORK FESTIVAL</p></article>
+        </div>
+      </section>
+
+      <section class="chapter-screen alumni-chapter">
+        <div class="alumni-photo"><img class="anim-img" src="https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=1300&q=85" alt="Alumni filmmaker standing outside" /></div>
+        <div><p class="eyebrow anim-fade"><span></span> WHERE THEY WENT NEXT</p><h2 class="anim-fade anim-fade-delay-1">&ldquo;The club gave<br />me a reason<br />to <em>start.&rdquo;</em></h2><p class="anim-fade anim-fade-delay-2">Sana now makes documentary films in Bengaluru. Her first credit was a two-minute campus story, shot between lectures.</p><p class="alumni-name anim-fade anim-fade-delay-3">SANA KHAN &middot; CLASS OF 2020</p></div>
+      </section>
+
+      <section class="chapter-screen cinema-chapter">
+        <div><p class="eyebrow light anim-fade"><span></span> THE CINEMA WALL</p><h2 class="anim-fade anim-fade-delay-1">Films that<br />stay with<br /><em>us.</em></h2></div>
+        <div class="recommendations">
+          <span class="anim-fade anim-fade-delay-1"><b>01</b><strong>In the Mood for Love</strong><i>WONG KAR-WAI &middot; 2000</i></span>
+          <span class="anim-fade anim-fade-delay-2"><b>02</b><strong>Charulata</strong><i>SATYAJIT RAY &middot; 1964</i></span>
+          <span class="anim-fade anim-fade-delay-3"><b>03</b><strong>Portrait of a Lady on Fire</strong><i>C&Eacute;LINE SCIAMMA &middot; 2019</i></span>
+          <span class="anim-fade anim-fade-delay-4"><b>04</b><strong>Court</strong><i>CHAITANYA TAMHANE &middot; 2014</i></span>
+        </div>
+      </section>
+
+      <section class="chapter-screen ideas-chapter">
+        <p class="eyebrow anim-fade"><span></span> THE IDEA BOARD</p>
+        <h2 class="anim-fade anim-fade-delay-1">Some films are<br />still just a <em>sentence.</em></h2>
+        <div class="idea-cards">
+          <article class="anim-fade anim-fade-delay-1"><span>IN DEVELOPMENT</span><h3>A campus that<br />forgets its name.</h3><p>Looking for: writers, sound recordists.</p></article>
+          <article class="anim-fade anim-fade-delay-2"><span>CASTING</span><h3>Two strangers<br />miss the last bus.</h3><p>Looking for: actors, assistant director.</p></article>
+          <article class="anim-fade anim-fade-delay-3"><span>SHOOTING SOON</span><h3>Letters to my<br />future city.</h3><p>Looking for: camera, production.</p></article>
+        </div>
+      </section>
+
+      <section class="chapter-screen numbers-chapter">
+        <div class="numbers-bg"></div>
+        <p class="eyebrow light anim-fade"><span></span> BY THE NUMBERS</p>
+        <div class="anim-fade anim-fade-delay-1"><strong>43</strong><span>films finished<br />and released</span></div>
+        <div class="anim-fade anim-fade-delay-2"><strong>1,900</strong><span>hours of footage<br />we almost deleted</span></div>
+        <div class="anim-fade anim-fade-delay-3"><strong>&infin;</strong><span>ideas still waiting<br />for their first shot</span></div>
+      </section>
+
+      <section class="chapter-screen contact-chapter">
+        <div>
+          <p class="eyebrow anim-fade"><span></span> COME FIND US</p>
+          <h2 class="anim-fade anim-fade-delay-1">Room 204.<br />After class.<br /><em>Always.</em></h2>
+        </div>
+        <div class="contact-details anim-fade anim-fade-delay-2">
+          <p>MEDIA BLOCK, SECOND FLOOR<br />YOUR COLLEGE CAMPUS</p>
+          <a href="mailto:filmclub@college.edu">FILMCLUB@COLLEGE.EDU &#8599;</a>
+          <a href="#join">INSTAGRAM / @FRAMEBYFRAME &#8599;</a>
+        </div>
+        <img class="contact-img anim-img" src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=800&q=80" alt="College campus building" />
+      </section>
+
+      <section class="join" id="join">
+        <div>
+          <p class="eyebrow light anim-fade"><span></span> NO EXPERIENCE NEEDED</p>
+          <h2 class="anim-fade anim-fade-delay-1">Make your<br /><em>first move.</em></h2>
+          <p class="anim-fade anim-fade-delay-2">Direct. Shoot. Design. Edit. Act. Write. Or simply show up with an idea we haven&rsquo;t heard yet.</p>
+        </div>
+        <img class="join-img anim-img" src="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=800&q=80" alt="Students collaborating on film set" />
+        <form class="anim-fade anim-fade-delay-2" id="join-form">
+          <label>YOUR NAME<input required name="name" placeholder="How should we call you?" /></label>
+          <label>YOUR SPARK<select name="interest"><option>Choose an interest</option><option>Directing</option><option>Cinematography</option><option>Writing</option><option>Editing</option><option>Acting</option></select></label>
+          <button type="submit">Send it <span>&#8599;</span></button>
+          <p class="form-status" aria-live="polite"></p>
+        </form>
+      </section>
+    </main>
+    <footer>
+      <a class="brand" href="#home"><span>FBF</span><i></i> FILM CLUB</a>
+      <p>THE FILM PRODUCTION CLUB<br />OF YOUR COLLEGE</p>
+      <div><a href="#">INSTAGRAM</a><a href="#">YOUTUBE</a><a href="mailto:filmclub@college.edu">EMAIL</a></div>
+      <small>&copy; 2024 FRAME BY FRAME. MADE WITH TOO MUCH COFFEE.</small>
+    </footer>
+    <dialog id="film-dialog">
+      <button class="close-dialog" aria-label="Close dialog">&times;</button>
+      <p class="eyebrow"><span></span> FEATURED PRODUCTION</p>
+      <h2></h2>
+      <p class="dialog-meta"></p>
+      <p class="dialog-info"></p>
+      <button class="watch">&#9654; &nbsp; PLAY TRAILER</button>
+    </dialog>
+
+    <audio id="ambient-sound" loop preload="auto" style="display:none">
+      <source src="https://www.soundjay.com/misc/sounds/film-projector-01.mp3" type="audio/mpeg">
+    </audio>
+    <button id="sound-toggle" style="position:fixed;bottom:20px;right:20px;z-index:99;background:#111;color:#eee;border:1px solid #555;border-radius:40px;padding:8px 18px;font:12px var(--mono);cursor:pointer;backdrop-filter:blur(4px);background:rgba(0,0,0,0.65);">&#128263; SOUND OFF</button>
+
+    <script>
+      (function(){
+        document.documentElement.classList.add('motion-ready');
+
+        const header = document.querySelector('.site-header');
+        window.addEventListener('scroll', () => {
+          header.classList.toggle('scrolled', window.scrollY > 40);
+        });
+
+        const menuBtn = document.querySelector('.menu-toggle');
+        const nav = document.querySelector('.nav');
+        menuBtn.addEventListener('click', () => {
+          const open = nav.classList.toggle('open');
+          menuBtn.setAttribute('aria-expanded', open);
+        });
+        document.querySelectorAll('.nav a').forEach(a => a.addEventListener('click', () => nav.classList.remove('open')));
+
+        const dialog = document.querySelector('#film-dialog');
+        const closeDialog = document.querySelector('.close-dialog');
+        document.querySelectorAll('.film-card').forEach(card => {
+          card.addEventListener('click', () => {
+            dialog.querySelector('h2').textContent = card.dataset.title;
+            dialog.querySelector('.dialog-meta').textContent = card.dataset.meta;
+            dialog.querySelector('.dialog-info').textContent = card.dataset.info;
+            dialog.showModal();
+          });
+        });
+        closeDialog.addEventListener('click', () => dialog.close());
+        dialog.addEventListener('click', e => { if(e.target === dialog) dialog.close(); });
+
+        document.querySelector('#join-form').addEventListener('submit', e => {
+          e.preventDefault();
+          const name = new FormData(e.currentTarget).get('name');
+          e.currentTarget.querySelector('.form-status').textContent = "Cut! Thanks, " + name + ". We'll be in touch.";
+          e.currentTarget.reset();
+        });
+
+        const animObserver = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-visible');
+              animObserver.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+        document.querySelectorAll('.anim-fade, .anim-scale, .anim-img').forEach(el => {
+          animObserver.observe(el);
+        });
+
+        const audio = document.getElementById('ambient-sound');
+        const toggleBtn = document.getElementById('sound-toggle');
+        let soundOn = false;
+        function toggleSound() {
+          soundOn = !soundOn;
+          if (soundOn) {
+            audio.play().catch(() => { soundOn = false; toggleBtn.textContent = '\u{1F507} SOUND OFF'; });
+            toggleBtn.textContent = '\u{1F50A} SOUND ON';
+          } else {
+            audio.pause();
+            toggleBtn.textContent = '\u{1F507} SOUND OFF';
+          }
+        }
+        toggleBtn.addEventListener('click', toggleSound);
+        audio.volume = 0.3;
+        audio.loop = true;
+        toggleBtn.textContent = '\u{1F507} SOUND OFF';
+
+        if (!('ontouchstart' in window) && !navigator.maxTouchPoints) {
+          const star = document.getElementById('star-cursor');
+          const sprinkleChars = ['\u2726','\u2727','\u274B','\u2736','\u2737','\u2738','\u2739','\u273A','\u273B','\u273C','\u273D','\u2740','\u2726','\u2727','\u2736'];
+          const colors = ['#ffd700','#ff6b6b','#4ecdc4','#ffe66d','#ff9ff3','#54a0ff','#5f27cd','#ff9f43'];
+          let lastX = 0, lastY = 0;
+
+          document.addEventListener('mousemove', (e) => {
+            const x = e.clientX, y = e.clientY;
+            star.style.left = x + 'px';
+            star.style.top = y + 'px';
+            star.style.transform = 'translate(-50%, -50%) rotate(' + (x * 0.05) + 'deg) scale(' + (1 + Math.sin(Date.now() / 300) * 0.05) + ')';
+            const dx = x - lastX, dy = y - lastY;
+            if (Math.sqrt(dx*dx + dy*dy) > 3) {
+              createSprinkle(x, y);
+            }
+            lastX = x; lastY = y;
+          });
+
+          function createSprinkle(x, y) {
+            const el = document.createElement('div');
+            el.className = 'sprinkle';
+            el.textContent = sprinkleChars[Math.floor(Math.random() * sprinkleChars.length)];
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            el.style.color = colors[Math.floor(Math.random() * colors.length)];
+            el.style.fontSize = (8 + Math.random() * 10) + 'px';
+            el.style.transform = 'translate(-50%, -50%) rotate(' + (Math.random() * 360) + 'deg)';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1100);
+          }
+
+          document.addEventListener('click', (e) => {
+            for (let i = 0; i < 8; i++) {
+              setTimeout(() => {
+                createSprinkle(e.clientX + (Math.random()-0.5)*30, e.clientY + (Math.random()-0.5)*30);
+              }, i * 50);
+            }
+          });
+          document.body.style.cursor = 'none';
+        } else {
+          document.getElementById('star-cursor').style.display = 'none';
+          document.body.style.cursor = 'auto';
+        }
+      })();
+    </script>
   </body>
 </html>
