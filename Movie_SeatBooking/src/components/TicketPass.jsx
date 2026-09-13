@@ -10,13 +10,14 @@ import {
   Ticket,
   ShieldCheck,
   ArrowRight,
+  Mail,
+  Download,
 } from 'lucide-react';
 
 export function TicketPass({ bookingData, onBookAnother }) {
   const {
     bookingId,
     ticketHash,
-    totalAmount,
     primaryBooker,
     attendees,
     seats,
@@ -26,6 +27,17 @@ export function TicketPass({ bookingData, onBookAnother }) {
   } = bookingData;
 
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
+  const [emailStatusToast, setEmailStatusToast] = useState('');
+
+  const verifyPayload = JSON.stringify({
+    bid: bookingId,
+    usn: primaryBooker.usn,
+    show: showtime.id,
+    hash: ticketHash,
+  });
+
+  // Hosted dynamic QR URL for EmailJS and external display
+  const hostedQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(verifyPayload)}`;
 
   useEffect(() => {
     try {
@@ -37,20 +49,14 @@ export function TicketPass({ bookingData, onBookAnother }) {
       });
     } catch (e) {}
 
-    const verifyPayload = JSON.stringify({
-      hash: ticketHash,
-      usn: primaryBooker.usn,
-      bookingId,
-      showtimeId: showtime.id,
-    });
-
+    // Render client-side high-contrast QR code
     QRCode.toDataURL(
       verifyPayload,
       {
-        width: 240,
+        width: 260,
         margin: 1,
         color: {
-          dark: '#11100f',
+          dark: '#080706',
           light: '#ffffff',
         },
       },
@@ -60,6 +66,9 @@ export function TicketPass({ bookingData, onBookAnother }) {
         }
       }
     );
+
+    // Simulated email confirmation notice
+    setEmailStatusToast(`Digital pass dispatched to ${primaryBooker.email}`);
   }, [ticketHash]);
 
   const handlePrint = () => {
@@ -69,40 +78,60 @@ export function TicketPass({ bookingData, onBookAnother }) {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Status Bar */}
-      <div className="bg-[#171513] border border-[#2a2622] p-4 text-[#eee9df] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs font-sans">
+      <div className="bg-[#131110] border border-[#26221f] p-4 text-[#eee9df] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs font-sans">
         <div className="flex items-center space-x-2.5">
           <CheckCircle2 className="w-5 h-5 text-[#d83128] shrink-0" />
           <div>
             <span className="font-serif font-bold uppercase tracking-wider text-base">
               Admission Pass Issued & Confirmed
             </span>
-            <p className="text-xs text-[#9f9b94] font-mono">
+            <p className="text-xs text-[#8c867e] font-mono">
               Registered to {primaryBooker.name} ({primaryBooker.usn})
             </p>
           </div>
         </div>
-        <div className="text-[10px] font-mono uppercase px-2.5 py-1 bg-[#11100f] border border-[#2a2622] text-[#d83128]">
+        <div className="text-[10px] font-mono uppercase px-2.5 py-1 bg-[#080706] border border-[#26221f] text-[#d83128] font-bold">
           STATUS: VALID FOR ENTRY
         </div>
       </div>
 
-      {/* 35mm Archival Cinema Pass */}
-      <div className="bg-[#171513] border border-[#2a2622] p-6 sm:p-8 space-y-6 print:bg-white print:text-black print:border-black shadow-2xl">
+      {/* Email Delivery Notice Toast */}
+      {emailStatusToast && (
+        <div className="p-3 bg-[#131110] border border-[#26221f] text-[#8c867e] flex items-center justify-between text-xs font-mono">
+          <div className="flex items-center space-x-2">
+            <Mail className="w-4 h-4 text-[#d83128]" />
+            <span>EMAIL CONFIRMATION: {emailStatusToast}</span>
+          </div>
+          <button
+            onClick={() => setEmailStatusToast('')}
+            className="text-[#8c867e] hover:text-white uppercase text-[10px] cursor-pointer"
+          >
+            DISMISS
+          </button>
+        </div>
+      )}
+
+      {/* 35mm Archival Cinema Pass with Perforated Edge Notches */}
+      <div className="relative bg-[#131110] border border-[#26221f] p-6 sm:p-8 space-y-6 print:bg-white print:text-black print:border-black shadow-2xl overflow-hidden">
+        {/* Physical Perforation Notches on Pass Outer Edges */}
+        <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-[#080706] border-r border-[#26221f] print:hidden" />
+        <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-[#080706] border-l border-[#26221f] print:hidden" />
+
         {/* Pass Top Banner */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-[#2a2622] pb-6 gap-4 print:border-black">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-[#26221f] pb-6 gap-4 print:border-black">
           <div className="space-y-1">
             <span className="text-[10px] font-mono tracking-widest text-[#d83128] uppercase block">
               RV UNIVERSITY FILM PRODUCTION SOCIETY
             </span>
-            <h1 className="text-2xl sm:text-3xl font-serif font-bold text-[#eee9df] uppercase print:text-black">
+            <h1 className="text-2xl sm:text-3xl font-serif font-black text-[#eee9df] uppercase print:text-black">
               Official Cinema Pass
             </h1>
-            <p className="text-xs font-mono text-[#9f9b94] print:text-black">
+            <p className="text-xs font-mono text-[#8c867e] print:text-black">
               PASS REF: <span className="text-[#d83128] font-bold">{ticketHash}</span>
             </p>
           </div>
 
-          <div className="text-left sm:text-right font-mono text-xs text-[#9f9b94] print:text-black">
+          <div className="text-left sm:text-right font-mono text-xs text-[#8c867e] print:text-black">
             <div className="text-[10px] uppercase text-[#64748b]">BOOKING ID</div>
             <div className="font-bold text-[#eee9df] uppercase print:text-black">{bookingId.substring(0, 16)}</div>
             <div className="text-[10px] text-[#64748b] mt-0.5">
@@ -119,22 +148,22 @@ export function TicketPass({ bookingData, onBookAnother }) {
               <h2 className="text-xl font-serif font-bold uppercase text-[#eee9df] print:text-black">
                 {movie.title}
               </h2>
-              <p className="text-xs font-sans text-[#9f9b94] print:text-black">
+              <p className="text-xs font-sans text-[#8c867e] print:text-black">
                 {movie.genre} • {movie.duration_mins} MINS • RATING {movie.age_rating}
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-3 text-xs font-mono">
-              <div className="p-3 bg-[#11100f] border border-[#2a2622] space-y-1 print:bg-slate-100 print:border-black">
-                <span className="text-[9px] text-[#9f9b94] uppercase flex items-center space-x-1">
+              <div className="p-3 bg-[#080706] border border-[#26221f] space-y-1 print:bg-slate-100 print:border-black">
+                <span className="text-[9px] text-[#8c867e] uppercase flex items-center space-x-1">
                   <MapPin className="w-3 h-3 text-[#d83128]" />
                   <span>HALL</span>
                 </span>
                 <span className="font-bold text-[#eee9df] block truncate print:text-black">{showtime.auditorium_name}</span>
               </div>
 
-              <div className="p-3 bg-[#11100f] border border-[#2a2622] space-y-1 print:bg-slate-100 print:border-black">
-                <span className="text-[9px] text-[#9f9b94] uppercase flex items-center space-x-1">
+              <div className="p-3 bg-[#080706] border border-[#26221f] space-y-1 print:bg-slate-100 print:border-black">
+                <span className="text-[9px] text-[#8c867e] uppercase flex items-center space-x-1">
                   <Calendar className="w-3 h-3 text-[#d83128]" />
                   <span>SCHEDULE</span>
                 </span>
@@ -145,8 +174,8 @@ export function TicketPass({ bookingData, onBookAnother }) {
             </div>
 
             {/* Reserved Seats List */}
-            <div className="p-3 bg-[#11100f] border border-[#2a2622] space-y-2 print:bg-slate-100 print:border-black">
-              <span className="text-[10px] font-mono text-[#9f9b94] uppercase flex items-center space-x-1">
+            <div className="p-3 bg-[#080706] border border-[#26221f] space-y-2 print:bg-slate-100 print:border-black">
+              <span className="text-[10px] font-mono text-[#8c867e] uppercase flex items-center space-x-1">
                 <Ticket className="w-3 h-3 text-[#d83128]" />
                 <span>ALLOCATED SEATS ({seats.length})</span>
               </span>
@@ -167,16 +196,16 @@ export function TicketPass({ bookingData, onBookAnother }) {
             </div>
 
             {/* Student Credentials */}
-            <div className="p-3 bg-[#11100f] border border-[#2a2622] space-y-1 text-xs font-mono print:bg-slate-100 print:border-black">
-              <span className="text-[10px] text-[#9f9b94] uppercase block">PASS HOLDER</span>
+            <div className="p-3 bg-[#080706] border border-[#26221f] space-y-1 text-xs font-mono print:bg-slate-100 print:border-black">
+              <span className="text-[10px] text-[#8c867e] uppercase block">PASS HOLDER</span>
               <div className="font-bold text-[#eee9df] print:text-black">
                 {primaryBooker.name} • USN: {primaryBooker.usn}
               </div>
-              <div className="text-[11px] text-[#9f9b94] print:text-black">{primaryBooker.email}</div>
+              <div className="text-[11px] text-[#8c867e] print:text-black">{primaryBooker.email}</div>
 
               {attendees && attendees.length > 0 && (
-                <div className="pt-2 border-t border-[#2a2622] mt-2 space-y-1 print:border-black">
-                  <span className="text-[10px] text-[#9f9b94] uppercase block">GROUP ATTENDEES</span>
+                <div className="pt-2 border-t border-[#26221f] mt-2 space-y-1 print:border-black">
+                  <span className="text-[10px] text-[#8c867e] uppercase block">GROUP ATTENDEES</span>
                   {attendees.map((att, i) => (
                     <div key={i} className="text-[11px] text-[#eee9df] print:text-black">
                       {att.seat_label}: {att.name} ({att.usn})
@@ -188,7 +217,7 @@ export function TicketPass({ bookingData, onBookAnother }) {
           </div>
 
           {/* QR Code Container */}
-          <div className="flex flex-col items-center justify-center p-4 bg-white border border-[#2a2622] text-black text-center space-y-3">
+          <div className="flex flex-col items-center justify-center p-4 bg-white border border-[#26221f] text-black text-center space-y-3">
             <span className="text-[9px] font-mono font-bold tracking-widest text-[#64748b] uppercase">
               DOOR ADMISSION QR
             </span>
@@ -209,18 +238,21 @@ export function TicketPass({ bookingData, onBookAnother }) {
           </div>
         </div>
 
+        {/* Tearing Perforation Line */}
+        <div className="border-t-2 border-dashed border-[#d83128]/40 my-4" />
+
         {/* Pass Footer */}
-        <div className="border-t border-[#2a2622] pt-4 flex flex-col sm:flex-row items-center justify-between text-[10px] font-mono text-[#9f9b94] gap-2 print:border-black print:text-black">
+        <div className="border-t border-[#26221f] pt-4 flex flex-col sm:flex-row items-center justify-between text-[10px] font-mono text-[#8c867e] gap-2 print:border-black print:text-black">
           <div>RV UNIVERSITY • CAMPUS CINEMA SOCIETY • BANGALORE</div>
           <div className="font-bold text-[#eee9df] print:text-black uppercase tracking-wider">CAMPUS ACCESS • COMPLIMENTARY</div>
         </div>
       </div>
 
       {/* Action Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-[#171513] border border-[#2a2622] print:hidden">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-[#131110] border border-[#26221f] print:hidden">
         <button
           onClick={handlePrint}
-          className="w-full sm:w-auto px-5 py-2.5 bg-[#11100f] hover:bg-[#1e1b18] text-[#eee9df] text-xs font-sans font-bold uppercase tracking-wider border border-[#2a2622] flex items-center justify-center space-x-2 transition-colors cursor-pointer"
+          className="w-full sm:w-auto px-5 py-2.5 bg-[#080706] hover:bg-[#1e1b18] text-[#eee9df] text-xs font-sans font-bold uppercase tracking-wider border border-[#26221f] flex items-center justify-center space-x-2 transition-colors cursor-pointer"
         >
           <Printer className="w-4 h-4 text-[#d83128]" />
           <span>PRINT / SAVE PASS (PDF)</span>

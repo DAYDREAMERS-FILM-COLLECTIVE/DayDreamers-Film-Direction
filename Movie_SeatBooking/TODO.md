@@ -23,10 +23,10 @@
   - [x] 3.1 Deferred WebSocket subscription (connected exclusively in Act II/auditorium view, `src/hooks/useRealtimeSeats.js`)
   - [x] 3.2 Non-blocking `NOWAIT` atomic lock exception trap (`55P03` -> `SEAT_CONTESTED` in <50ms with Viewfinder jitter shake)
   - [x] 3.3 Client-side lazy expiration engine (1-second tick) & atomic crimson progress bar hold timer dock
-- [ ] **Phase 4: Perforated Pass Checkout, RVU Validation & EmailJS Delivery**
-  - [ ] 4.1 ReactBits-inspired perforated ticket slide-over modal
-  - [ ] 4.2 Individual (1 seat) & Group (2–4 seats) RVU credential validation (`@rvu.edu.in` + USN)
-  - [ ] 4.3 Client-side HMAC QR generation and EmailJS dispatch
+- [x] **Phase 4: Perforated Pass Checkout, RVU Validation & EmailJS Delivery**
+  - [x] 4.1 ReactBits-inspired perforated ticket slide-over modal with physical tear-line & hold timer
+  - [x] 4.2 Individual (1 seat) & Group (2–4 seats) RVU credential validation (`@rvu.edu.in` + regex USN)
+  - [x] 4.3 Client-side HMAC QR generation, deep sub stamp sound trigger, and safe EmailJS dispatch (`src/lib/email.js`)
 - [ ] **Phase 5: Admin Door Scanner (`/admin`) & Performance Optimization (60 FPS audit)**
   - [ ] 5.1 Admin CMS pass gate (`fps2026`) with live camera QR scanner
   - [ ] 5.2 Student roster search and single-use entry check-in
