@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
 import { confirmBookingAtomic } from '../lib/supabase.js';
 import {
-  ShieldCheck,
   User,
   Mail,
-  CreditCard,
   AlertTriangle,
   ArrowLeft,
-  CheckCircle2,
   Lock,
   IdCard,
   Users,
+  ShieldCheck,
 } from 'lucide-react';
 
 export function StudentCheckout({
@@ -22,15 +20,13 @@ export function StudentCheckout({
   onBack,
   onBookingConfirmed,
 }) {
-  // Primary booker form state
   const [primaryFirstName, setPrimaryFirstName] = useState('');
   const [primaryLastName, setPrimaryLastName] = useState('');
   const [primaryUsn, setPrimaryUsn] = useState('');
   const [primaryEmail, setPrimaryEmail] = useState('');
 
-  // Group attendees form state (for seats index 1 to N-1)
   const [attendees, setAttendees] = useState(
-    selectedSeats.slice(1).map((seat, index) => ({
+    selectedSeats.slice(1).map((seat) => ({
       seatNumber: `${seat.row_label}${seat.col_number}`,
       seatId: seat.id,
       seatTier: seat.seat_tier,
@@ -44,13 +40,11 @@ export function StudentCheckout({
   const [submitting, setSubmitting] = useState(false);
   const [validationError, setValidationError] = useState('');
 
-  // Total price calculation
   const totalPrice = selectedSeats.reduce((sum, s) => {
     const price = s.seat_tier === 'vip' ? showtime.price_vip : showtime.price_regular;
     return sum + Number(price);
   }, 0);
 
-  // Attendees change handler
   const handleAttendeeChange = (index, field, value) => {
     setAttendees((prev) => {
       const updated = [...prev];
@@ -59,31 +53,28 @@ export function StudentCheckout({
     });
   };
 
-  // Form submission & atomic booking confirmation
   const handleSubmit = async (e) => {
     e.preventDefault();
     setValidationError('');
 
-    // 1. Validate primary booker
     if (!primaryFirstName.trim() || !primaryLastName.trim()) {
-      setValidationError('Please enter both First Name and Last Name for the primary ticket holder.');
+      setValidationError('Please enter both First Name and Last Name for the primary pass holder.');
       return;
     }
 
     const cleanPrimaryUsn = primaryUsn.trim().toUpperCase();
     if (cleanPrimaryUsn.length < 5) {
-      setValidationError('Please enter a valid RV University USN (e.g. RVU23BSE042).');
+      setValidationError('Please enter a valid RV University student USN (e.g. RVU23BSE042).');
       return;
     }
 
     const rvuEmailRegex = /^[a-zA-Z0-9._%+-]+@rvu\.edu\.in$/i;
     const cleanPrimaryEmail = primaryEmail.trim().toLowerCase();
     if (!rvuEmailRegex.test(cleanPrimaryEmail)) {
-      setValidationError('Primary email must be an official RV University student email ending in @rvu.edu.in');
+      setValidationError('Primary email must be an official RV University address ending in @rvu.edu.in');
       return;
     }
 
-    // 2. Validate group attendees if mode is group
     const formattedAttendees = [];
     if (bookingMode === 'group' && selectedSeats.length > 1) {
       for (let i = 0; i < attendees.length; i++) {
@@ -100,7 +91,7 @@ export function StudentCheckout({
         const cleanAttEmail = att.email.trim().toLowerCase();
         if (!rvuEmailRegex.test(cleanAttEmail)) {
           setValidationError(
-            `Attendee ${i + 2} (${att.seatNumber}) must have an official @rvu.edu.in student email.`
+            `Attendee ${i + 2} (${att.seatNumber}) must possess an official @rvu.edu.in student email.`
           );
           return;
         }
@@ -120,7 +111,7 @@ export function StudentCheckout({
 
     try {
       const fullName = `${primaryFirstName.trim()} ${primaryLastName.trim()}`;
-      const ticketHash = `RVU-${cleanPrimaryUsn}-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+      const ticketHash = `FPS-${cleanPrimaryUsn}-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
       const res = await confirmBookingAtomic({
         showtimeId: showtime.id,
@@ -152,12 +143,12 @@ export function StudentCheckout({
         });
       } else {
         setValidationError(
-          res?.error || 'Your 5-minute reservation hold has expired. Please reselect your seats.'
+          res?.error || 'Your 5-minute seat reservation has expired. Please reselect your seats.'
         );
       }
     } catch (err) {
       console.error('[StudentCheckout] Confirmation error:', err);
-      setValidationError('Network error while processing booking. Please try again.');
+      setValidationError('Error processing reservation against live Supabase database.');
     } finally {
       setSubmitting(false);
     }
@@ -165,85 +156,79 @@ export function StudentCheckout({
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Back to Seat Map button */}
-      <div className="flex items-center justify-between p-4 bg-slate-950 border border-slate-800">
+      {/* Top Header */}
+      <div className="flex items-center justify-between p-4 bg-[#171513] border border-[#2a2622]">
         <button
           onClick={onBack}
           disabled={submitting}
-          className="flex items-center space-x-2 text-xs font-mono font-bold uppercase text-slate-300 hover:text-white transition-colors"
+          className="flex items-center space-x-2 text-xs font-sans text-[#9f9b94] hover:text-[#eee9df] transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>RETURN TO SEAT GRID</span>
+          <span>RETURN TO SEATING BLOCK</span>
         </button>
-        <div className="text-[10px] font-mono text-rvu-accent font-bold uppercase tracking-widest">
-          STEP 3: STUDENT DETAILS & PASS ISSUANCE
+        <div className="text-[10px] font-mono text-[#d83128] tracking-widest uppercase">
+          CREDENTIAL VERIFICATION // PASS ISSUANCE
         </div>
       </div>
 
-      {/* Validation Error Banner */}
       {validationError && (
-        <div className="p-4 bg-red-950/80 border border-red-500 text-red-200 flex items-start space-x-3 text-xs font-mono">
-          <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+        <div className="p-4 bg-[#1e1411] border border-[#d83128] text-[#eee9df] flex items-start space-x-3 text-xs font-sans">
+          <AlertTriangle className="w-5 h-5 text-[#d83128] shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="font-bold uppercase tracking-wide">CONFIRMATION FAILED</p>
-            <p className="mt-1 text-red-300">{validationError}</p>
+            <p className="font-bold text-[#d83128] uppercase font-mono">VERIFICATION ERROR</p>
+            <p className="mt-1 text-[#eee9df]">{validationError}</p>
           </div>
         </div>
       )}
 
-      {/* Main Grid: Form + Order Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left 2 Cols: Student Credentials Form */}
+        {/* Form Container */}
         <div className="lg:col-span-2 space-y-6">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Primary Booker Card */}
-            <div className="bg-slate-950 border border-slate-800 p-6 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            {/* Primary Pass Holder Card */}
+            <div className="bg-[#171513] border border-[#2a2622] p-6 space-y-4">
+              <div className="flex items-center justify-between border-b border-[#2a2622] pb-3">
                 <div className="flex items-center space-x-2">
-                  <User className="w-4 h-4 text-rvu-accent" />
-                  <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-white">
-                    PRIMARY TICKET HOLDER ({selectedSeats[0]?.row_label}{selectedSeats[0]?.col_number})
+                  <User className="w-4 h-4 text-[#d83128]" />
+                  <h3 className="text-sm font-serif font-bold uppercase text-[#eee9df]">
+                    Primary Pass Holder ({selectedSeats[0]?.row_label}{selectedSeats[0]?.col_number})
                   </h3>
                 </div>
-                <span className="text-[10px] font-mono bg-slate-900 border border-slate-700 px-2 py-0.5 text-slate-300 uppercase">
+                <span className="text-[10px] font-mono bg-[#0e0d0c] border border-[#2a2622] px-2 py-0.5 text-[#9f9b94] uppercase">
                   LEAD BOOKER
                 </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
-                    First Name *
-                  </label>
+                  <label className="text-[10px] font-mono uppercase text-[#9f9b94]">First Name *</label>
                   <input
                     type="text"
                     required
                     value={primaryFirstName}
                     onChange={(e) => setPrimaryFirstName(e.target.value)}
                     placeholder="e.g. Arjun"
-                    className="w-full bg-slate-900 border border-slate-700 px-3 py-2 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-rvu-accent"
+                    className="w-full bg-[#0e0d0c] border border-[#2a2622] px-3 py-2 text-xs font-sans text-[#eee9df] placeholder-[#64748b] focus:outline-none focus:border-[#d83128]"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
-                    Last Name *
-                  </label>
+                  <label className="text-[10px] font-mono uppercase text-[#9f9b94]">Last Name *</label>
                   <input
                     type="text"
                     required
                     value={primaryLastName}
                     onChange={(e) => setPrimaryLastName(e.target.value)}
                     placeholder="e.g. Sharma"
-                    className="w-full bg-slate-900 border border-slate-700 px-3 py-2 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-rvu-accent"
+                    className="w-full bg-[#0e0d0c] border border-[#2a2622] px-3 py-2 text-xs font-sans text-[#eee9df] placeholder-[#64748b] focus:outline-none focus:border-[#d83128]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1">
-                    <IdCard className="w-3 h-3 text-rvu-accent" />
+                  <label className="text-[10px] font-mono uppercase text-[#9f9b94] flex items-center space-x-1">
+                    <IdCard className="w-3 h-3 text-[#d83128]" />
                     <span>RVU Student USN *</span>
                   </label>
                   <input
@@ -252,13 +237,13 @@ export function StudentCheckout({
                     value={primaryUsn}
                     onChange={(e) => setPrimaryUsn(e.target.value)}
                     placeholder="e.g. RVU23BSE042"
-                    className="w-full bg-slate-900 border border-slate-700 px-3 py-2 text-xs font-mono uppercase text-white placeholder-slate-600 focus:outline-none focus:border-rvu-accent"
+                    className="w-full bg-[#0e0d0c] border border-[#2a2622] px-3 py-2 text-xs font-mono uppercase text-[#eee9df] placeholder-[#64748b] focus:outline-none focus:border-[#d83128]"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1">
-                    <Mail className="w-3 h-3 text-rvu-accent" />
+                  <label className="text-[10px] font-mono uppercase text-[#9f9b94] flex items-center space-x-1">
+                    <Mail className="w-3 h-3 text-[#d83128]" />
                     <span>RVU Student Email *</span>
                   </label>
                   <input
@@ -266,88 +251,77 @@ export function StudentCheckout({
                     required
                     value={primaryEmail}
                     onChange={(e) => setPrimaryEmail(e.target.value)}
-                    placeholder="name@rvu.edu.in"
-                    className="w-full bg-slate-900 border border-slate-700 px-3 py-2 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-rvu-accent"
+                    placeholder="arjun@rvu.edu.in"
+                    className="w-full bg-[#0e0d0c] border border-[#2a2622] px-3 py-2 text-xs font-sans text-[#eee9df] placeholder-[#64748b] focus:outline-none focus:border-[#d83128]"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Additional Attendees Cards (For Group Booking: Seats 2 to 4) */}
+            {/* Additional Attendees for Group Mode */}
             {bookingMode === 'group' && selectedSeats.length > 1 && (
               <div className="space-y-4">
-                <div className="flex items-center space-x-2 text-xs font-mono font-bold uppercase tracking-wider text-slate-300">
-                  <Users className="w-4 h-4 text-rvu-accent" />
-                  <span>GROUP ATTENDEE CREDENTIALS ({attendees.length} ADDITIONAL STUDENTS)</span>
+                <div className="flex items-center space-x-2 text-xs font-serif font-bold uppercase text-[#eee9df]">
+                  <Users className="w-4 h-4 text-[#d83128]" />
+                  <span>Additional Attendees ({attendees.length} Students)</span>
                 </div>
 
                 {attendees.map((att, idx) => (
-                  <div key={att.seatId} className="bg-slate-950 border border-slate-800 p-6 space-y-4">
-                    <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                      <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-white">
-                        ATTENDEE {idx + 2} • SEAT {att.seatNumber} ({att.seatTier.toUpperCase()})
+                  <div key={att.seatId} className="bg-[#171513] border border-[#2a2622] p-6 space-y-4">
+                    <div className="flex items-center justify-between border-b border-[#2a2622] pb-3">
+                      <h4 className="text-xs font-serif font-bold uppercase text-[#eee9df]">
+                        Attendee {idx + 2} • Seat {att.seatNumber} ({att.seatTier.toUpperCase()})
                       </h4>
-                      <span className="text-[10px] font-mono bg-purple-950/40 border border-purple-800 px-2 py-0.5 text-purple-300 uppercase">
-                        VERIFIED ADMISSION REQUIRED
-                      </span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
-                          First Name *
-                        </label>
+                        <label className="text-[10px] font-mono uppercase text-[#9f9b94]">First Name *</label>
                         <input
                           type="text"
                           required
                           value={att.firstName}
                           onChange={(e) => handleAttendeeChange(idx, 'firstName', e.target.value)}
                           placeholder="e.g. Diya"
-                          className="w-full bg-slate-900 border border-slate-700 px-3 py-2 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-rvu-accent"
+                          className="w-full bg-[#0e0d0c] border border-[#2a2622] px-3 py-2 text-xs font-sans text-[#eee9df] placeholder-[#64748b] focus:outline-none focus:border-[#d83128]"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
-                          Last Name *
-                        </label>
+                        <label className="text-[10px] font-mono uppercase text-[#9f9b94]">Last Name *</label>
                         <input
                           type="text"
                           required
                           value={att.lastName}
                           onChange={(e) => handleAttendeeChange(idx, 'lastName', e.target.value)}
                           placeholder="e.g. Verma"
-                          className="w-full bg-slate-900 border border-slate-700 px-3 py-2 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-rvu-accent"
+                          className="w-full bg-[#0e0d0c] border border-[#2a2622] px-3 py-2 text-xs font-sans text-[#eee9df] placeholder-[#64748b] focus:outline-none focus:border-[#d83128]"
                         />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
-                          RVU Student USN *
-                        </label>
+                        <label className="text-[10px] font-mono uppercase text-[#9f9b94]">RVU Student USN *</label>
                         <input
                           type="text"
                           required
                           value={att.usn}
                           onChange={(e) => handleAttendeeChange(idx, 'usn', e.target.value)}
                           placeholder="e.g. RVU23BSE088"
-                          className="w-full bg-slate-900 border border-slate-700 px-3 py-2 text-xs font-mono uppercase text-white placeholder-slate-600 focus:outline-none focus:border-rvu-accent"
+                          className="w-full bg-[#0e0d0c] border border-[#2a2622] px-3 py-2 text-xs font-mono uppercase text-[#eee9df] placeholder-[#64748b] focus:outline-none focus:border-[#d83128]"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
-                          RVU Student Email *
-                        </label>
+                        <label className="text-[10px] font-mono uppercase text-[#9f9b94]">RVU Student Email *</label>
                         <input
                           type="email"
                           required
                           value={att.email}
                           onChange={(e) => handleAttendeeChange(idx, 'email', e.target.value)}
                           placeholder="diya@rvu.edu.in"
-                          className="w-full bg-slate-900 border border-slate-700 px-3 py-2 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-rvu-accent"
+                          className="w-full bg-[#0e0d0c] border border-[#2a2622] px-3 py-2 text-xs font-sans text-[#eee9df] placeholder-[#64748b] focus:outline-none focus:border-[#d83128]"
                         />
                       </div>
                     </div>
@@ -356,109 +330,89 @@ export function StudentCheckout({
               </div>
             )}
 
-            {/* Submit Button */}
-            <div className="pt-2">
-              <button
-                type="submit"
-                disabled={submitting}
-                className={`w-full py-3.5 px-6 font-mono text-xs font-bold uppercase tracking-widest border transition-all flex items-center justify-center space-x-2 ${
-                  submitting
-                    ? 'bg-slate-900 border-slate-800 text-slate-500 cursor-not-allowed'
-                    : 'bg-rvu-accent hover:bg-orange-600 text-white border-rvu-accent shadow-[0_0_15px_rgba(255,107,0,0.4)] cursor-pointer'
-                }`}
-              >
-                {submitting ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent animate-spin mr-2" />
-                    <span>VERIFYING RVU CREDENTIALS & ISSUING PASS...</span>
-                  </>
-                ) : (
-                  <>
-                    <Lock className="w-4 h-4" />
-                    <span>CONFIRM RESERVATION & GENERATE QR PASS</span>
-                  </>
-                )}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={submitting}
+              className={`w-full py-3.5 px-6 font-sans text-xs font-bold uppercase tracking-wider border transition-colors flex items-center justify-center space-x-2 ${
+                submitting
+                  ? 'bg-[#171513] border-[#2a2622] text-[#64748b] cursor-not-allowed'
+                  : 'bg-[#d83128] hover:bg-[#b8241c] text-white border-[#d83128] cursor-pointer'
+              }`}
+            >
+              {submitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent animate-spin mr-2" />
+                  <span>RECORDING RESERVATION & GENERATING PASS...</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="w-4 h-4" />
+                  <span>CONFIRM RESERVATION & GENERATE PASS</span>
+                </>
+              )}
+            </button>
           </form>
         </div>
 
-        {/* Right 1 Col: Screening & Pricing Breakdown */}
+        {/* Order Summary */}
         <div className="space-y-4">
-          <div className="bg-slate-950 border border-slate-800 p-5 space-y-4">
-            <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-white border-b border-slate-800 pb-2">
-              RESERVATION SUMMARY
+          <div className="bg-[#171513] border border-[#2a2622] p-5 space-y-4">
+            <h3 className="text-sm font-serif font-bold uppercase text-[#eee9df] border-b border-[#2a2622] pb-2">
+              Reservation Summary
             </h3>
 
-            {/* Movie details */}
             <div className="space-y-1">
-              <div className="text-[10px] font-mono text-rvu-accent font-bold uppercase">MOVIE</div>
-              <div className="text-sm font-bold font-mono text-white uppercase">{movie.title}</div>
-              <div className="text-[11px] font-mono text-slate-400">{movie.genre} • {movie.duration_mins} MINS</div>
+              <span className="text-[10px] font-mono text-[#d83128] uppercase block">SCREENING</span>
+              <div className="text-base font-serif font-bold text-[#eee9df] uppercase">{movie.title}</div>
+              <div className="text-xs text-[#9f9b94] font-sans">{movie.genre} • {movie.duration_mins} MINS</div>
             </div>
 
-            {/* Showtime details */}
-            <div className="space-y-1 border-t border-slate-900 pt-3">
-              <div className="text-[10px] font-mono text-rvu-accent font-bold uppercase">VENUE & TIME</div>
-              <div className="text-xs font-bold font-mono text-slate-200 uppercase">{showtime.auditorium_name}</div>
-              <div className="text-[11px] font-mono text-slate-400">
-                {new Date(showtime.start_time).toLocaleDateString('en-IN', {
-                  weekday: 'short',
-                  month: 'short',
-                  day: 'numeric',
-                })}{' '}
-                at{' '}
-                {new Date(showtime.start_time).toLocaleTimeString('en-IN', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  hour12: true,
-                })}
+            <div className="space-y-1 border-t border-[#2a2622] pt-3">
+              <span className="text-[10px] font-mono text-[#d83128] uppercase block">HALL & TIMING</span>
+              <div className="text-xs font-sans font-medium text-[#eee9df] uppercase">{showtime.auditorium_name}</div>
+              <div className="text-xs text-[#9f9b94] font-mono">
+                {new Date(showtime.start_time).toLocaleString('en-IN')}
               </div>
             </div>
 
-            {/* Selected Seats */}
-            <div className="space-y-2 border-t border-slate-900 pt-3">
-              <div className="text-[10px] font-mono text-rvu-accent font-bold uppercase">RESERVED SEATS</div>
+            <div className="space-y-2 border-t border-[#2a2622] pt-3">
+              <span className="text-[10px] font-mono text-[#d83128] uppercase block">ALLOCATED SEATS</span>
               <div className="space-y-1">
                 {selectedSeats.map((s) => {
                   const price = s.seat_tier === 'vip' ? showtime.price_vip : showtime.price_regular;
                   return (
                     <div key={s.id} className="flex items-center justify-between text-xs font-mono">
-                      <span className="text-slate-300">
-                        Seat {s.row_label}{s.col_number} ({s.seat_tier.toUpperCase()})
-                      </span>
-                      <span className="text-white font-bold">₹{price}</span>
+                      <span className="text-[#9f9b94]">Seat {s.row_label}{s.col_number} ({s.seat_tier.toUpperCase()})</span>
+                      <span className="text-[#eee9df] font-bold">₹{price}</span>
                     </div>
                   );
                 })}
               </div>
             </div>
 
-            {/* Price breakdown */}
-            <div className="border-t border-slate-800 pt-3 space-y-1.5 text-xs font-mono">
-              <div className="flex justify-between text-slate-400">
-                <span>Subtotal ({selectedSeats.length} seats)</span>
+            <div className="border-t border-[#2a2622] pt-3 space-y-1.5 text-xs font-mono">
+              <div className="flex justify-between text-[#9f9b94]">
+                <span>Total ({selectedSeats.length} seats)</span>
                 <span>₹{totalPrice}</span>
               </div>
-              <div className="flex justify-between text-emerald-400">
-                <span>RVU Student Subsidy</span>
-                <span>₹0.00 (Zero booking fee)</span>
+              <div className="flex justify-between text-[#d83128]">
+                <span>Student Society Subsidy</span>
+                <span>₹0 (Zero Fee)</span>
               </div>
-              <div className="border-t border-slate-800 pt-2 flex justify-between text-sm font-bold text-white">
-                <span className="uppercase">TOTAL PAYABLE</span>
-                <span className="text-rvu-accent">₹{totalPrice}</span>
+              <div className="border-t border-[#2a2622] pt-2 flex justify-between text-sm font-bold text-[#eee9df]">
+                <span className="font-serif">TOTAL PAYABLE</span>
+                <span className="text-[#d83128]">₹{totalPrice}</span>
               </div>
             </div>
           </div>
 
-          {/* Security & Policy Note */}
-          <div className="p-4 bg-slate-950 border border-slate-800 space-y-2 text-[11px] font-mono text-slate-400">
-            <div className="flex items-center space-x-1.5 text-white font-bold uppercase">
-              <ShieldCheck className="w-3.5 h-3.5 text-rvu-accent" />
-              <span>RVU ADMISSION POLICY</span>
+          <div className="p-4 bg-[#171513] border border-[#2a2622] space-y-2 text-xs font-sans text-[#9f9b94]">
+            <div className="flex items-center space-x-1.5 text-[#eee9df] font-serif font-bold uppercase">
+              <ShieldCheck className="w-4 h-4 text-[#d83128]" />
+              <span>ADMISSION REGULATION</span>
             </div>
             <p className="leading-relaxed">
-              Admission is restricted to RV University students and staff. Physical or digital RVU student ID cards must match the registered USN upon entry.
+              Admission is restricted to RV University students and faculty. Student ID matching the registered USN must be presented at the auditorium door.
             </p>
           </div>
         </div>

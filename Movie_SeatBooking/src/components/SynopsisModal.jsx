@@ -1,110 +1,87 @@
 import React from 'react';
-import { X, Play, Clock, Shield, Tag } from 'lucide-react';
+import { X, Clock, Calendar, Film, ShieldCheck } from 'lucide-react';
 
 export function SynopsisModal({ movie, onClose, onSelectMovie }) {
   if (!movie) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
-      <div 
-        className="relative w-full max-w-2xl bg-slate-950 border border-slate-700 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Backdrop Header (Sharp) */}
-        <div className="relative h-60 w-full overflow-hidden bg-black">
-          <img 
-            src={movie.backdrop_url || movie.poster_url} 
-            alt={movie.title}
-            className="w-full h-full object-cover object-center grayscale-[15%]"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-transparent" />
-
-          {/* Close Button (Sharp) */}
-          <button
-            onClick={onClose}
-            className="absolute top-3 right-3 p-2 bg-black/80 text-slate-300 hover:text-white border border-slate-700 transition-colors"
-            aria-label="Close dialog"
-          >
-            <X className="w-4 h-4" />
-          </button>
-
-          {/* Trailer Preview Link */}
-          {movie.trailer_url && (
-            <a
-              href={movie.trailer_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="absolute bottom-4 right-4 flex items-center space-x-2 px-3.5 py-1.5 bg-rvu-accent hover:bg-orange-600 text-white text-xs font-mono font-bold uppercase transition-colors"
-            >
-              <Play className="w-3.5 h-3.5 fill-current" />
-              <span>TRAILER</span>
-            </a>
-          )}
-
-          {/* Title & Tagline in Overlay */}
-          <div className="absolute bottom-4 left-4 right-32">
-            <span className="px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wider bg-rvu-ruby text-rose-100 mb-1.5 inline-block">
-              RATING {movie.age_rating} • CAMPUS ARCHIVE
+      <div className="relative w-full max-w-2xl bg-[#171513] border border-[#2a2622] p-6 sm:p-8 space-y-6 shadow-2xl">
+        {/* Modal Header */}
+        <div className="flex items-start justify-between border-b border-[#2a2622] pb-4">
+          <div className="space-y-1">
+            <span className="text-[10px] font-mono text-[#d83128] tracking-widest uppercase">
+              RVU FILM PRODUCTION SOCIETY // DOSSIER
             </span>
-            <h2 className="text-xl sm:text-2xl font-bold text-white uppercase tracking-tight leading-tight">
+            <h3 className="text-2xl font-serif font-bold text-[#eee9df] uppercase">
               {movie.title}
-            </h2>
+            </h3>
             {movie.tagline && (
-              <p className="text-xs text-slate-300 italic font-serif mt-0.5">
+              <p className="text-xs font-serif italic text-[#9f9b94]">
                 "{movie.tagline}"
               </p>
             )}
           </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 text-[#9f9b94] hover:text-white border border-transparent hover:border-[#2a2622] transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        {/* Content Body */}
-        <div className="p-5 space-y-4">
-          {/* Metadata Badges (Sharp) */}
-          <div className="flex flex-wrap gap-2 items-center text-xs font-mono">
-            <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-slate-900 border border-slate-800 text-slate-300">
-              <Clock className="w-3.5 h-3.5 text-rvu-accent" />
-              <span>{movie.duration_mins} MIN ({Math.floor(movie.duration_mins / 60)}H {movie.duration_mins % 60}M)</span>
-            </div>
-
-            <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-slate-900 border border-slate-800 text-slate-300">
-              <Tag className="w-3.5 h-3.5 text-amber-400" />
-              <span>{movie.genre}</span>
-            </div>
-
-            <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-slate-900 border border-slate-800 text-slate-300">
-              <Shield className="w-3.5 h-3.5 text-emerald-400" />
-              <span>RVU STUDENT PASS ELIGIBLE</span>
-            </div>
+        {/* Technical Attributes Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+          <div className="p-3 bg-[#0e0d0c] border border-[#2a2622]">
+            <span className="text-[10px] text-[#9f9b94] uppercase block">DURATION</span>
+            <span className="font-bold text-[#eee9df]">
+              {Math.floor(movie.duration_mins / 60)}h {movie.duration_mins % 60}m
+            </span>
           </div>
-
-          {/* Synopsis */}
-          <div>
-            <h3 className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500 mb-1">
-              ARCHIVE SYNOPSIS
-            </h3>
-            <p className="text-xs text-slate-200 leading-relaxed font-sans">
-              {movie.description}
-            </p>
+          <div className="p-3 bg-[#0e0d0c] border border-[#2a2622]">
+            <span className="text-[10px] text-[#9f9b94] uppercase block">RATING</span>
+            <span className="font-bold text-[#eee9df]">{movie.age_rating}</span>
           </div>
-
-          {/* Action Buttons (Sharp) */}
-          <div className="pt-3 border-t border-slate-900 flex items-center justify-end space-x-2">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-xs font-mono font-bold uppercase text-slate-400 hover:text-white bg-slate-900 border border-slate-800"
-            >
-              CLOSE
-            </button>
-            <button
-              onClick={() => {
-                onSelectMovie(movie);
-                onClose();
-              }}
-              className="px-5 py-2 text-xs font-mono font-bold uppercase text-white bg-rvu-accent hover:bg-orange-600 border border-rvu-accent transition-colors"
-            >
-              SELECT SHOWTIMES
-            </button>
+          <div className="p-3 bg-[#0e0d0c] border border-[#2a2622]">
+            <span className="text-[10px] text-[#9f9b94] uppercase block">GENRE</span>
+            <span className="font-bold text-[#eee9df] truncate block">{movie.genre}</span>
           </div>
+          <div className="p-3 bg-[#0e0d0c] border border-[#2a2622]">
+            <span className="text-[10px] text-[#9f9b94] uppercase block">FORMAT</span>
+            <span className="font-bold text-[#d83128]">35MM / 70MM</span>
+          </div>
+        </div>
+
+        {/* Synopsis Narrative */}
+        <div className="space-y-2">
+          <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-[#9f9b94]">
+            SYNOPSIS & CURATORIAL NOTE
+          </h4>
+          <p className="text-xs sm:text-sm text-[#eee9df] font-sans leading-relaxed">
+            {movie.description}
+          </p>
+        </div>
+
+        {/* Curatorial Compliance */}
+        <div className="p-3 bg-[#0e0d0c] border border-[#2a2622] flex items-center space-x-2 text-[11px] font-sans text-[#9f9b94]">
+          <ShieldCheck className="w-4 h-4 text-[#d83128] shrink-0" />
+          <span>Authorized screening licensed for RV University students and faculty members.</span>
+        </div>
+
+        {/* Modal Actions */}
+        <div className="pt-2 border-t border-[#2a2622] flex items-center justify-end space-x-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-[#0e0d0c] hover:bg-[#1e1b18] text-[#9f9b94] hover:text-[#eee9df] text-xs font-sans uppercase border border-[#2a2622] transition-colors"
+          >
+            CLOSE
+          </button>
+          <button
+            onClick={() => onSelectMovie(movie)}
+            className="px-5 py-2 bg-[#d83128] hover:bg-[#b8241c] text-white text-xs font-sans font-bold uppercase tracking-wider transition-colors border border-[#d83128]"
+          >
+            PROCEED TO SHOWTIMES
+          </button>
         </div>
       </div>
     </div>

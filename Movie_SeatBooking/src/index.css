@@ -7,51 +7,37 @@
 }
 
 body {
+  background-color: #0e0d0c;
+  color: #eee9df;
+  font-family: 'DM Sans', system-ui, sans-serif;
   margin: 0;
-  background-color: #080C14;
-  color: #F1F5F9;
-  font-family: 'Inter', system-ui, sans-serif;
+  padding: 0;
   overflow-x: hidden;
 }
 
-/* Sharp Editorial Cinema Scrollbar (No rounded corners) */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0B0F19;
+  background: #0e0d0c;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1E293B;
-  border-radius: 0;
+  background: #2a2622;
+  border-radius: 0px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #d83128;
 }
 
-/* Strict Rectilinear Editorial Panels (No rounded corners, no shadows) */
-.glass-panel {
-  background: rgba(17, 24, 39, 0.9);
-  border: 1px solid #1E293B;
-  border-radius: 0;
-}
-
-.glass-panel-glow {
-  background: rgba(26, 34, 52, 0.95);
-  border: 1px solid #EB6C36;
-  border-radius: 0;
-}
-
-/* Screen glow without blur */
-@keyframes screen-glow {
-  0%, 100% { opacity: 0.9; }
-  50% { opacity: 1; }
-}
-
-.animate-screen-glow {
-  animation: screen-glow 4s ease-in-out infinite;
+/* Print Styles */
+@media print {
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
 }

@@ -8,24 +8,34 @@ export default {
   theme: {
     extend: {
       colors: {
+        fps: {
+          black: '#0e0d0c',
+          surface: '#171513',
+          border: '#2a2622',
+          crimson: '#d83128',
+          'crimson-hover': '#b8241c',
+          paper: '#eee9df',
+          muted: '#9f9b94',
+          charcoal: '#22201d',
+          'charcoal-border': '#3a3530',
+          bronze: '#2d241e',
+          'bronze-border': '#5c4738',
+          sunken: '#131211',
+        },
         rvu: {
-          crimson: '#8B0000',
-          ruby: '#9B111E',
-          gold: '#D4AF37',
-          dark: '#0B0F19',
-          surface: '#111827',
-          card: '#1A2234',
-          border: '#243048',
-          accent: '#EB6C36',
+          crimson: '#d83128',
+          accent: '#d83128',
+          dark: '#0e0d0c',
+          surface: '#171513',
+          card: '#171513',
+          border: '#2a2622',
         }
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+        serif: ['"Playfair Display"', 'Georgia', 'serif'],
+        sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
+        mono: ['"DM Mono"', 'monospace'],
       },
-      animation: {
-        'pulse-subtle': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-      }
     },
   },
   plugins: [],
