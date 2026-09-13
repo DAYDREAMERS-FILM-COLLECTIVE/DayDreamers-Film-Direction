@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background-color: #080C14;
+  color: #F1F5F9;
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+}
+
+/* Custom Cinema Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0B0F19;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1E293B;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Glassmorphism utilities */
+.glass-panel {
+  background: rgba(17, 24, 39, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel-glow {
+  background: rgba(26, 34, 52, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(235, 108, 54, 0.25);
+  box-shadow: 0 0 25px -5px rgba(235, 108, 54, 0.15);
+}
+
+/* Glow animations */
+@keyframes screen-glow {
+  0%, 100% { opacity: 0.85; filter: drop-shadow(0 0 15px rgba(235, 108, 54, 0.4)); }
+  50% { opacity: 1; filter: drop-shadow(0 0 25px rgba(235, 108, 54, 0.65)); }
+}
+
+.animate-screen-glow {
+  animation: screen-glow 4s ease-in-out infinite;
+}
