@@ -1,56 +1,56 @@
 import React from 'react';
-import { X, Play, Clock, Sparkles, Shield, Tag, Calendar } from 'lucide-react';
+import { X, Play, Clock, Shield, Tag } from 'lucide-react';
 
 export function SynopsisModal({ movie, onClose, onSelectMovie }) {
   if (!movie) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
       <div 
-        className="relative w-full max-w-3xl overflow-hidden rounded-2xl bg-rvu-surface border border-slate-700/80 shadow-2xl shadow-black/80"
+        className="relative w-full max-w-2xl bg-slate-950 border border-slate-700 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Backdrop Image Header */}
-        <div className="relative h-64 sm:h-80 w-full overflow-hidden">
+        {/* Backdrop Header (Sharp) */}
+        <div className="relative h-60 w-full overflow-hidden bg-black">
           <img 
             src={movie.backdrop_url || movie.poster_url} 
             alt={movie.title}
-            className="w-full h-full object-cover object-center"
+            className="w-full h-full object-cover object-center grayscale-[15%]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-rvu-surface via-rvu-surface/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-transparent" />
 
-          {/* Close Button */}
+          {/* Close Button (Sharp) */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 rounded-full bg-black/60 text-slate-300 hover:text-white hover:bg-black/90 transition-colors"
+            className="absolute top-3 right-3 p-2 bg-black/80 text-slate-300 hover:text-white border border-slate-700 transition-colors"
             aria-label="Close dialog"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
 
-          {/* Trailer Preview Badge */}
+          {/* Trailer Preview Link */}
           {movie.trailer_url && (
             <a
               href={movie.trailer_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="absolute bottom-6 right-6 flex items-center space-x-2 px-4 py-2 rounded-full bg-rvu-accent hover:bg-orange-600 text-white text-xs font-bold transition-all shadow-lg hover:scale-105"
+              className="absolute bottom-4 right-4 flex items-center space-x-2 px-3.5 py-1.5 bg-rvu-accent hover:bg-orange-600 text-white text-xs font-mono font-bold uppercase transition-colors"
             >
-              <Play className="w-4 h-4 fill-current" />
-              <span>Watch Trailer</span>
+              <Play className="w-3.5 h-3.5 fill-current" />
+              <span>TRAILER</span>
             </a>
           )}
 
           {/* Title & Tagline in Overlay */}
-          <div className="absolute bottom-6 left-6 right-36">
-            <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-rvu-ruby text-rose-100 mb-2 inline-block">
-              {movie.age_rating} • CAMPUS SCREENING
+          <div className="absolute bottom-4 left-4 right-32">
+            <span className="px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wider bg-rvu-ruby text-rose-100 mb-1.5 inline-block">
+              RATING {movie.age_rating} • CAMPUS ARCHIVE
             </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-tight drop-shadow">
+            <h2 className="text-xl sm:text-2xl font-bold text-white uppercase tracking-tight leading-tight">
               {movie.title}
             </h2>
             {movie.tagline && (
-              <p className="text-xs sm:text-sm text-slate-300 italic font-serif mt-1">
+              <p className="text-xs text-slate-300 italic font-serif mt-0.5">
                 "{movie.tagline}"
               </p>
             )}
@@ -58,51 +58,51 @@ export function SynopsisModal({ movie, onClose, onSelectMovie }) {
         </div>
 
         {/* Content Body */}
-        <div className="p-6 space-y-6">
-          {/* Metadata Badges */}
-          <div className="flex flex-wrap gap-2.5 items-center text-xs">
-            <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800/90 border border-slate-700 text-slate-300">
+        <div className="p-5 space-y-4">
+          {/* Metadata Badges (Sharp) */}
+          <div className="flex flex-wrap gap-2 items-center text-xs font-mono">
+            <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-slate-900 border border-slate-800 text-slate-300">
               <Clock className="w-3.5 h-3.5 text-rvu-accent" />
-              <span>{movie.duration_mins} Minutes ({Math.floor(movie.duration_mins / 60)}h {movie.duration_mins % 60}m)</span>
+              <span>{movie.duration_mins} MIN ({Math.floor(movie.duration_mins / 60)}H {movie.duration_mins % 60}M)</span>
             </div>
 
-            <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800/90 border border-slate-700 text-slate-300">
+            <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-slate-900 border border-slate-800 text-slate-300">
               <Tag className="w-3.5 h-3.5 text-amber-400" />
               <span>{movie.genre}</span>
             </div>
 
-            <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800/90 border border-slate-700 text-slate-300">
+            <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-slate-900 border border-slate-800 text-slate-300">
               <Shield className="w-3.5 h-3.5 text-emerald-400" />
-              <span>RVU Student Entry Allowed</span>
+              <span>RVU STUDENT PASS ELIGIBLE</span>
             </div>
           </div>
 
           {/* Synopsis */}
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-              Synopsis
+            <h3 className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500 mb-1">
+              ARCHIVE SYNOPSIS
             </h3>
-            <p className="text-sm text-slate-200 leading-relaxed">
+            <p className="text-xs text-slate-200 leading-relaxed font-sans">
               {movie.description}
             </p>
           </div>
 
-          {/* Action Buttons */}
-          <div className="pt-4 border-t border-slate-800 flex items-center justify-end space-x-3">
+          {/* Action Buttons (Sharp) */}
+          <div className="pt-3 border-t border-slate-900 flex items-center justify-end space-x-2">
             <button
               onClick={onClose}
-              className="px-4 py-2.5 text-xs font-semibold rounded-xl text-slate-400 hover:text-white bg-slate-900 border border-slate-800"
+              className="px-4 py-2 text-xs font-mono font-bold uppercase text-slate-400 hover:text-white bg-slate-900 border border-slate-800"
             >
-              Close
+              CLOSE
             </button>
             <button
               onClick={() => {
                 onSelectMovie(movie);
                 onClose();
               }}
-              className="px-6 py-2.5 text-xs font-bold rounded-xl text-white bg-gradient-to-r from-rvu-ruby to-rvu-accent hover:from-rose-700 hover:to-orange-600 shadow-lg shadow-rvu-accent/20 transition-all hover:scale-[1.02]"
+              className="px-5 py-2 text-xs font-mono font-bold uppercase text-white bg-rvu-accent hover:bg-orange-600 border border-rvu-accent transition-colors"
             >
-              Select Showtimes
+              SELECT SHOWTIMES
             </button>
           </div>
         </div>

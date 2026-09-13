@@ -4,7 +4,7 @@ import { MovieCatalog } from './components/MovieCatalog.jsx';
 import { ShowtimePicker } from './components/ShowtimePicker.jsx';
 import { fetchMovies, fetchShowtimes, isSupabaseConfigured } from './lib/supabase.js';
 import { getSessionId, resetSessionId } from './lib/session.js';
-import { Sparkles, Armchair, ChevronRight, ShieldAlert, CheckCircle2, RotateCcw, QrCode } from 'lucide-react';
+import { Armchair, ChevronRight, RotateCcw, QrCode } from 'lucide-react';
 
 export default function App() {
   const [currentView, setCurrentView] = useState('browse'); // 'browse' | 'verify'
@@ -61,61 +61,52 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-rvu-dark text-slate-100 selection:bg-rvu-accent selection:text-white">
+    <div className="min-h-screen flex flex-col bg-[#080C14] text-slate-100 selection:bg-rvu-accent selection:text-white">
       {/* Top Navigation */}
       <Navbar currentView={currentView} onSelectView={setCurrentView} />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-10">
         {currentView === 'verify' ? (
-          /* Door Scanner Preview / Placeholder until Phase 6 */
-          <div className="max-w-2xl mx-auto py-12 px-6 rounded-2xl bg-rvu-surface border border-slate-800 text-center space-y-4">
-            <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-amber-500 to-rvu-accent flex items-center justify-center text-white shadow-xl shadow-amber-500/20">
-              <QrCode className="w-7 h-7" />
+          /* Door Scanner Preview (Sharp) */
+          <div className="max-w-xl mx-auto py-10 px-6 bg-slate-950 border border-slate-800 text-center space-y-4">
+            <div className="w-12 h-12 mx-auto bg-slate-900 border border-slate-700 flex items-center justify-center text-white">
+              <QrCode className="w-6 h-6 text-rvu-accent" />
             </div>
-            <h2 className="text-2xl font-extrabold text-white">Auditorium Door Entry Scanner</h2>
-            <p className="text-sm text-slate-300 max-w-md mx-auto">
-              Staff verification route for scanning student QR passes and verifying USNs. Full camera barcode scanner and check-in engine will be activated in <span className="text-rvu-accent font-semibold">Phase 6</span>.
+            <h2 className="text-lg font-bold font-mono uppercase tracking-wider text-white">Auditorium Entry Verification</h2>
+            <p className="text-xs text-slate-400 font-mono max-w-md mx-auto leading-relaxed">
+              Ticket scanning portal for venue staff. Barcode camera decoding and one-time admission records will be integrated in Phase 6.
             </p>
-            <div className="pt-4">
+            <div className="pt-2">
               <button
                 onClick={() => setCurrentView('browse')}
-                className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white transition-colors"
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-xs font-mono font-bold uppercase text-white border border-slate-700 transition-colors"
               >
-                Back to Movie Screenings
+                RETURN TO SCREENINGS
               </button>
             </div>
           </div>
         ) : (
-          /* Browse & Discovery Flow */
+          /* Complete Website Web Skeleton */
           <>
-            {/* Hero Festival Banner */}
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-rvu-ruby/40 via-slate-900 to-rvu-accent/20 border border-slate-800 p-6 sm:p-10 shadow-2xl">
-              <div className="relative z-10 max-w-2xl space-y-4">
-                <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-rvu-ruby/40 border border-rvu-ruby/60 text-rose-200 text-xs font-bold tracking-wide">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                  <span>RV UNIVERSITY CAMPUS SCREENINGS 2026</span>
-                </div>
-                <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
-                  Cinema on Campus, <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-rvu-accent">
-                    Real-Time Seat Booking.
-                  </span>
-                </h1>
-                <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
-                  Reserve your seat across Campus Auditorium 1 &amp; 2 with live 5-minute atomic holds, verified RVU student identity, and instant digital QR entry passes.
-                </p>
+            {/* Campus Screening Schedule Banner (Sharp, Rectilinear) */}
+            <div className="border border-slate-800 bg-slate-950 p-6 sm:p-8 space-y-3">
+              <div className="flex items-center space-x-2 text-[10px] font-mono font-bold uppercase tracking-widest text-rvu-accent">
+                <span>RV UNIVERSITY FILM SOCIETY • CAMPUS SCREENINGS 2026</span>
               </div>
-
-              {/* Decorative Glow */}
-              <div className="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-rvu-accent/10 blur-3xl pointer-events-none" />
+              <h1 className="text-2xl sm:text-4xl font-extrabold uppercase tracking-tight text-white leading-tight">
+                Campus Cinema Booking Engine
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-300 font-mono max-w-3xl leading-relaxed">
+                Live screening schedule for Campus Auditorium 1 (Main Stage) and Auditorium 2 (Film Lab). All seat reservations require strict RV University USN verification and @rvu.edu.in student credentials.
+              </p>
             </div>
 
             {/* Movie Catalog */}
             {loading ? (
-              <div className="py-24 text-center space-y-3">
-                <div className="w-10 h-10 border-2 border-rvu-accent border-t-transparent rounded-full animate-spin mx-auto" />
-                <p className="text-xs text-slate-400 font-mono">Loading campus screenings...</p>
+              <div className="py-20 text-center space-y-2 border border-slate-800 bg-slate-950">
+                <div className="w-6 h-6 border-2 border-rvu-accent border-t-transparent animate-spin mx-auto" />
+                <p className="text-xs text-slate-400 font-mono uppercase">Retrieving screening schedule...</p>
               </div>
             ) : (
               <>
@@ -135,34 +126,34 @@ export default function App() {
                   />
                 )}
 
-                {/* Next Step Stage Indicator (Phase 3 Hook) */}
+                {/* Phase 3 Seat Selection CTA Dock (Sharp) */}
                 {selectedMovie && selectedShowtime && (
-                  <div className="sticky bottom-4 z-40 p-4 rounded-2xl bg-rvu-card/95 border border-rvu-accent/40 shadow-2xl backdrop-blur-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-center space-x-3.5">
-                      <div className="p-3 rounded-xl bg-rvu-accent/20 border border-rvu-accent/30 text-rvu-accent">
-                        <Armchair className="w-6 h-6" />
+                  <div className="sticky bottom-4 z-40 p-4 bg-slate-950 border-2 border-rvu-accent shadow-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2.5 bg-slate-900 border border-slate-800 text-rvu-accent">
+                        <Armchair className="w-5 h-5" />
                       </div>
                       <div>
-                        <div className="flex items-center space-x-2 text-xs text-amber-300 font-bold uppercase tracking-wider">
-                          <span>READY FOR PHASE 3: SEAT SELECTION</span>
+                        <div className="text-[10px] font-mono text-amber-400 font-bold uppercase tracking-wider">
+                          READY FOR SEAT SELECTION
                         </div>
-                        <h4 className="text-sm sm:text-base font-bold text-white">
+                        <h4 className="text-sm font-bold font-mono text-white uppercase">
                           {selectedMovie.title} • {selectedShowtime.auditorium_name}
                         </h4>
-                        <p className="text-xs text-slate-400">
-                          {new Date(selectedShowtime.start_time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })} • Regular ₹{selectedShowtime.price_regular} / VIP ₹{selectedShowtime.price_vip}
+                        <p className="text-[11px] font-mono text-slate-400">
+                          {new Date(selectedShowtime.start_time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })} • REGULAR ₹{selectedShowtime.price_regular} / VIP ₹{selectedShowtime.price_vip}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-3">
+                    <div>
                       <button
-                        className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-rvu-ruby to-rvu-accent hover:from-rose-700 hover:to-orange-600 text-white text-xs font-extrabold shadow-lg shadow-rvu-accent/25 flex items-center justify-center space-x-2 transition-all hover:scale-105"
+                        className="w-full sm:w-auto px-5 py-2.5 bg-rvu-accent hover:bg-orange-600 text-white text-xs font-mono font-bold uppercase tracking-wider border border-rvu-accent flex items-center justify-center space-x-2 transition-colors"
                         onClick={() => {
                           alert(`Selected: ${selectedMovie.title} at ${selectedShowtime.auditorium_name}.\nPhase 2 Complete! Awaiting confirmation to unlock Phase 3: Interactive Seat Grid & 5-minute Hold Engine.`);
                         }}
                       >
-                        <span>Proceed to Seat Grid</span>
+                        <span>OPEN SEAT MAP</span>
                         <ChevronRight className="w-4 h-4" />
                       </button>
                     </div>
@@ -174,22 +165,22 @@ export default function App() {
         )}
       </main>
 
-      {/* Footer & Session Diagnostics */}
-      <footer className="mt-16 border-t border-slate-900 bg-slate-950 py-8 text-xs text-slate-500">
+      {/* Footer & Session Diagnostics (Sharp) */}
+      <footer className="mt-16 border-t border-slate-900 bg-[#05080E] py-8 text-xs text-slate-500 font-mono">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
-            <p className="font-semibold text-slate-400">RV University Campus Cinema Booking System</p>
-            <p className="text-[11px] text-slate-600">Built for student screenings • Strict @rvu.edu.in verification</p>
+            <p className="font-bold text-slate-300 uppercase tracking-wider">RV UNIVERSITY CAMPUS CINEMA PLATFORM</p>
+            <p className="text-[11px] text-slate-500 mt-0.5">Authorized screenings only • Official university credentials required</p>
           </div>
 
           {/* Session Diagnostics */}
-          <div className="flex items-center space-x-3 text-[11px] font-mono bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">
-            <span className="text-slate-400">Session ID:</span>
+          <div className="flex items-center space-x-3 text-[11px] bg-slate-950 px-3 py-1.5 border border-slate-800">
+            <span className="text-slate-400">SESSION:</span>
             <span className="text-amber-400 truncate max-w-[140px]" title={sessionId}>{sessionId}</span>
             <button
               onClick={handleResetSession}
-              className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
-              title="Generate fresh Session UUID (tests race conditions)"
+              className="p-1 text-slate-400 hover:text-white transition-colors"
+              title="Generate fresh Session UUID"
             >
               <RotateCcw className="w-3 h-3" />
             </button>
