@@ -6,26 +6,26 @@ import { usePathname } from 'next/navigation';
 import { useShowcaseStore } from '@/store/useShowcaseStore';
 
 export const DogstudioTransitionWipe: React.FC = () => {
-  const overlayRef = useRef<HTMLDivElement>(null);
+  const curtainRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
-  const isPageTransitioning = useShowcaseStore((s) => s.isPageTransitioning);
   const setIsPageTransitioning = useShowcaseStore((s) => s.setIsPageTransitioning);
   const setIsBookingRoute = useShowcaseStore((s) => s.setIsBookingRoute);
 
-  // Detect route changes and trigger reverse wipe reveal
+  // Smooth curtain slide-out when the new page route arrives
   useEffect(() => {
     setIsBookingRoute(pathname.includes('/book') || pathname.includes('/film/'));
 
-    if (overlayRef.current) {
-      // Reverse wipe: scale down towards the top
+    if (curtainRef.current) {
       anime({
-        targets: overlayRef.current,
-        scaleY: [1, 0],
-        transformOrigin: ['50% 0%', '50% 0%'],
-        easing: 'easeInOutCubic',
-        duration: 800,
+        targets: curtainRef.current,
+        translateY: ['0%', '-100%'],
+        easing: 'cubicBezier(0.77, 0, 0.175, 1)',
+        duration: 900,
         complete: () => {
           setIsPageTransitioning(false);
+          if (curtainRef.current) {
+            curtainRef.current.style.transform = 'translateY(100%)';
+          }
         },
       });
     }
@@ -33,12 +33,19 @@ export const DogstudioTransitionWipe: React.FC = () => {
 
   return (
     <div
-      ref={overlayRef}
-      className="fixed inset-0 z-50 pointer-events-none bg-[#060814] flex flex-col justify-end"
-      style={{ transform: 'scaleY(0)', transformOrigin: 'bottom' }}
+      id="dogstudio-curtain"
+      ref={curtainRef}
+      className="fixed inset-0 z-50 pointer-events-none bg-[#060814] flex flex-col justify-between"
+      style={{ transform: 'translateY(100%)' }}
     >
-      {/* Editorial Crimson Accent Wipe Edge */}
-      <div className="w-full h-1 bg-[#C92A42] shadow-[0_0_30px_#C92A42]" />
+      {/* Top subtle crimson accent line */}
+      <div className="w-full h-[3px] bg-[#C92A42] shadow-[0_0_20px_#C92A42]" />
+      <div className="flex-1 flex items-center justify-center">
+        <span className="font-serif text-2xl tracking-widest text-[#E8E3D9]/20 uppercase">
+          FPS ARCHIVE
+        </span>
+      </div>
+      <div className="w-full h-[1px] bg-white/[0.04]" />
     </div>
   );
 };

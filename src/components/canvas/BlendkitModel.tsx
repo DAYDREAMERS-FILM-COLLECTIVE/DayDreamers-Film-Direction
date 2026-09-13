@@ -10,7 +10,7 @@ export const BlendkitModel: React.FC = () => {
   const { scene } = useGLTF('/models/cinema_lens.glb');
   const groupRef = useRef<THREE.Group>(null);
 
-  // Clone and traverse scene to dynamically apply ethereal MeshPhysicalMaterial properties
+  // Traverse and apply high-fidelity studio materials with physical glass
   const clonedScene = useMemo(() => {
     const clone = scene.clone(true);
     clone.traverse((child) => {
@@ -19,43 +19,46 @@ export const BlendkitModel: React.FC = () => {
         const name = mesh.name.toLowerCase();
 
         if (name.includes('lens') || name.includes('glass') || name.includes('prism')) {
-          // Ethereal floating optical glass with transmission
+          // Physical optical glass with transmission, chromatic reflections, and realistic refraction
           mesh.material = new THREE.MeshPhysicalMaterial({
-            color: new THREE.Color('#E8E3D9'),
-            transmission: 0.95,
-            roughness: 0.08,
-            ior: 1.58,
-            thickness: 1.4,
+            color: new THREE.Color('#ffffff'),
+            transmission: 0.92,
+            roughness: 0.12,
+            ior: 1.5,
+            thickness: 1.2,
             transparent: true,
             opacity: 1,
-            reflectivity: 0.8,
-            clearcoat: 0.5,
-            clearcoatRoughness: 0.1,
+            reflectivity: 0.85,
+            clearcoat: 0.8,
+            clearcoatRoughness: 0.08,
+            specularIntensity: 1.0,
+            specularColor: new THREE.Color('#ffffff'),
           });
         } else if (name.includes('flange') || name.includes('mount')) {
-          // Muted gold brass mount
+          // Brushed brass/gold cinema mount
           mesh.material = new THREE.MeshStandardMaterial({
             color: new THREE.Color('#D4AF37'),
-            roughness: 0.28,
-            metalness: 0.9,
+            roughness: 0.3,
+            metalness: 0.92,
           });
-        } else if (name.includes('ring') || name.includes('iris')) {
-          // Crimson accent ring
+        } else if (name.includes('ring') || name.includes('iris') || name.includes('focal')) {
+          // Muted crimson anodized knurled focus collar
           mesh.material = new THREE.MeshPhysicalMaterial({
-            color: new THREE.Color('#C92A42'),
-            roughness: 0.2,
-            metalness: 0.85,
-            clearcoat: 0.4,
+            color: new THREE.Color('#9e2235'),
+            roughness: 0.25,
+            metalness: 0.8,
+            clearcoat: 0.3,
           });
         } else {
-          // Deep midnight chassis
-          mesh.material = new THREE.MeshPhysicalMaterial({
-            color: new THREE.Color('#0e1322'),
-            roughness: 0.35,
-            metalness: 0.75,
-            clearcoat: 0.2,
+          // Satin dark titanium camera/lens chassis with soft specular sheen
+          mesh.material = new THREE.MeshStandardMaterial({
+            color: new THREE.Color('#1c202a'),
+            roughness: 0.38,
+            metalness: 0.78,
           });
         }
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
       }
     });
     return clone;
@@ -64,43 +67,38 @@ export const BlendkitModel: React.FC = () => {
   useFrame((state, delta) => {
     if (!groupRef.current) return;
 
-    // Transient store read outside React loop
     const { activeMovie, normalizedScroll, isPageTransitioning, isBookingRoute } = useShowcaseStore.getState();
     const damping = 1 - Math.exp(-4.5 * delta);
 
-    // Dynamic rotation targets based on active film
     const [targetRotX, targetRotY, targetRotZ] = activeMovie.sceneConfig.modelRotation;
 
-    // Floating idle oscillation
     const elapsed = state.clock.getElapsedTime();
-    const floatY = Math.sin(elapsed * 0.8) * 0.12;
-    const floatRotZ = Math.cos(elapsed * 0.5) * 0.04;
-
-    // Mouse parallax offset
-    const mouseX = state.pointer.x * 0.35;
-    const mouseY = state.pointer.y * 0.25;
+    const floatY = Math.sin(elapsed * 0.7) * 0.08;
+    const mouseX = state.pointer.x * 0.25;
+    const mouseY = state.pointer.y * 0.2;
 
     if (isBookingRoute || isPageTransitioning) {
-      // Dogstudio transition: rotate 90 degrees and push deep into the background
-      const targetPos = new THREE.Vector3(1.8, -0.4, -3.2);
+      // In booking mode: pushed deep into background with subtle rotation
+      const targetPos = new THREE.Vector3(1.2, -0.3, -2.5);
       groupRef.current.position.lerp(targetPos, damping);
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, 0.2, damping);
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, Math.PI * 0.5 + mouseX * 0.2, damping);
-      groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, -0.1, damping);
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, 0.15, damping);
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, Math.PI * 0.45 + mouseX * 0.1, damping);
+      groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, -0.05, damping);
     } else {
-      // Showcase position mapped to scroll
-      const scrollRotY = normalizedScroll * Math.PI * 1.5;
-      const targetPos = new THREE.Vector3(0, floatY, 0);
+      // Center-right heroic staging with rich visible detail
+      // On desktop: position prominently at center-right [0.8, floatY, 0.2]
+      const scrollRot = normalizedScroll * Math.PI * 1.2;
+      const targetPos = new THREE.Vector3(0.65, floatY, 0.1);
 
       groupRef.current.position.lerp(targetPos, damping);
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetRotX + mouseY, damping);
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetRotY + scrollRotY + mouseX, damping);
-      groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, targetRotZ + floatRotZ, damping);
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetRotX + mouseY * 0.5, damping);
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetRotY + scrollRot + mouseX * 0.5, damping);
+      groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, targetRotZ, damping);
     }
   });
 
   return (
-    <group ref={groupRef} scale={[1.2, 1.2, 1.2]}>
+    <group ref={groupRef} scale={[1.85, 1.85, 1.85]}>
       <primitive object={clonedScene} />
     </group>
   );

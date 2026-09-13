@@ -25,49 +25,52 @@ export const ParametricSeatMap: React.FC<ParametricSeatMapProps> = ({ seats, cli
   };
 
   return (
-    <div className="w-full flex flex-col items-center select-none py-2">
-      {/* 1. Curved Cinema Screen Arc */}
-      <div className="w-full max-w-xl flex flex-col items-center mb-8 relative">
-        <svg viewBox="0 0 600 50" className="w-full h-12 overflow-visible">
+    <div className="w-full flex flex-col items-center select-none py-4">
+      {/* 1. Minimal Editorial Screen Arc */}
+      <div className="w-full max-w-3xl flex flex-col items-center mb-12 relative">
+        <svg viewBox="0 0 800 60" className="w-full h-14 overflow-visible">
           <defs>
-            <linearGradient id="editorialScreenGlow" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#C92A42" stopOpacity="0.1" />
-              <stop offset="50%" stopColor="#E8E3D9" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#C92A42" stopOpacity="0.1" />
+            <linearGradient id="minimalScreenGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#E8E3D9" stopOpacity="0.05" />
+              <stop offset="50%" stopColor="#E8E3D9" stopOpacity="0.75" />
+              <stop offset="100%" stopColor="#E8E3D9" stopOpacity="0.05" />
             </linearGradient>
           </defs>
           <path
-            d="M 40 40 Q 300 0 560 40"
+            d="M 60 50 Q 400 0 740 50"
             fill="none"
-            stroke="url(#editorialScreenGlow)"
-            strokeWidth="3.0"
+            stroke="url(#minimalScreenGlow)"
+            strokeWidth="2.5"
             strokeLinecap="round"
           />
         </svg>
-        <span className="text-[10px] font-mono text-[#E8E3D9]/60 tracking-[0.3em] uppercase -mt-3">
-          ANAMORPHIC ACOUSTIC PROJECTION SCREEN // 2.39:1
+        <span className="text-[11px] font-sans tracking-[0.4em] uppercase text-[#E8E3D9]/40 -mt-4 font-light">
+          SCREEN
         </span>
       </div>
 
-      {/* 2. Parametric Curved SVG Seating Grid */}
-      <div className="relative w-full max-w-2xl flex justify-center overflow-x-auto pb-4">
-        <svg viewBox="0 0 720 340" className="w-full min-w-[620px] max-w-[700px] h-auto overflow-visible">
+      {/* 2. Prominently Scaled SVG Curved Seating Matrix (65-75% Viewport Width) */}
+      <div className="relative w-full max-w-4xl flex justify-center overflow-x-auto pb-6">
+        <svg
+          viewBox="0 0 940 440"
+          className="w-full min-w-[760px] max-w-[920px] h-auto overflow-visible"
+        >
           {AUDITORIUM_CONFIG.tiers.map((tier, tierIdx) => {
             return tier.rows.map((rowChar, rowLocalIdx) => {
-              const radius = tier.curveRadius + rowLocalIdx * 42;
+              const radius = tier.curveRadius * 1.08 + rowLocalIdx * 52;
               const totalCols = tier.seatsPerRow;
-              const angularSpan = 0.82;
-              const cx = 360;
-              const cy = -70;
+              const angularSpan = 0.84;
+              const cx = 470;
+              const cy = -90;
 
               return (
                 <g key={rowChar}>
-                  {/* Row Label (Left) */}
+                  {/* Row Letter (Left) */}
                   <text
-                    x={cx + radius * Math.sin(-angularSpan / 2 - 0.05)}
-                    y={cy + radius * Math.cos(-angularSpan / 2 - 0.05) - tier.curveRadius + 120}
+                    x={cx + radius * Math.sin(-angularSpan / 2 - 0.045)}
+                    y={cy + radius * Math.cos(-angularSpan / 2 - 0.045) - tier.curveRadius * 1.08 + 140}
                     fill="#85817a"
-                    fontSize="11"
+                    fontSize="13"
                     fontFamily="serif"
                     textAnchor="end"
                     dominantBaseline="middle"
@@ -81,12 +84,12 @@ export const ParametricSeatMap: React.FC<ParametricSeatMapProps> = ({ seats, cli
                     const seatId = `${rowChar}-${String(seatNumber).padStart(2, '0')}`;
                     const seatData = seatMap.get(seatId);
 
-                    const aisleOffset = seatNumber > 5 ? 0.04 : -0.04;
+                    const aisleOffset = seatNumber > 5 ? 0.038 : -0.038;
                     const normalizedCol = (colIdx - (totalCols - 1) / 2) / totalCols;
                     const angle = normalizedCol * angularSpan + aisleOffset;
 
                     const x = cx + radius * Math.sin(angle);
-                    const y = cy + radius * Math.cos(angle) - tier.curveRadius + 120;
+                    const y = cy + radius * Math.cos(angle) - tier.curveRadius * 1.08 + 140;
                     const deg = (angle * 180) / Math.PI;
 
                     const isSelected = selectedSeats.includes(seatId);
@@ -96,23 +99,23 @@ export const ParametricSeatMap: React.FC<ParametricSeatMapProps> = ({ seats, cli
                     const isBooked = status === 'BOOKED';
                     const isAvailable = status === 'AVAILABLE' || isHeldByMe;
 
-                    let fill = '#0f1424';
-                    let stroke = 'rgba(232, 227, 217, 0.2)';
+                    let fill = '#0d111d';
+                    let stroke = 'rgba(232, 227, 217, 0.28)';
                     let cursor = 'pointer';
 
                     if (isBooked) {
-                      fill = '#120E15';
-                      stroke = 'rgba(232, 227, 217, 0.06)';
+                      fill = '#141118';
+                      stroke = 'rgba(232, 227, 217, 0.05)';
                       cursor = 'not-allowed';
                     } else if (isHeldByOther) {
-                      fill = '#38160d';
-                      stroke = '#C92A42';
+                      fill = '#2c1e14';
+                      stroke = '#D4AF37';
                       cursor = 'not-allowed';
                     } else if (isSelected) {
-                      fill = '#C92A42'; // Dogstudio Crimson
+                      fill = '#C92A42'; // Velvet Crimson
                       stroke = '#E8E3D9';
                     } else if (tier.id === 'tier-director') {
-                      stroke = '#D4AF37'; // Muted Gold
+                      stroke = '#D4AF37'; // Muted Gold VIP
                     }
 
                     return (
@@ -123,36 +126,38 @@ export const ParametricSeatMap: React.FC<ParametricSeatMapProps> = ({ seats, cli
                         style={{ cursor }}
                         className="group"
                       >
-                        {/* Seat Base */}
+                        {/* Seat Base - Scaled Up for Prominence */}
                         <rect
-                          x="-11"
-                          y="-11"
-                          width="22"
-                          height="22"
-                          rx="4"
+                          x="-14"
+                          y="-14"
+                          width="28"
+                          height="28"
+                          rx="6"
                           fill={fill}
                           stroke={stroke}
-                          strokeWidth={isSelected ? '2' : '1.2'}
+                          strokeWidth={isSelected ? '2.2' : '1.4'}
                           className="transition-all duration-200 group-hover:stroke-[#E8E3D9]"
                         />
-                        {/* Headrest Pill */}
+
+                        {/* Minimal Headrest Bar */}
                         <rect
-                          x="-8"
-                          y="-14"
-                          width="16"
+                          x="-10"
+                          y="-18"
+                          width="20"
                           height="4"
                           rx="2"
                           fill={stroke}
-                          opacity={isBooked ? '0.2' : '0.6'}
+                          opacity={isBooked ? '0.15' : '0.5'}
                         />
-                        {/* Number */}
+
+                        {/* Seat Number */}
                         <text
                           x="0"
                           y="1"
-                          fill={isSelected ? '#E8E3D9' : isBooked ? '#55524d' : '#cbd5e1'}
-                          fontSize="8"
-                          fontFamily="monospace"
-                          fontWeight={isSelected ? 'bold' : 'normal'}
+                          fill={isSelected ? '#E8E3D9' : isBooked ? '#44413c' : '#E8E3D9'}
+                          fontSize="9"
+                          fontFamily="sans-serif"
+                          fontWeight={isSelected ? '600' : '400'}
                           textAnchor="middle"
                           dominantBaseline="middle"
                         >
@@ -162,12 +167,12 @@ export const ParametricSeatMap: React.FC<ParametricSeatMapProps> = ({ seats, cli
                     );
                   })}
 
-                  {/* Row Label (Right) */}
+                  {/* Row Letter (Right) */}
                   <text
-                    x={cx + radius * Math.sin(angularSpan / 2 + 0.05)}
-                    y={cy + radius * Math.cos(angularSpan / 2 + 0.05) - tier.curveRadius + 120}
+                    x={cx + radius * Math.sin(angularSpan / 2 + 0.045)}
+                    y={cy + radius * Math.cos(angularSpan / 2 + 0.045) - tier.curveRadius * 1.08 + 140}
                     fill="#85817a"
-                    fontSize="11"
+                    fontSize="13"
                     fontFamily="serif"
                     textAnchor="start"
                     dominantBaseline="middle"
@@ -181,27 +186,27 @@ export const ParametricSeatMap: React.FC<ParametricSeatMapProps> = ({ seats, cli
         </svg>
       </div>
 
-      {/* 3. Legend */}
-      <div className="flex flex-wrap items-center justify-center gap-6 pt-3 text-xs font-mono text-zinc-400 border-t border-white/10 w-full max-w-xl">
-        <div className="flex items-center gap-2">
-          <span className="w-3.5 h-3.5 rounded border border-white/30 bg-[#0f1424]" />
+      {/* 3. Refined Editorial Legend */}
+      <div className="flex flex-wrap items-center justify-center gap-8 pt-4 text-xs font-sans tracking-wider text-[#E8E3D9]/60 border-t border-white/[0.08] w-full max-w-2xl">
+        <div className="flex items-center gap-2.5">
+          <span className="w-3.5 h-3.5 rounded border border-white/30 bg-[#0d111d]" />
           <span>Available</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <span className="w-3.5 h-3.5 rounded border border-[#E8E3D9] bg-[#C92A42]" />
           <span className="text-[#E8E3D9]">Selected</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="w-3.5 h-3.5 rounded border border-[#D4AF37] bg-[#0f1424]" />
+        <div className="flex items-center gap-2.5">
+          <span className="w-3.5 h-3.5 rounded border border-[#D4AF37] bg-[#0d111d]" />
           <span className="text-[#D4AF37]">VIP Box</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="w-3.5 h-3.5 rounded border border-[#C92A42] bg-[#38160d]" />
-          <span className="text-[#C92A42]">Locked (Held)</span>
+        <div className="flex items-center gap-2.5">
+          <span className="w-3.5 h-3.5 rounded border border-[#D4AF37] bg-[#2c1e14]" />
+          <span className="text-[#D4AF37]/80">Held</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="w-3.5 h-3.5 rounded border border-white/5 bg-[#120E15] opacity-60" />
-          <span className="text-zinc-600">Booked</span>
+        <div className="flex items-center gap-2.5">
+          <span className="w-3.5 h-3.5 rounded border border-white/5 bg-[#141118] opacity-50" />
+          <span className="text-zinc-600">Reserved</span>
         </div>
       </div>
     </div>

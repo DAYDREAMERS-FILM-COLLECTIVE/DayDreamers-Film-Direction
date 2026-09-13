@@ -13,15 +13,14 @@ export function useDogstudioNavigate() {
     sound.playShutterClick();
     setIsPageTransitioning(true);
 
-    const overlay = document.querySelector('.fixed.inset-0.z-50.bg-\\[\\#060814\\]') || document.querySelector('[style*="transform-origin"]');
+    const curtain = document.getElementById('dogstudio-curtain');
 
-    if (overlay) {
+    if (curtain) {
       anime({
-        targets: overlay,
-        scaleY: [0, 1],
-        transformOrigin: ['50% 100%', '50% 100%'],
-        duration: 750,
-        easing: 'easeInOutCubic',
+        targets: curtain,
+        translateY: ['100%', '0%'],
+        duration: 850,
+        easing: 'cubicBezier(0.77, 0, 0.175, 1)',
         complete: () => {
           router.push(href);
         },

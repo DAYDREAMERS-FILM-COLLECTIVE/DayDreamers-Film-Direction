@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { MOVIE_CATALOG, MovieItem } from '@/config/movies.schema';
 import { useShowcaseStore } from '@/store/useShowcaseStore';
@@ -11,7 +11,7 @@ import { CheckoutDrawer } from '@/components/booking/CheckoutDrawer';
 import { HoldTimerDock } from '@/components/booking/HoldTimerDock';
 import { TicketPass35mm } from '@/components/booking/TicketPass35mm';
 import { useDogstudioNavigate } from '@/hooks/useDogstudioNavigate';
-import { ArrowLeft, Film, Sparkles, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { sound } from '@/lib/audio';
 
 export default function FilmBookingPage() {
@@ -55,84 +55,52 @@ export default function FilmBookingPage() {
   };
 
   return (
-    <main className="relative min-h-screen pt-28 pb-20 px-6 md:px-16 flex flex-col justify-between">
-      {/* Top Breadcrumb & Return Action */}
-      <div className="max-w-5xl mx-auto w-full flex items-center justify-between pb-6 border-b border-white/[0.08]">
+    <main className="relative min-h-screen pt-24 pb-24 px-6 md:px-12 flex flex-col justify-between">
+      {/* Editorial Top Bar */}
+      <div className="max-w-6xl mx-auto w-full flex items-center justify-between pb-6 border-b border-white/[0.06]">
         <button
           onClick={handleReturn}
-          className="px-4 py-2 rounded-lg border border-white/10 hover:border-white/30 text-xs font-mono text-[#E8E3D9] transition flex items-center gap-2 bg-[#0c0f1d]/70 backdrop-blur-md"
+          className="group flex items-center gap-2 text-xs font-sans tracking-widest uppercase text-[#E8E3D9]/70 hover:text-[#E8E3D9] transition-colors"
         >
-          <ArrowLeft className="w-3.5 h-3.5 text-[#C92A42]" />
-          <span>RETURN TO SHOWCASE</span>
+          <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform text-[#C92A42]" />
+          <span>Back to Archive</span>
         </button>
 
-        <div className="flex items-center gap-3 text-xs font-mono text-zinc-400">
-          <span className="w-2 h-2 rounded-full bg-[#C92A42] animate-ping" />
-          <span>LIVE RESERVATION CHANNEL</span>
+        <div className="text-right">
+          <h2 className="font-serif text-xl tracking-tight text-[#E8E3D9]">
+            {movie.title}
+          </h2>
+          <span className="text-[11px] font-sans tracking-wider text-[#D4AF37] block">
+            {selectedShowtime.timeLabel} &bull; {selectedShowtime.venue}
+          </span>
         </div>
       </div>
 
-      {/* Main Reservation Chamber */}
-      <div className="flex-1 max-w-5xl mx-auto w-full py-10 flex flex-col items-center justify-center">
+      {/* Main Seating Chamber */}
+      <div className="flex-1 max-w-6xl mx-auto w-full py-8 flex flex-col items-center justify-center">
         {confirmedTickets ? (
           <TicketPass35mm tickets={confirmedTickets} onDone={handleReturn} />
+        ) : loading ? (
+          <div className="flex flex-col items-center justify-center py-28 space-y-4 font-sans text-xs text-[#E8E3D9]/50">
+            <Loader2 className="w-6 h-6 text-[#C92A42] animate-spin" />
+            <span className="tracking-widest uppercase">Loading Seating Matrix...</span>
+          </div>
         ) : (
-          <div className="w-full space-y-8">
-            {/* Editorial Heading */}
-            <div className="text-center space-y-3">
-              <div className="inline-flex items-center gap-2 text-xs font-mono text-[#D4AF37] uppercase tracking-[0.2em]">
-                <Sparkles className="w-3.5 h-3.5" />
-                DOGSTUDIO PARAMETRIC SEAT ALLOCATION
-              </div>
-              <h1 className="text-3xl sm:text-5xl font-serif tracking-wide text-[#E8E3D9]">
-                {movie.title}
-              </h1>
-              <p className="text-xs sm:text-sm font-mono text-zinc-400">
-                {selectedShowtime.timeLabel} &bull; {selectedShowtime.venue} &bull; 100% FREE ADMISSION
-              </p>
-
-              {/* Showtime Pill Selector */}
-              <div className="flex justify-center gap-2 pt-2">
-                {movie.showtimes.map((st) => (
-                  <button
-                    key={st.id}
-                    onClick={() => {
-                      setSelectedShowtime(st);
-                      sound.playShutterClick();
-                    }}
-                    className={`px-3 py-1.5 rounded text-xs font-mono border transition ${
-                      selectedShowtime.id === st.id
-                        ? 'border-[#C92A42] bg-[#C92A42]/20 text-[#E8E3D9]'
-                        : 'border-white/10 text-zinc-400 hover:border-white/30'
-                    }`}
-                  >
-                    {st.timeLabel}
-                  </button>
-                ))}
-              </div>
+          <div className="w-full flex flex-col items-center space-y-8">
+            {/* Massive Curved Seating Grid (65-75% Viewport Width) */}
+            <div className="w-full flex justify-center">
+              <ParametricSeatMap seats={seats} clientSessionId={clientSessionId} />
             </div>
 
-            {loading ? (
-              <div className="flex flex-col items-center justify-center py-20 space-y-3 font-mono text-xs text-zinc-400">
-                <Loader2 className="w-6 h-6 text-[#C92A42] animate-spin" />
-                <span>RETRIEVING ATOMIC SEAT MATRIX...</span>
-              </div>
-            ) : (
-              <>
-                {/* Parametric SVG Curved Seating Chart */}
-                <div className="p-6 rounded-2xl bg-[#0c0f1d]/75 border border-white/[0.08] backdrop-blur-xl shadow-2xl">
-                  <ParametricSeatMap seats={seats} clientSessionId={clientSessionId} />
-                </div>
-
-                {/* Checkout Drawer with USN/Email verification */}
-                <CheckoutDrawer
-                  showtimeId={showtimeId}
-                  clientSessionId={clientSessionId}
-                  onLockSeats={handleLockSeats}
-                  onBookingSuccess={() => {}}
-                />
-              </>
-            )}
+            {/* Docked Floating Glassmorphism Checkout Card */}
+            <div className="w-full flex justify-center">
+              <CheckoutDrawer
+                showtimeId={showtimeId}
+                clientSessionId={clientSessionId}
+                onLockSeats={handleLockSeats}
+                onBookingSuccess={() => {}}
+              />
+            </div>
           </div>
         )}
       </div>
