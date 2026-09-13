@@ -14,7 +14,10 @@ import {
   ArrowRight,
   RefreshCw,
   Ticket,
+  Box,
+  Layers,
 } from 'lucide-react';
+import { AuditoriumScene } from './canvas/AuditoriumScene.jsx';
 
 const HOLD_DURATION_SECONDS = 300; // 5 minutes
 
@@ -33,9 +36,11 @@ export function SeatGrid({
   const [loading, setLoading] = useState(true);
   const [locking, setLocking] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [timeLeft, setTimeLeft] = useState(0);
-  const [isSyncing, setIsSyncing] = useState(false);
   const [contestedSeatToast, setContestedSeatToast] = useState('');
+  const [timeLeft, setTimeLeft] = useState(HOLD_DURATION_SECONDS);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [view3D, setView3D] = useState(true);
+  const [focusedSeat, setFocusedSeat] = useState(null);
 
   const timerRef = useRef(null);
   const selectedSeatsRef = useRef(selectedSeats);
@@ -322,31 +327,60 @@ export function SeatGrid({
           </div>
         </div>
 
-        {/* Mode Selector */}
-        <div className="flex items-center space-x-1 bg-[#11100f] p-1 border border-[#2a2622]">
-          <button
-            onClick={() => handleModeSwitch('individual')}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-sans font-medium uppercase tracking-wider transition-colors ${
-              bookingMode === 'individual'
-                ? 'bg-[#d83128] text-white'
-                : 'text-[#9f9b94] hover:text-[#eee9df]'
-            }`}
-          >
-            <User className="w-3.5 h-3.5" />
-            <span>Individual (1 Seat)</span>
-          </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* 3D WebGL vs 2D Schematic Switcher */}
+          <div className="flex items-center space-x-1 bg-[#11100f] p-1 border border-[#2a2622]">
+            <button
+              onClick={() => setView3D(true)}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-sans font-medium uppercase tracking-wider transition-colors ${
+                view3D
+                  ? 'bg-[#d83128] text-white'
+                  : 'text-[#9f9b94] hover:text-[#eee9df]'
+              }`}
+            >
+              <Box className="w-3.5 h-3.5" />
+              <span>3D WebGL Cinema</span>
+            </button>
 
-          <button
-            onClick={() => handleModeSwitch('group')}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-sans font-medium uppercase tracking-wider transition-colors ${
-              bookingMode === 'group'
-                ? 'bg-[#d83128] text-white'
-                : 'text-[#9f9b94] hover:text-[#eee9df]'
-            }`}
-          >
-            <Users className="w-3.5 h-3.5" />
-            <span>Group (2–4 Seats)</span>
-          </button>
+            <button
+              onClick={() => setView3D(false)}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-sans font-medium uppercase tracking-wider transition-colors ${
+                !view3D
+                  ? 'bg-[#d83128] text-white'
+                  : 'text-[#9f9b94] hover:text-[#eee9df]'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>2D Schematic</span>
+            </button>
+          </div>
+
+          {/* Mode Selector */}
+          <div className="flex items-center space-x-1 bg-[#11100f] p-1 border border-[#2a2622]">
+            <button
+              onClick={() => handleModeSwitch('individual')}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-sans font-medium uppercase tracking-wider transition-colors ${
+                bookingMode === 'individual'
+                  ? 'bg-[#d83128] text-white'
+                  : 'text-[#9f9b94] hover:text-[#eee9df]'
+              }`}
+            >
+              <User className="w-3.5 h-3.5" />
+              <span>Individual (1 Seat)</span>
+            </button>
+
+            <button
+              onClick={() => handleModeSwitch('group')}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-sans font-medium uppercase tracking-wider transition-colors ${
+                bookingMode === 'group'
+                  ? 'bg-[#d83128] text-white'
+                  : 'text-[#9f9b94] hover:text-[#eee9df]'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>Group (2–4 Seats)</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -374,27 +408,76 @@ export function SeatGrid({
         </div>
       )}
 
-      {/* Interactive 3D Perspective Amphitheater Container */}
-      <div className="bg-[#171513] border border-[#2a2622] p-6 sm:p-12 space-y-12 overflow-hidden relative">
-        {/* Projector Light Cone Effect */}
-        <div className="relative max-w-2xl mx-auto text-center">
-          {/* Subtle Projector Beam shining down from ceiling */}
-          <div
-            className="w-full h-24 mx-auto pointer-events-none opacity-20"
-            style={{
-              background: 'linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 70%, transparent 100%)',
-              clipPath: 'polygon(35% 0%, 65% 0%, 100% 100%, 0% 100%)',
+      {/* 3D WebGL Cinema Canvas OR 2D Architectural Schematic */}
+      {view3D ? (
+        <div className="relative border border-[#2a2622] bg-[#11100f] overflow-hidden">
+          {/* R3F 3D Scene */}
+          <AuditoriumScene
+            movie={movie}
+            showtime={showtime}
+            seats={seats}
+            selectedSeats={selectedSeats}
+            onSeatClick={(seat) => {
+              setFocusedSeat(seat);
+              handleSeatClick(seat);
             }}
+            locking={locking}
+            sessionId={sessionId}
+            viewMode="auditorium"
+            focusedSeat={focusedSeat}
           />
 
-          {/* Soft Curved Acoustic Screen Banner */}
-          <div className="relative mt-2">
-            <div className="h-1.5 w-full bg-gradient-to-r from-transparent via-[#eee9df] to-transparent shadow-[0_6px_24px_rgba(238,233,223,0.35)]" />
-            <span className="text-[10px] font-mono tracking-widest text-[#9f9b94] uppercase block mt-2">
-              ACOUSTIC 35MM PROJECTION SCREEN
-            </span>
+          {/* ReactBits-Inspired Floating HUD Overlay */}
+          <div className="absolute top-4 left-4 pointer-events-none z-10 flex flex-col space-y-2">
+            <div className="bg-[#171513]/90 backdrop-blur-md border border-[#2a2622] p-3 pointer-events-auto space-y-1 shadow-xl">
+              <div className="flex items-center space-x-2">
+                <span className="w-2 h-2 bg-[#d83128] animate-pulse" />
+                <span className="text-[10px] font-mono tracking-widest text-[#d83128] uppercase font-bold">
+                  LIVE 3D WEBGL AUDITORIUM
+                </span>
+              </div>
+              <h3 className="text-sm font-serif font-bold text-[#eee9df] uppercase">
+                {movie.title}
+              </h3>
+              <p className="text-[10px] font-mono text-[#9f9b94]">
+                Audi 1 • 50 Raycast Seat Meshes (A1 .. E10)
+              </p>
+              <div className="pt-2 border-t border-[#2a2622] flex items-center space-x-3 text-[10px] font-mono">
+                <div className="flex items-center space-x-1.5">
+                  <span className="w-2.5 h-2.5 bg-[#22201d] border border-[#37342f]" />
+                  <span className="text-[#9f9b94]">Regular</span>
+                </div>
+                <div className="flex items-center space-x-1.5">
+                  <span className="w-2.5 h-2.5 bg-[#3a2c20] border border-[#5c4738]" />
+                  <span className="text-[#d4af37]">VIP Bronze</span>
+                </div>
+                <div className="flex items-center space-x-1.5">
+                  <span className="w-2.5 h-2.5 bg-[#d83128]" />
+                  <span className="text-white">Selected</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+      ) : (
+        <div className="bg-[#171513] border border-[#2a2622] p-6 sm:p-12 space-y-12 overflow-hidden relative">
+          {/* Projector Light Cone Effect */}
+          <div className="relative max-w-2xl mx-auto text-center">
+            <div
+              className="w-full h-24 mx-auto pointer-events-none opacity-20"
+              style={{
+                background: 'linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 70%, transparent 100%)',
+                clipPath: 'polygon(35% 0%, 65% 0%, 100% 100%, 0% 100%)',
+              }}
+            />
+
+            <div className="relative mt-2">
+              <div className="h-1.5 w-full bg-gradient-to-r from-transparent via-[#eee9df] to-transparent shadow-[0_6px_24px_rgba(238,233,223,0.35)]" />
+              <span className="text-[10px] font-mono tracking-widest text-[#9f9b94] uppercase block mt-2">
+                ACOUSTIC 35MM PROJECTION SCREEN
+              </span>
+            </div>
+          </div>
 
         {/* Legend */}
         <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-[11px] font-sans">
@@ -526,6 +609,7 @@ export function SeatGrid({
           </div>
         </div>
       </div>
+      )}
 
       {/* Sticky Bottom Dock: Physical Ticket Preview & Analog Timecode */}
       <div className="sticky bottom-4 z-40 bg-[#11100f] border border-[#d83128] p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xl">

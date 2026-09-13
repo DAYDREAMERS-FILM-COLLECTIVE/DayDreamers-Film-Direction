@@ -9,6 +9,7 @@ import { AdminPortal } from './components/AdminPortal.jsx';
 import { AdminAuthModal } from './components/AdminAuthModal.jsx';
 import { fetchMovies, fetchShowtimes } from './lib/supabase.js';
 import { getSessionId, resetSessionId } from './lib/session.js';
+import { initLenis, destroyLenis } from './lib/lenis.js';
 import { RotateCcw, AlertTriangle } from 'lucide-react';
 
 export default function App() {
@@ -31,6 +32,7 @@ export default function App() {
   const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
 
   useEffect(() => {
+    initLenis();
     setSessionId(getSessionId());
     setIsAdminUnlocked(sessionStorage.getItem('fps_admin_auth') === 'true');
 
