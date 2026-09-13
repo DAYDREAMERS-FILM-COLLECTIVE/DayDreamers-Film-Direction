@@ -2,18 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar.jsx';
 import { MovieCatalog } from './components/MovieCatalog.jsx';
 import { ShowtimePicker } from './components/ShowtimePicker.jsx';
-import { fetchMovies, fetchShowtimes, isSupabaseConfigured } from './lib/supabase.js';
+import { SeatGrid } from './components/SeatGrid.jsx';
+import { StudentCheckout } from './components/StudentCheckout.jsx';
+import { TicketPass } from './components/TicketPass.jsx';
+import { DoorVerification } from './components/DoorVerification.jsx';
+import { fetchMovies, fetchShowtimes } from './lib/supabase.js';
 import { getSessionId, resetSessionId } from './lib/session.js';
-import { Armchair, ChevronRight, RotateCcw, QrCode } from 'lucide-react';
+import { Armchair, ChevronRight, RotateCcw } from 'lucide-react';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState('browse'); // 'browse' | 'verify'
+  const [currentView, setCurrentView] = useState('browse'); // 'browse' | 'seats' | 'checkout' | 'ticket' | 'verify'
   const [movies, setMovies] = useState([]);
   const [showtimes, setShowtimes] = useState([]);
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [selectedShowtime, setSelectedShowtime] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sessionId, setSessionId] = useState('');
+
+  // Booking Flow States
+  const [bookingMode, setBookingMode] = useState('individual'); // 'individual' | 'group'
+  const [selectedSeats, setSelectedSeats] = useState([]);
+  const [confirmedBookingData, setConfirmedBookingData] = useState(null);
 
   useEffect(() => {
     setSessionId(getSessionId());
@@ -48,8 +57,8 @@ export default function App() {
     setSelectedMovie(movie);
     const firstShowtime = showtimes.find((s) => s.movie_id === movie.id);
     setSelectedShowtime(firstShowtime || null);
+    setSelectedSeats([]);
 
-    // Smooth scroll to showtimes section
     setTimeout(() => {
       document.getElementById('showtimes-section')?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
@@ -58,36 +67,90 @@ export default function App() {
   const handleResetSession = () => {
     const newId = resetSessionId();
     setSessionId(newId);
+    setSelectedSeats([]);
+  };
+
+  const handleOpenSeatMap = () => {
+    setSelectedSeats([]);
+    setCurrentView('seats');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleProceedToCheckout = () => {
+    if (selectedSeats.length === 0) return;
+    setCurrentView('checkout');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleBookingConfirmed = (data) => {
+    setConfirmedBookingData(data);
+    setCurrentView('ticket');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleBookAnother = () => {
+    setSelectedSeats([]);
+    setConfirmedBookingData(null);
+    setCurrentView('browse');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#080C14] text-slate-100 selection:bg-rvu-accent selection:text-white">
       {/* Top Navigation */}
-      <Navbar currentView={currentView} onSelectView={setCurrentView} />
+      <Navbar
+        currentView={currentView}
+        onSelectView={(view) => {
+          setCurrentView(view);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+      />
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-10">
-        {currentView === 'verify' ? (
-          /* Door Scanner Preview (Sharp) */
-          <div className="max-w-xl mx-auto py-10 px-6 bg-slate-950 border border-slate-800 text-center space-y-4">
-            <div className="w-12 h-12 mx-auto bg-slate-900 border border-slate-700 flex items-center justify-center text-white">
-              <QrCode className="w-6 h-6 text-rvu-accent" />
-            </div>
-            <h2 className="text-lg font-bold font-mono uppercase tracking-wider text-white">Auditorium Entry Verification</h2>
-            <p className="text-xs text-slate-400 font-mono max-w-md mx-auto leading-relaxed">
-              Ticket scanning portal for venue staff. Barcode camera decoding and one-time admission records will be integrated in Phase 6.
-            </p>
-            <div className="pt-2">
-              <button
-                onClick={() => setCurrentView('browse')}
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-xs font-mono font-bold uppercase text-white border border-slate-700 transition-colors"
-              >
-                RETURN TO SCREENINGS
-              </button>
-            </div>
-          </div>
-        ) : (
-          /* Complete Website Web Skeleton */
+        {/* VIEW: Door Verification Scanner */}
+        {currentView === 'verify' && (
+          <DoorVerification onBackToBrowse={() => setCurrentView('browse')} />
+        )}
+
+        {/* VIEW: Interactive Seat Grid (Phase 3) */}
+        {currentView === 'seats' && selectedMovie && selectedShowtime && (
+          <SeatGrid
+            movie={selectedMovie}
+            showtime={selectedShowtime}
+            sessionId={sessionId}
+            bookingMode={bookingMode}
+            setBookingMode={setBookingMode}
+            selectedSeats={selectedSeats}
+            setSelectedSeats={setSelectedSeats}
+            onProceedToCheckout={handleProceedToCheckout}
+            onBack={() => setCurrentView('browse')}
+          />
+        )}
+
+        {/* VIEW: Student Checkout & Credential Verification (Phase 4) */}
+        {currentView === 'checkout' && selectedMovie && selectedShowtime && (
+          <StudentCheckout
+            movie={selectedMovie}
+            showtime={selectedShowtime}
+            selectedSeats={selectedSeats}
+            bookingMode={bookingMode}
+            sessionId={sessionId}
+            onBack={() => setCurrentView('seats')}
+            onBookingConfirmed={handleBookingConfirmed}
+          />
+        )}
+
+        {/* VIEW: Confirmed Ticket Pass & QR (Phase 5) */}
+        {currentView === 'ticket' && confirmedBookingData && (
+          <TicketPass
+            bookingData={confirmedBookingData}
+            onBookAnother={handleBookAnother}
+          />
+        )}
+
+        {/* VIEW: Main Screening Catalog & Discovery (Phases 1-2 Foundation) */}
+        {currentView === 'browse' && (
           <>
             {/* Campus Screening Schedule Banner (Sharp, Rectilinear) */}
             <div className="border border-slate-800 bg-slate-950 p-6 sm:p-8 space-y-3">
@@ -122,11 +185,14 @@ export default function App() {
                     movie={selectedMovie}
                     showtimes={showtimes}
                     selectedShowtime={selectedShowtime}
-                    onSelectShowtime={setSelectedShowtime}
+                    onSelectShowtime={(st) => {
+                      setSelectedShowtime(st);
+                      setSelectedSeats([]);
+                    }}
                   />
                 )}
 
-                {/* Phase 3 Seat Selection CTA Dock (Sharp) */}
+                {/* Seat Selection CTA Dock (Sharp) */}
                 {selectedMovie && selectedShowtime && (
                   <div className="sticky bottom-4 z-40 p-4 bg-slate-950 border-2 border-rvu-accent shadow-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center space-x-3">
@@ -141,17 +207,20 @@ export default function App() {
                           {selectedMovie.title} • {selectedShowtime.auditorium_name}
                         </h4>
                         <p className="text-[11px] font-mono text-slate-400">
-                          {new Date(selectedShowtime.start_time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })} • REGULAR ₹{selectedShowtime.price_regular} / VIP ₹{selectedShowtime.price_vip}
+                          {new Date(selectedShowtime.start_time).toLocaleTimeString('en-IN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true,
+                          })}{' '}
+                          • REGULAR ₹{selectedShowtime.price_regular} / VIP ₹{selectedShowtime.price_vip}
                         </p>
                       </div>
                     </div>
 
                     <div>
                       <button
-                        className="w-full sm:w-auto px-5 py-2.5 bg-rvu-accent hover:bg-orange-600 text-white text-xs font-mono font-bold uppercase tracking-wider border border-rvu-accent flex items-center justify-center space-x-2 transition-colors"
-                        onClick={() => {
-                          alert(`Selected: ${selectedMovie.title} at ${selectedShowtime.auditorium_name}.\nPhase 2 Complete! Awaiting confirmation to unlock Phase 3: Interactive Seat Grid & 5-minute Hold Engine.`);
-                        }}
+                        className="w-full sm:w-auto px-6 py-3 bg-rvu-accent hover:bg-orange-600 text-white text-xs font-mono font-bold uppercase tracking-wider border border-rvu-accent flex items-center justify-center space-x-2 transition-colors cursor-pointer shadow-[0_0_15px_rgba(255,107,0,0.4)]"
+                        onClick={handleOpenSeatMap}
                       >
                         <span>OPEN SEAT MAP</span>
                         <ChevronRight className="w-4 h-4" />
@@ -170,13 +239,17 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
             <p className="font-bold text-slate-300 uppercase tracking-wider">RV UNIVERSITY CAMPUS CINEMA PLATFORM</p>
-            <p className="text-[11px] text-slate-500 mt-0.5">Authorized screenings only • Official university credentials required</p>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              Authorized screenings only • Official university credentials required
+            </p>
           </div>
 
           {/* Session Diagnostics */}
           <div className="flex items-center space-x-3 text-[11px] bg-slate-950 px-3 py-1.5 border border-slate-800">
             <span className="text-slate-400">SESSION:</span>
-            <span className="text-amber-400 truncate max-w-[140px]" title={sessionId}>{sessionId}</span>
+            <span className="text-amber-400 truncate max-w-[140px]" title={sessionId}>
+              {sessionId}
+            </span>
             <button
               onClick={handleResetSession}
               className="p-1 text-slate-400 hover:text-white transition-colors"

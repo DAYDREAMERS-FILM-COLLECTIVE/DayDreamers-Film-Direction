@@ -1,15 +1,14 @@
 -- ============================================================================
 -- RVU CAMPUS CINEMA PLATFORM - DATABASE SCHEMA & CONCURRENCY ENGINE
--- Phase 1 Migration: Tables, Indexes, Atomic RPCs, RLS, & Realtime
+-- 7 Rows x 10 Columns Continuous Tiered Layout (70 Seats per Showtime)
 -- ============================================================================
 
--- 1. EXTENSIONS
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- Clean existing schema if running fresh
 DROP FUNCTION IF EXISTS acquire_seat_locks(UUID, UUID[], UUID, INT);
 DROP FUNCTION IF EXISTS release_seat_locks(UUID[], UUID);
+DROP FUNCTION IF EXISTS confirm_booking_atomic(UUID, UUID[], UUID, TEXT, TEXT, TEXT, TEXT, JSONB);
 DROP FUNCTION IF EXISTS confirm_booking_atomic(UUID, UUID[], UUID, TEXT, TEXT, TEXT, TEXT);
 DROP FUNCTION IF EXISTS verify_ticket_atomic(TEXT, TEXT);
 DROP FUNCTION IF EXISTS get_showtime_seats(UUID, UUID);
@@ -19,10 +18,6 @@ DROP TABLE IF EXISTS bookings CASCADE;
 DROP TABLE IF EXISTS seats CASCADE;
 DROP TABLE IF EXISTS showtimes CASCADE;
 DROP TABLE IF EXISTS movies CASCADE;
-
--- ----------------------------------------------------------------------------
--- 2. CORE TABLES
--- ----------------------------------------------------------------------------
 
 -- Table: movies
 CREATE TABLE movies (
@@ -51,12 +46,12 @@ CREATE TABLE showtimes (
     created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp()
 );
 
--- Table: seats
+-- Table: seats (70 seats: Rows A-G, Columns 1-10)
 CREATE TABLE seats (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     showtime_id UUID NOT NULL REFERENCES showtimes(id) ON DELETE CASCADE,
     row_label CHAR(1) NOT NULL,
-    col_number INT NOT NULL CHECK (col_number > 0),
+    col_number INT NOT NULL CHECK (col_number > 0 AND col_number <= 10),
     seat_tier TEXT NOT NULL DEFAULT 'regular' CHECK (seat_tier IN ('regular', 'vip')),
     status TEXT NOT NULL DEFAULT 'available' CHECK (status IN ('available', 'locked', 'booked')),
     locked_until TIMESTAMPTZ,
@@ -68,11 +63,13 @@ CREATE TABLE seats (
 CREATE TABLE bookings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     showtime_id UUID NOT NULL REFERENCES showtimes(id) ON DELETE RESTRICT,
+    booking_mode TEXT NOT NULL DEFAULT 'individual' CHECK (booking_mode IN ('individual', 'group')),
     user_name TEXT NOT NULL,
     usn TEXT NOT NULL,
     rvu_email TEXT NOT NULL,
     total_amount NUMERIC(10,2) NOT NULL DEFAULT 0.00,
     ticket_hash TEXT NOT NULL UNIQUE,
+    attendees JSONB DEFAULT '[]'::jsonb,
     status TEXT NOT NULL DEFAULT 'confirmed' CHECK (status IN ('confirmed', 'cancelled')),
     checked_in_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp()
@@ -86,9 +83,7 @@ CREATE TABLE booking_seats (
     PRIMARY KEY (booking_id, seat_id)
 );
 
--- ----------------------------------------------------------------------------
--- 3. INDEXES FOR PERFORMANCE & CONCURRENCY
--- ----------------------------------------------------------------------------
+-- Indexes
 CREATE INDEX idx_seats_showtime_status ON seats(showtime_id, status);
 CREATE INDEX idx_seats_locked_until ON seats(locked_until) WHERE status = 'locked';
 CREATE INDEX idx_seats_lookup ON seats(showtime_id, row_label, col_number);
@@ -98,11 +93,10 @@ CREATE INDEX idx_bookings_showtime ON bookings(showtime_id);
 CREATE INDEX idx_showtimes_movie_time ON showtimes(movie_id, start_time);
 
 -- ----------------------------------------------------------------------------
--- 4. CONCURRENCY RPC FUNCTIONS
+-- Concurrency RPC Functions
 -- ----------------------------------------------------------------------------
 
 -- A. GET SHOWTIME SEATS (With Lazy Lock Expiration)
--- Explicitly treats expired locks as 'available' so no deadlocks persist.
 CREATE OR REPLACE FUNCTION get_showtime_seats(
     p_showtime_id UUID,
     p_session_id UUID DEFAULT NULL
@@ -149,10 +143,7 @@ END;
 $$;
 
 
--- B. ACQUIRE SEAT LOCKS (Atomic Concurrency Lock)
--- Uses SELECT ... FOR UPDATE to eliminate race conditions between concurrent students.
--- Implements lazy expiration: rows where status = 'locked' AND locked_until < clock_timestamp()
--- are considered available and safely acquired.
+-- B. ACQUIRE SEAT LOCKS (Strict 5-minute atomic lock with individual/group quota guard)
 CREATE OR REPLACE FUNCTION acquire_seat_locks(
     p_showtime_id UUID,
     p_seat_ids UUID[],
@@ -174,14 +165,18 @@ BEGIN
         RETURN jsonb_build_object('success', false, 'error', 'No seats specified');
     END IF;
 
+    -- Quota guard: max 4 seats per reservation
+    IF v_requested_count > 4 THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Maximum 4 seats allowed per reservation');
+    END IF;
+
     IF p_session_id IS NULL THEN
         RETURN jsonb_build_object('success', false, 'error', 'Valid session ID required');
     END IF;
 
-    -- Calculate hold expiration
     v_new_expiry := clock_timestamp() + (p_hold_seconds || ' seconds')::INTERVAL;
 
-    -- 1. Acquire row-level locks on candidate seats ordered by ID to prevent deadlocks
+    -- 1. Lock rows in deterministic sorted order
     PERFORM id
     FROM seats
     WHERE id = ANY(p_seat_ids)
@@ -189,7 +184,7 @@ BEGIN
     ORDER BY id
     FOR UPDATE;
 
-    -- 2. Verify all requested seats exist
+    -- 2. Verify all exist
     SELECT COUNT(*) INTO v_locked_count
     FROM seats
     WHERE id = ANY(p_seat_ids)
@@ -202,8 +197,7 @@ BEGIN
         );
     END IF;
 
-    -- 3. Check for conflicting seats:
-    -- A seat conflicts if it is 'booked' OR if it is actively 'locked' by ANOTHER session
+    -- 3. Check conflicts (booked OR locked by other unexpired)
     SELECT COUNT(*) INTO v_conflict_count
     FROM seats
     WHERE id = ANY(p_seat_ids)
@@ -221,7 +215,7 @@ BEGIN
         );
     END IF;
 
-    -- 4. Safely update all seats to 'locked' with session ID and expiry
+    -- 4. Update to locked
     UPDATE seats
     SET status = 'locked',
         locked_by_session = p_session_id,
@@ -240,7 +234,6 @@ $$;
 
 
 -- C. RELEASE SEAT LOCKS
--- Releases locks held by the session. Used when user deselects, timer expires, or modal closes.
 CREATE OR REPLACE FUNCTION release_seat_locks(
     p_seat_ids UUID[],
     p_session_id UUID
@@ -256,7 +249,6 @@ BEGIN
         RETURN jsonb_build_object('success', false, 'error', 'Session ID required');
     END IF;
 
-    -- Lock rows to update
     PERFORM id
     FROM seats
     WHERE id = ANY(p_seat_ids)
@@ -282,12 +274,7 @@ END;
 $$;
 
 
--- D. CONFIRM BOOKING ATOMIC
--- Converts held seats to booked within an ACID transaction.
--- Verifies:
---   1. Valid RVU email (@rvu.edu.in)
---   2. Valid USN and student name
---   3. All seats are currently held by this session and hold has NOT expired
+-- D. CONFIRM BOOKING ATOMIC (With Individual and Group Booking Support)
 CREATE OR REPLACE FUNCTION confirm_booking_atomic(
     p_showtime_id UUID,
     p_seat_ids UUID[],
@@ -295,7 +282,8 @@ CREATE OR REPLACE FUNCTION confirm_booking_atomic(
     p_user_name TEXT,
     p_usn TEXT,
     p_email TEXT,
-    p_ticket_hash TEXT
+    p_ticket_hash TEXT,
+    p_attendees JSONB DEFAULT '[]'::jsonb
 )
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -309,8 +297,8 @@ DECLARE
     v_sanitized_usn TEXT;
     v_seat RECORD;
     v_showtime RECORD;
+    v_booking_mode TEXT;
 BEGIN
-    -- 1. Input Validation
     IF p_user_name IS NULL OR length(trim(p_user_name)) < 3 THEN
         RETURN jsonb_build_object('success', false, 'error', 'Full Name must be at least 3 characters');
     END IF;
@@ -329,13 +317,17 @@ BEGIN
         RETURN jsonb_build_object('success', false, 'error', 'No seats provided for booking');
     END IF;
 
-    -- 2. Fetch Showtime prices
+    IF v_seat_count = 1 THEN
+        v_booking_mode := 'individual';
+    ELSE
+        v_booking_mode := 'group';
+    END IF;
+
     SELECT * INTO v_showtime FROM showtimes WHERE id = p_showtime_id;
     IF NOT FOUND THEN
         RETURN jsonb_build_object('success', false, 'error', 'Showtime does not exist');
     END IF;
 
-    -- 3. Lock candidate seats in consistent order
     PERFORM id
     FROM seats
     WHERE id = ANY(p_seat_ids)
@@ -343,7 +335,6 @@ BEGIN
     ORDER BY id
     FOR UPDATE;
 
-    -- 4. Verify all candidate seats are actively locked by this session and NOT expired
     SELECT COUNT(*) INTO v_eligible_count
     FROM seats
     WHERE id = ANY(p_seat_ids)
@@ -359,7 +350,6 @@ BEGIN
         );
     END IF;
 
-    -- 5. Calculate total amount
     FOR v_seat IN 
         SELECT id, seat_tier FROM seats WHERE id = ANY(p_seat_ids)
     LOOP
@@ -370,26 +360,28 @@ BEGIN
         END IF;
     END LOOP;
 
-    -- 6. Insert Booking record
     INSERT INTO bookings (
         showtime_id,
+        booking_mode,
         user_name,
         usn,
         rvu_email,
         total_amount,
         ticket_hash,
+        attendees,
         status
     ) VALUES (
         p_showtime_id,
+        v_booking_mode,
         trim(p_user_name),
         v_sanitized_usn,
         lower(trim(p_email)),
         v_total_amount,
         p_ticket_hash,
+        p_attendees,
         'confirmed'
     ) RETURNING id INTO v_booking_id;
 
-    -- 7. Insert Seat junctions with snapshot prices
     FOR v_seat IN 
         SELECT id, seat_tier FROM seats WHERE id = ANY(p_seat_ids)
     LOOP
@@ -404,7 +396,6 @@ BEGIN
         );
     END LOOP;
 
-    -- 8. Convert seats status to 'booked' and clear lock fields
     UPDATE seats
     SET status = 'booked',
         locked_by_session = NULL,
@@ -426,8 +417,7 @@ END;
 $$;
 
 
--- E. VERIFY TICKET ATOMIC (Door Entry Scanner RPC)
--- Validates QR ticket hash or USN, checks for duplicate scans, and records check-in timestamp.
+-- E. VERIFY TICKET ATOMIC (Door Scanner)
 CREATE OR REPLACE FUNCTION verify_ticket_atomic(
     p_ticket_hash TEXT DEFAULT NULL,
     p_usn TEXT DEFAULT NULL
@@ -446,7 +436,6 @@ BEGIN
         RETURN jsonb_build_object('valid', false, 'error', 'Please provide a ticket QR hash or student USN');
     END IF;
 
-    -- Lock the booking row for atomic verification
     SELECT * INTO v_booking
     FROM bookings
     WHERE (p_ticket_hash IS NOT NULL AND ticket_hash = trim(p_ticket_hash))
@@ -462,18 +451,15 @@ BEGIN
         );
     END IF;
 
-    -- Fetch movie and showtime metadata
     SELECT * INTO v_showtime FROM showtimes WHERE id = v_booking.showtime_id;
     SELECT * INTO v_movie FROM movies WHERE id = v_showtime.movie_id;
 
-    -- Fetch booked seats as formatted string (e.g., "A3, A4 (Regular)")
     SELECT string_agg(s.row_label || s.col_number::text, ', ' ORDER BY s.row_label, s.col_number)
     INTO v_seats_text
     FROM booking_seats bs
     JOIN seats s ON s.id = bs.seat_id
     WHERE bs.booking_id = v_booking.id;
 
-    -- Check if ticket was already scanned
     IF v_booking.checked_in_at IS NOT NULL THEN
         RETURN jsonb_build_object(
             'valid', false,
@@ -493,7 +479,6 @@ BEGIN
         );
     END IF;
 
-    -- Mark check-in timestamp
     UPDATE bookings
     SET checked_in_at = clock_timestamp()
     WHERE id = v_booking.id;
@@ -518,36 +503,26 @@ BEGIN
 END;
 $$;
 
--- ----------------------------------------------------------------------------
--- 5. ROW LEVEL SECURITY (RLS) POLICIES
--- ----------------------------------------------------------------------------
+-- RLS
 ALTER TABLE movies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE showtimes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE seats ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bookings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE booking_seats ENABLE ROW LEVEL SECURITY;
 
--- Public read policies (all students can browse catalog, showtimes, and seat layout)
 CREATE POLICY "Public read movies" ON movies FOR SELECT USING (true);
 CREATE POLICY "Public read showtimes" ON showtimes FOR SELECT USING (true);
 CREATE POLICY "Public read seats" ON seats FOR SELECT USING (true);
 CREATE POLICY "Public read bookings" ON bookings FOR SELECT USING (true);
 CREATE POLICY "Public read booking_seats" ON booking_seats FOR SELECT USING (true);
 
--- Mutations are guarded strictly through the SECURITY DEFINER RPCs above.
--- Direct table updates are restricted to prevent client manipulation.
-
--- ----------------------------------------------------------------------------
--- 6. ENABLE SUPABASE REALTIME REPLICATION
--- ----------------------------------------------------------------------------
+-- Realtime Publication
 DO $$
 BEGIN
-    -- Ensure publication exists
     IF NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
         CREATE PUBLICATION supabase_realtime;
     END IF;
     
-    -- Add seats table to publication for sub-100ms updates
     IF NOT EXISTS (
         SELECT 1 FROM pg_publication_tables 
         WHERE pubname = 'supabase_realtime' AND tablename = 'seats'

@@ -79,18 +79,19 @@ BEGIN
         (v_movie_spiderman, 'Campus Audi 2 - Film Lab', (CURRENT_DATE + TIME '16:00:00') AT TIME ZONE 'Asia/Kolkata', 130.00, 220.00),
         (v_movie_spiderman, 'Campus Audi 1 - Main Stage', (CURRENT_DATE + 1 + TIME '19:30:00') AT TIME ZONE 'Asia/Kolkata', 150.00, 250.00);
 
-    -- 3. POPULATE 64-SEAT GRID FOR EVERY SHOWTIME (Rows A-H, Cols 1-8)
-    -- Rows A to F = 'regular'
-    -- Rows G to H = 'vip'
+    -- 3. POPULATE 70-SEAT GRID FOR EVERY SHOWTIME (Rows A-G, Cols 1-10)
+    -- Rows A to E = 'regular'
+    -- Rows F to G = 'vip'
+    v_row_chars := ARRAY['A', 'B', 'C', 'D', 'E', 'F', 'G'];
     FOR v_showtime_id IN (SELECT id FROM showtimes) LOOP
         FOREACH v_row_char IN ARRAY v_row_chars LOOP
-            IF v_row_char IN ('G', 'H') THEN
+            IF v_row_char IN ('F', 'G') THEN
                 v_tier := 'vip';
             ELSE
                 v_tier := 'regular';
             END IF;
 
-            FOR v_col IN 1..8 LOOP
+            FOR v_col IN 1..10 LOOP
                 INSERT INTO seats (
                     showtime_id,
                     row_label,
@@ -115,5 +116,5 @@ BEGIN
     WHERE showtime_id = v_showtime_id 
       AND row_label = 'D' AND col_number IN (4, 5);
 
-    RAISE NOTICE 'RVU Cinema database successfully seeded with movies, showtimes, and 64-seat layouts.';
+    RAISE NOTICE 'RVU Cinema database successfully seeded with movies, showtimes, and 70-seat layouts.';
 END $$;

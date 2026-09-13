@@ -173,6 +173,7 @@ export async function confirmBookingAtomic({
   usn,
   email,
   ticketHash,
+  attendees = [],
 }) {
   if (!isSupabaseConfigured) {
     return confirmMockBookingAtomic({
@@ -183,6 +184,7 @@ export async function confirmBookingAtomic({
       usn,
       email,
       ticketHash,
+      attendees,
     });
   }
 
@@ -195,6 +197,7 @@ export async function confirmBookingAtomic({
       p_usn: usn,
       p_email: email,
       p_ticket_hash: ticketHash,
+      p_attendees: attendees,
     });
 
     if (error) throw error;
@@ -209,6 +212,7 @@ export async function confirmBookingAtomic({
       usn,
       email,
       ticketHash,
+      attendees,
     });
   }
 }

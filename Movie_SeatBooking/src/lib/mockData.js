@@ -128,14 +128,14 @@ export const MOCK_SHOWTIMES = [
   },
 ];
 
-// Generate 64-seat grid (Rows A-H, Cols 1-8)
-function generate64Seats(showtimeId) {
+// Generate 70-seat grid (Rows A-G, Cols 1-10)
+function generate70Seats(showtimeId) {
   const seats = [];
-  const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+  const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
   rows.forEach((row) => {
-    const isVip = row === 'G' || row === 'H';
-    for (let col = 1; col <= 8; col++) {
+    const isVip = row === 'F' || row === 'G';
+    for (let col = 1; col <= 10; col++) {
       const seatId = `${showtimeId}-${row}${col}`;
       // Demo: pre-book D4 & D5 for visual realism
       const isBooked = (row === 'D' && (col === 4 || col === 5));
@@ -157,7 +157,7 @@ function generate64Seats(showtimeId) {
 // In-Memory Global Mock Store for Fallback Mode
 const inMemorySeats = {};
 MOCK_SHOWTIMES.forEach((st) => {
-  inMemorySeats[st.id] = generate64Seats(st.id);
+  inMemorySeats[st.id] = generate70Seats(st.id);
 });
 
 export const inMemoryBookings = [];
@@ -167,7 +167,7 @@ export const inMemoryBookings = [];
  */
 export function getMockSeats(showtimeId, sessionId) {
   if (!inMemorySeats[showtimeId]) {
-    inMemorySeats[showtimeId] = generate64Seats(showtimeId);
+    inMemorySeats[showtimeId] = generate70Seats(showtimeId);
   }
 
   const nowMs = Date.now();
@@ -284,6 +284,7 @@ export function confirmMockBookingAtomic({
   usn,
   email,
   ticketHash,
+  attendees = [],
 }) {
   // Input validations
   if (!userName || userName.trim().length < 3) {

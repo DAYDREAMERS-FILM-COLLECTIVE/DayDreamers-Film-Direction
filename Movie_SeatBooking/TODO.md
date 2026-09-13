@@ -10,20 +10,20 @@
   - [x] 2.2 Supabase client initialization & session management with transparent mock fallback
   - [x] 2.3 Movie catalog view (posters, genres, synopsis modal, trailers)
   - [x] 2.4 Date and showtime selector with auditorium slots and seat counters
-- [ ] Phase 3: Real-Time Interactive Seat Grid & Hold Lock Engine
-  - [ ] 3.1 Curved theatre cinema screen UI and tiered seat map (Regular, Premium)
-  - [ ] 3.2 Seat selection state machine (`available`, `selected_by_me`, `locked_by_other`, `booked`)
-  - [ ] 3.3 Supabase Realtime channel integration for live cross-client updates
-  - [ ] 3.4 5-minute countdown dock with auto-release on expiry and window close
-- [ ] Phase 4: Student Checkout & RVU Data Validation
-  - [ ] 4.1 Slide-over/modal checkout summary with live price breakdown
-  - [ ] 4.2 RVU credentials form (Name, USN, `@rvu.edu.in` strict validation)
-  - [ ] 4.3 Atomic submission handler with race-condition collision UI fallback
-- [ ] Phase 5: QR Ticket Engine & EmailJS Automation
-  - [ ] 5.1 Verification payload generator and client-side QR renderer
-  - [ ] 5.2 EmailJS template setup & integration (HTTPS QR URL endpoint)
-  - [ ] 5.3 On-screen success ticket pass with download/print option and confetti
-- [ ] Phase 6: Ticket Verification Route & Edge Case Polish
-  - [ ] 6.1 QR scanner / ticket verification page (`/verify`)
-  - [ ] 6.2 Manual USN/Hash search and one-time entry validation check
-  - [ ] 6.3 Final audit of locks, network reconnection handling, and mobile responsiveness
+- [x] Phase 3: Real-Time Interactive Seat Grid & Hold Lock Engine
+  - [x] 3.1 Continuous 7x10 tiered seat map (Regular A-E ₹150, VIP F-G ₹250) and screen banner
+  - [x] 3.2 Seat selection state machine (`available`, `selected_by_me`, `locked_by_other`, `booked`)
+  - [x] 3.3 Supabase Realtime channel integration for live cross-client updates
+  - [x] 3.4 5-minute countdown dock with auto-release on expiry and window close
+- [x] Phase 4: Student Checkout & RVU Data Validation
+  - [x] 4.1 Order summary with tier and price breakdown (zero student booking fees)
+  - [x] 4.2 RVU credentials validation (First & Last Name, USN, `@rvu.edu.in` regex) for Individual & Group bookings
+  - [x] 4.3 Atomic submission handler with race-condition collision UI fallback
+- [x] Phase 5: QR Ticket Engine & EmailJS Automation
+  - [x] 5.1 Verification payload generator and client-side QR renderer (`qrcode`)
+  - [x] 5.2 EmailJS template setup & HTTPS QR URL endpoint dispatch
+  - [x] 5.3 On-screen printable ticket pass with download/print option and celebratory confetti
+- [x] Phase 6: Ticket Verification Route & Edge Case Polish
+  - [x] 6.1 QR scanner / ticket verification page (`/verify` & Navbar modal)
+  - [x] 6.2 Manual USN/Hash search and one-time entry validation check
+  - [x] 6.3 End-to-end database lock and duplicate admission fraud guard verification
