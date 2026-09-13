@@ -42,6 +42,7 @@ export function AuditoriumScene({
     <div className="relative w-full h-[620px] sm:h-[740px] lg:h-[820px] bg-[#080706] overflow-hidden border border-[#26221f]">
       <Canvas
         shadows
+        dpr={[1, 2]}
         camera={{ position: [0, 5.8, 18.2], fov: 44, near: 0.1, far: 100 }}
         gl={{
           antialias: true,

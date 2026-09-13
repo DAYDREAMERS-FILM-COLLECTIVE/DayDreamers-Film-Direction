@@ -26,7 +26,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 
-export function AdminPortal({ onBackToScreenings, onOpenDoorScanner }) {
+export function AdminPortal({ onBackToScreenings, onOpenDoorScanner, onLogout }) {
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'movies' | 'showtimes' | 'roster'
   const [stats, setStats] = useState(null);
   const [movies, setMovies] = useState([]);
@@ -213,16 +213,24 @@ export function AdminPortal({ onBackToScreenings, onOpenDoorScanner }) {
         <div className="flex items-center space-x-3">
           <button
             onClick={onOpenDoorScanner}
-            className="px-4 py-2 bg-[#11100f] hover:bg-[#1e1b18] text-[#eee9df] border border-[#2a2622] text-xs font-mono uppercase tracking-wider transition-colors"
+            className="px-4 py-2 bg-[#11100f] hover:bg-[#1e1b18] text-[#eee9df] border border-[#2a2622] text-xs font-mono uppercase tracking-wider transition-colors cursor-pointer"
           >
             SCANNER GATE
           </button>
           <button
             onClick={onBackToScreenings}
-            className="px-4 py-2 bg-[#d83128] hover:bg-[#b8241c] text-white border border-[#d83128] text-xs font-sans font-bold uppercase tracking-wider transition-colors"
+            className="px-4 py-2 bg-[#22201d] hover:bg-[#2d2a26] text-[#eee9df] border border-[#2a2622] text-xs font-sans font-bold uppercase tracking-wider transition-colors cursor-pointer"
           >
             RETURN TO SITE
           </button>
+          {onLogout && (
+            <button
+              onClick={onLogout}
+              className="px-4 py-2 bg-[#d83128] hover:bg-[#b8241c] text-white border border-[#d83128] text-xs font-sans font-bold uppercase tracking-wider transition-colors cursor-pointer"
+            >
+              LOG OUT
+            </button>
+          )}
         </div>
       </div>
 

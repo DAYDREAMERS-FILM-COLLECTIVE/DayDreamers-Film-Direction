@@ -27,8 +27,8 @@
   - [x] 4.1 ReactBits-inspired perforated ticket slide-over modal with physical tear-line & hold timer
   - [x] 4.2 Individual (1 seat) & Group (2–4 seats) RVU credential validation (`@rvu.edu.in` + regex USN)
   - [x] 4.3 Client-side HMAC QR generation, deep sub stamp sound trigger, and safe EmailJS dispatch (`src/lib/email.js`)
-- [ ] **Phase 5: Admin Door Scanner (`/admin`) & Performance Optimization (60 FPS audit)**
-  - [ ] 5.1 Admin CMS pass gate (`fps2026`) with live camera QR scanner
-  - [ ] 5.2 Student roster search and single-use entry check-in
-  - [ ] 5.3 60 FPS WebGL audit & memory disposal cleanup
+- [x] **Phase 5: Admin Door Scanner (`/admin`) & Performance Optimization (60 FPS audit)**
+  - [x] 5.1 Admin CMS pass gate (`fps2026`) with live camera QR scanner (`Html5Qrcode` + 35mm reticle)
+  - [x] 5.2 Student roster search and single-use entry check-in with atomic timestamp validation
+  - [x] 5.3 60 FPS WebGL audit & memory disposal cleanup (`dpr={[1, 2]}`, texture `.dispose()`, deferred channels)
 

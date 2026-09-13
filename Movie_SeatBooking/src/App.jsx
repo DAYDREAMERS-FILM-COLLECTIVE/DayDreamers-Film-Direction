@@ -152,6 +152,11 @@ export default function App() {
             <AdminPortal
               onBackToScreenings={() => setCurrentView('premiere')}
               onOpenDoorScanner={() => setCurrentView('verify')}
+              onLogout={() => {
+                sessionStorage.removeItem('fps_admin_auth');
+                setIsAdminUnlocked(false);
+                setCurrentView('premiere');
+              }}
             />
           </div>
         )}

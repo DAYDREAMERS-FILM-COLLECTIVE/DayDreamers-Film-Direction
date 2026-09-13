@@ -207,11 +207,12 @@ export function ProceduralAuditorium({
 }) {
   const [screenTexture, setScreenTexture] = useState(null);
 
-  // 1. Load Movie Backdrop / Poster Texture dynamically onto Curved Screen
+  // 1. Load Movie Backdrop / Poster Texture dynamically onto Curved Screen with disposal cleanup
   useEffect(() => {
     const imgUrl = movie?.backdrop_url || movie?.poster_url;
     if (!imgUrl) return;
 
+    let loadedTex = null;
     const loader = new THREE.TextureLoader();
     loader.load(
       imgUrl,
@@ -219,11 +220,18 @@ export function ProceduralAuditorium({
         tex.colorSpace = THREE.SRGBColorSpace;
         tex.wrapS = THREE.ClampToEdgeWrapping;
         tex.wrapT = THREE.ClampToEdgeWrapping;
+        loadedTex = tex;
         setScreenTexture(tex);
       },
       undefined,
       () => setScreenTexture(null)
     );
+
+    return () => {
+      if (loadedTex) {
+        loadedTex.dispose();
+      }
+    };
   }, [movie]);
 
   // Screen Geometry: Curved 16:9 Cylinder Arc
