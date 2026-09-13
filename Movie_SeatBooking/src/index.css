@@ -3,14 +3,16 @@
 @tailwind utilities;
 
 :root {
-  --ink: #11100f;
-  --paper: #eee9df;
+  --ink: #080706;
+  --surface: #131110;
+  --line: #26221f;
   --red: #d83128;
-  --mute: #9f9b94;
-  --line: #c9c3b8;
-  --darkline: #282420;
+  --paper: #eee9df;
+  --sepia: #8c867e;
+  --mute: #8c867e;
+  --screenglow: #fffbf0;
   --serif: 'Playfair Display', Georgia, serif;
-  --sans: 'DM Sans', Arial, sans-serif;
+  --sans: 'DM Sans', system-ui, sans-serif;
   --mono: 'DM Mono', monospace;
   --ease-out: cubic-bezier(.23, 1, .32, 1);
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);

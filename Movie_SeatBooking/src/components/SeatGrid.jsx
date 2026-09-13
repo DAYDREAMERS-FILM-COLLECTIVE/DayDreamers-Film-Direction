@@ -308,11 +308,11 @@ export function SeatGrid({
   return (
     <div className="space-y-6">
       {/* Top Bar with Mode Switcher & Back Navigation */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-[#171513] border border-[#2a2622]">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-[#131110] border border-[#26221f]">
         <div className="flex items-center space-x-3">
           <button
             onClick={onBack}
-            className="p-2 bg-[#11100f] hover:bg-[#1e1b18] border border-[#2a2622] text-[#9f9b94] hover:text-[#eee9df] transition-colors"
+            className="p-2 bg-[#080706] hover:bg-[#1e1b18] border border-[#26221f] text-[#8c867e] hover:text-[#eee9df] transition-colors"
             title="Return to Premiere Drop"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -329,13 +329,13 @@ export function SeatGrid({
 
         <div className="flex flex-wrap items-center gap-2">
           {/* 3D WebGL vs 2D Schematic Switcher */}
-          <div className="flex items-center space-x-1 bg-[#11100f] p-1 border border-[#2a2622]">
+          <div className="flex items-center space-x-1 bg-[#080706] p-1 border border-[#26221f]">
             <button
               onClick={() => setView3D(true)}
               className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-sans font-medium uppercase tracking-wider transition-colors ${
                 view3D
                   ? 'bg-[#d83128] text-white'
-                  : 'text-[#9f9b94] hover:text-[#eee9df]'
+                  : 'text-[#8c867e] hover:text-[#eee9df]'
               }`}
             >
               <Box className="w-3.5 h-3.5" />
@@ -347,7 +347,7 @@ export function SeatGrid({
               className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-sans font-medium uppercase tracking-wider transition-colors ${
                 !view3D
                   ? 'bg-[#d83128] text-white'
-                  : 'text-[#9f9b94] hover:text-[#eee9df]'
+                  : 'text-[#8c867e] hover:text-[#eee9df]'
               }`}
             >
               <Layers className="w-3.5 h-3.5" />
@@ -356,13 +356,13 @@ export function SeatGrid({
           </div>
 
           {/* Mode Selector */}
-          <div className="flex items-center space-x-1 bg-[#11100f] p-1 border border-[#2a2622]">
+          <div className="flex items-center space-x-1 bg-[#080706] p-1 border border-[#26221f]">
             <button
               onClick={() => handleModeSwitch('individual')}
               className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-sans font-medium uppercase tracking-wider transition-colors ${
                 bookingMode === 'individual'
                   ? 'bg-[#d83128] text-white'
-                  : 'text-[#9f9b94] hover:text-[#eee9df]'
+                  : 'text-[#8c867e] hover:text-[#eee9df]'
               }`}
             >
               <User className="w-3.5 h-3.5" />
@@ -374,7 +374,7 @@ export function SeatGrid({
               className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-sans font-medium uppercase tracking-wider transition-colors ${
                 bookingMode === 'group'
                   ? 'bg-[#d83128] text-white'
-                  : 'text-[#9f9b94] hover:text-[#eee9df]'
+                  : 'text-[#8c867e] hover:text-[#eee9df]'
               }`}
             >
               <Users className="w-3.5 h-3.5" />
@@ -392,7 +392,7 @@ export function SeatGrid({
             <span className="font-bold text-[#d83128] uppercase">SEAT CONTESTED:</span>
             <span>{contestedSeatToast}</span>
           </div>
-          <button onClick={() => setContestedSeatToast('')} className="text-[#9f9b94] hover:text-white uppercase text-[10px]">
+          <button onClick={() => setContestedSeatToast('')} className="text-[#8c867e] hover:text-white uppercase text-[10px]">
             DISMISS
           </button>
         </div>
@@ -402,7 +402,7 @@ export function SeatGrid({
         <div className="p-3 bg-[#1e1411] border border-[#d83128]/70 text-[#eee9df] flex items-start space-x-2 text-xs font-sans">
           <AlertTriangle className="w-4 h-4 text-[#d83128] shrink-0 mt-0.5" />
           <div className="flex-1">{errorMessage}</div>
-          <button onClick={() => setErrorMessage('')} className="text-[#9f9b94] hover:text-white uppercase font-mono text-[10px]">
+          <button onClick={() => setErrorMessage('')} className="text-[#8c867e] hover:text-white uppercase font-mono text-[10px]">
             DISMISS
           </button>
         </div>
@@ -410,7 +410,7 @@ export function SeatGrid({
 
       {/* 3D WebGL Cinema Canvas OR 2D Architectural Schematic */}
       {view3D ? (
-        <div className="relative border border-[#2a2622] bg-[#11100f] overflow-hidden">
+        <div className="relative border border-[#26221f] bg-[#080706] overflow-hidden">
           {/* R3F 3D Scene */}
           <AuditoriumScene
             movie={movie}
@@ -429,7 +429,7 @@ export function SeatGrid({
 
           {/* ReactBits-Inspired Floating HUD Overlay */}
           <div className="absolute top-4 left-4 pointer-events-none z-10 flex flex-col space-y-2">
-            <div className="bg-[#171513]/90 backdrop-blur-md border border-[#2a2622] p-3 pointer-events-auto space-y-1 shadow-xl">
+            <div className="bg-[#131110]/90 backdrop-blur-md border border-[#26221f] p-3 pointer-events-auto space-y-1 shadow-xl">
               <div className="flex items-center space-x-2">
                 <span className="w-2 h-2 bg-[#d83128] animate-pulse" />
                 <span className="text-[10px] font-mono tracking-widest text-[#d83128] uppercase font-bold">
@@ -439,13 +439,13 @@ export function SeatGrid({
               <h3 className="text-sm font-serif font-bold text-[#eee9df] uppercase">
                 {movie.title}
               </h3>
-              <p className="text-[10px] font-mono text-[#9f9b94]">
+              <p className="text-[10px] font-mono text-[#8c867e]">
                 Audi 1 • 50 Raycast Seat Meshes (A1 .. E10)
               </p>
-              <div className="pt-2 border-t border-[#2a2622] flex items-center space-x-3 text-[10px] font-mono">
+              <div className="pt-2 border-t border-[#26221f] flex items-center space-x-3 text-[10px] font-mono">
                 <div className="flex items-center space-x-1.5">
                   <span className="w-2.5 h-2.5 bg-[#22201d] border border-[#37342f]" />
-                  <span className="text-[#9f9b94]">Regular</span>
+                  <span className="text-[#8c867e]">Regular</span>
                 </div>
                 <div className="flex items-center space-x-1.5">
                   <span className="w-2.5 h-2.5 bg-[#3a2c20] border border-[#5c4738]" />
@@ -460,7 +460,7 @@ export function SeatGrid({
           </div>
         </div>
       ) : (
-        <div className="bg-[#171513] border border-[#2a2622] p-6 sm:p-12 space-y-12 overflow-hidden relative">
+        <div className="bg-[#131110] border border-[#26221f] p-6 sm:p-12 space-y-12 overflow-hidden relative">
           {/* Projector Light Cone Effect */}
           <div className="relative max-w-2xl mx-auto text-center">
             <div
@@ -473,7 +473,7 @@ export function SeatGrid({
 
             <div className="relative mt-2">
               <div className="h-1.5 w-full bg-gradient-to-r from-transparent via-[#eee9df] to-transparent shadow-[0_6px_24px_rgba(238,233,223,0.35)]" />
-              <span className="text-[10px] font-mono tracking-widest text-[#9f9b94] uppercase block mt-2">
+              <span className="text-[10px] font-mono tracking-widest text-[#8c867e] uppercase block mt-2">
                 ACOUSTIC 35MM PROJECTION SCREEN
               </span>
             </div>
@@ -483,7 +483,7 @@ export function SeatGrid({
         <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-[11px] font-sans">
           <div className="flex items-center space-x-2">
             <div className="w-4 h-4 bg-[#22201d] border border-[#37342f]" />
-            <span className="text-[#9f9b94]">Regular Tier</span>
+            <span className="text-[#8c867e]">Regular Tier</span>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-4 h-4 bg-[#2d241e] border border-[#5c4738]" />
@@ -498,7 +498,7 @@ export function SeatGrid({
             <span className="text-[#f59e0b]">Held</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-[#13110f] opacity-30 border border-[#2a2622]" />
+            <div className="w-4 h-4 bg-[#13110f] opacity-30 border border-[#26221f]" />
             <span className="text-[#64748b]">Booked</span>
           </div>
         </div>
@@ -507,7 +507,7 @@ export function SeatGrid({
         {loading ? (
           <div className="py-20 text-center space-y-2">
             <div className="w-6 h-6 border-2 border-[#d83128] border-t-transparent animate-spin mx-auto" />
-            <p className="text-xs font-mono text-[#9f9b94] uppercase">Synchronizing 50-seat acoustic grid...</p>
+            <p className="text-xs font-mono text-[#8c867e] uppercase">Synchronizing 50-seat acoustic grid...</p>
           </div>
         ) : (
           <div
@@ -525,8 +525,8 @@ export function SeatGrid({
             >
               {/* Columns Header */}
               <div className="flex items-center space-x-2 px-8">
-                <div className="w-6 text-center text-[10px] font-mono text-[#9f9b94] font-bold"></div>
-                <div className="flex-1 grid grid-cols-10 gap-2.5 text-center text-[10px] font-mono text-[#9f9b94]">
+                <div className="w-6 text-center text-[10px] font-mono text-[#8c867e] font-bold"></div>
+                <div className="flex-1 grid grid-cols-10 gap-2.5 text-center text-[10px] font-mono text-[#8c867e]">
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((col) => (
                     <span key={col}>{col}</span>
                   ))}
@@ -543,7 +543,7 @@ export function SeatGrid({
                     {/* Row Label */}
                     <div
                       className={`w-6 text-center text-xs font-mono font-bold ${
-                        isVipRow ? 'text-[#d4af37]' : 'text-[#9f9b94]'
+                        isVipRow ? 'text-[#d4af37]' : 'text-[#8c867e]'
                       }`}
                     >
                       {rowLabel}
@@ -559,7 +559,7 @@ export function SeatGrid({
 
                         let seatStyles = '';
                         if (isBooked) {
-                          seatStyles = 'bg-[#131211] opacity-25 border-[#2a2622] text-[#64748b] cursor-not-allowed line-through';
+                          seatStyles = 'bg-[#131211] opacity-25 border-[#26221f] text-[#64748b] cursor-not-allowed line-through';
                         } else if (isLockedByOther) {
                           seatStyles = 'bg-[#523009] border-[#854d0e] text-[#f59e0b] cursor-not-allowed';
                         } else if (isSelectedByMe) {
@@ -570,7 +570,7 @@ export function SeatGrid({
                             'bg-[#2d241e] border-[#5c4738] text-[#eee9df] hover:border-[#d4af37] hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(212,175,55,0.2)] cursor-pointer';
                         } else {
                           seatStyles =
-                            'bg-[#22201d] border-[#3a3530] text-[#9f9b94] hover:border-[#eee9df] hover:text-[#eee9df] hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(238,233,223,0.15)] cursor-pointer';
+                            'bg-[#22201d] border-[#3a3530] text-[#8c867e] hover:border-[#eee9df] hover:text-[#eee9df] hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(238,233,223,0.15)] cursor-pointer';
                         }
 
                         return (
@@ -596,7 +596,7 @@ export function SeatGrid({
         )}
 
         {/* Tier Annotations */}
-        <div className="pt-3 border-t border-[#2a2622] flex flex-col sm:flex-row items-center justify-between text-[11px] font-mono text-[#9f9b94] gap-2">
+        <div className="pt-3 border-t border-[#26221f] flex flex-col sm:flex-row items-center justify-between text-[11px] font-mono text-[#8c867e] gap-2">
           <div>ROWS A–C: REGULAR ARCHIVE TIER</div>
           <div className="flex items-center space-x-2">
             {isSyncing && (
@@ -612,16 +612,16 @@ export function SeatGrid({
       )}
 
       {/* Sticky Bottom Dock: Physical Ticket Preview & Analog Timecode */}
-      <div className="sticky bottom-4 z-40 bg-[#11100f] border border-[#d83128] p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xl">
+      <div className="sticky bottom-4 z-40 bg-[#080706] border border-[#d83128] p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xl">
         {/* Left: Physical Ticket Preview with Tearing Perforation Line */}
         <div className="flex items-center space-x-4">
-          <div className="relative bg-[#171513] border border-[#2a2622] px-4 py-2 flex items-center space-x-3">
+          <div className="relative bg-[#131110] border border-[#26221f] px-4 py-2 flex items-center space-x-3">
             {/* Ticket Notches */}
-            <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-[#11100f] border-r border-[#2a2622]" />
-            <div className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-[#11100f] border-l border-[#2a2622]" />
+            <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-[#080706] border-r border-[#26221f]" />
+            <div className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-[#080706] border-l border-[#26221f]" />
 
             <div className="space-y-0.5">
-              <span className="text-[9px] font-mono uppercase text-[#9f9b94] block">
+              <span className="text-[9px] font-mono uppercase text-[#8c867e] block">
                 TICKET PREVIEW ({selectedSeats.length}/{maxSeats})
               </span>
               <div className="flex items-center space-x-1">
@@ -635,7 +635,7 @@ export function SeatGrid({
                     </span>
                   ))
                 ) : (
-                  <span className="text-xs font-mono text-[#9f9b94] italic">No seats selected</span>
+                  <span className="text-xs font-mono text-[#8c867e] italic">No seats selected</span>
                 )}
               </div>
             </div>
@@ -645,7 +645,7 @@ export function SeatGrid({
 
             {/* Admission Status */}
             <div>
-              <span className="text-[9px] font-mono uppercase text-[#9f9b94] block">ADMISSION</span>
+              <span className="text-[9px] font-mono uppercase text-[#8c867e] block">ADMISSION</span>
               <span className="text-xs font-mono font-bold text-[#eee9df] uppercase">FREE CAMPUS PASS</span>
             </div>
           </div>
@@ -653,7 +653,7 @@ export function SeatGrid({
           {/* Analog Timecode Hold Timer */}
           {selectedSeats.length > 0 && (
             <div className="flex items-center space-x-2 text-xs font-mono">
-              <span className="text-[#9f9b94] uppercase text-[10px]">TIME REMAINING:</span>
+              <span className="text-[#8c867e] uppercase text-[10px]">TIME REMAINING:</span>
               <span className="font-bold text-[#d83128] tracking-widest text-sm sm:text-base">
                 {formatTimecode(timeLeft)}
               </span>
@@ -667,7 +667,7 @@ export function SeatGrid({
             <button
               onClick={handleReleaseAll}
               disabled={locking}
-              className="px-3 py-2 bg-[#171513] hover:bg-[#22201d] text-[#9f9b94] hover:text-[#eee9df] text-xs font-mono uppercase border border-[#2a2622] transition-colors"
+              className="px-3 py-2 bg-[#131110] hover:bg-[#22201d] text-[#8c867e] hover:text-[#eee9df] text-xs font-mono uppercase border border-[#26221f] transition-colors"
             >
               RELEASE
             </button>
