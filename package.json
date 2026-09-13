@@ -1,0 +1,44 @@
+{
+  "name": "cinematic-film-showcase",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@react-three/drei": "^9.106.0",
+    "@react-three/fiber": "^8.16.8",
+    "@supabase/supabase-js": "^2.43.4",
+    "canvas-confetti": "^1.9.3",
+    "clsx": "^2.1.1",
+    "gsap": "^3.12.5",
+    "html5-qrcode": "^2.3.8",
+    "lenis": "^1.1.9",
+    "lucide-react": "^0.395.0",
+    "next": "14.2.5",
+    "qrcode": "^1.5.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^2.3.0",
+    "three": "^0.165.0",
+    "three-stdlib": "^2.30.0",
+    "zustand": "^4.5.2"
+  },
+  "devDependencies": {
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/node": "^20.14.2",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@types/three": "^0.165.0",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "raw-loader": "^4.0.2",
+    "tailwindcss": "^3.4.4",
+    "tsx": "^4.23.13",
+    "typescript": "^5.4.5"
+  }
+}
