@@ -64,13 +64,12 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
         return;
       }
 
-      // Success! Play sound, trigger confetti, update store
       sound.playShutterClick();
       confetti({
         particleCount: 80,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ['#00f0ff', '#ff7a00', '#d946ef', '#ffffff'],
+        colors: ['#C92A42', '#D4AF37', '#E8E3D9', '#120E15'],
       });
 
       setConfirmedTickets(res.tickets);
@@ -85,30 +84,30 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
   if (!selectedSeats.length) {
     return (
       <div className="p-4 rounded-xl bg-black/40 border border-white/5 text-center text-xs font-mono text-zinc-400">
-        SELECT UP TO 4 SEATS ON THE ARCHITECTURAL MAP TO BEGIN RESERVATION
+        SELECT UP TO 4 SEATS ON THE ARCHITECTURAL MAP TO INITIATE ALLOCATION
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-xl mx-auto p-6 rounded-2xl bg-[#0b0e14]/90 border border-white/10 shadow-2xl backdrop-blur-xl">
+    <div className="w-full max-w-xl mx-auto p-6 rounded-2xl bg-[#0c0f1d]/90 border border-white/10 shadow-2xl backdrop-blur-xl">
       {/* Selection Summary */}
       <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-4 text-xs font-mono">
         <div>
           <span className="text-zinc-400 block text-[10px]">SELECTED SEATS ({selectedSeats.length}/4)</span>
-          <span className="text-base font-bold text-white tracking-wider">
+          <span className="text-base font-bold text-[#E8E3D9] tracking-wider">
             {selectedSeats.join(', ')}
           </span>
         </div>
         <div className="text-right">
-          <span className="text-zinc-400 block text-[10px]">ADMISSION COST</span>
-          <span className="text-emerald-400 text-base font-bold">100% FREE</span>
+          <span className="text-zinc-400 block text-[10px]">ADMISSION</span>
+          <span className="text-[#D4AF37] text-base font-bold">100% FREE</span>
         </div>
       </div>
 
       {errorMsg && (
         <div className="p-3 rounded-lg bg-red-950/80 border border-red-500/50 text-red-300 text-xs font-mono mb-4 flex items-center gap-2">
-          <ShieldAlert className="w-4 h-4 shrink-0 text-red-400" />
+          <ShieldAlert className="w-4 h-4 shrink-0 text-[#C92A42]" />
           <span>{errorMsg}</span>
         </div>
       )}
@@ -118,7 +117,7 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
         <button
           onClick={handleLockAndProceed}
           disabled={locking}
-          className="w-full py-3.5 px-6 rounded-xl font-mono text-xs tracking-wider uppercase font-bold text-black bg-neon-cyan hover:bg-neon-cyan/90 transition flex items-center justify-center gap-2 disabled:opacity-50"
+          className="w-full py-3.5 px-6 rounded-xl font-mono text-xs tracking-wider uppercase font-bold text-white bg-[#C92A42] hover:bg-[#C92A42]/90 transition flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-[#C92A42]/20"
         >
           {locking ? (
             <>
@@ -137,7 +136,7 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
         <form onSubmit={handleConfirmReservation} className="space-y-4 text-xs font-mono">
           <div>
             <label className="text-zinc-400 flex items-center gap-1.5 mb-1 text-[11px]">
-              <Mail className="w-3.5 h-3.5 text-neon-cyan" />
+              <Mail className="w-3.5 h-3.5 text-[#C92A42]" />
               ATTENDEE UNIVERSITY EMAIL
             </label>
             <input
@@ -146,13 +145,13 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="student@university.edu"
-              className="w-full px-3.5 py-2.5 rounded-lg bg-black/60 border border-white/15 text-white placeholder:text-zinc-600 focus:outline-none focus:border-neon-cyan transition"
+              className="w-full px-3.5 py-2.5 rounded-lg bg-black/60 border border-white/15 text-[#E8E3D9] placeholder:text-zinc-600 focus:outline-none focus:border-[#C92A42] transition"
             />
           </div>
 
           <div>
             <label className="text-zinc-400 flex items-center gap-1.5 mb-1 text-[11px]">
-              <User className="w-3.5 h-3.5 text-neon-cyan" />
+              <User className="w-3.5 h-3.5 text-[#C92A42]" />
               STUDENT ID / USN
             </label>
             <input
@@ -161,24 +160,24 @@ export const CheckoutDrawer: React.FC<CheckoutDrawerProps> = ({
               value={usn}
               onChange={(e) => setUsn(e.target.value.toUpperCase())}
               placeholder="e.g. 1RV22CS001"
-              className="w-full px-3.5 py-2.5 rounded-lg bg-black/60 border border-white/15 text-white placeholder:text-zinc-600 uppercase focus:outline-none focus:border-neon-cyan transition"
+              className="w-full px-3.5 py-2.5 rounded-lg bg-black/60 border border-white/15 text-[#E8E3D9] placeholder:text-zinc-600 uppercase focus:outline-none focus:border-[#C92A42] transition"
             />
           </div>
 
           <button
             type="submit"
             disabled={submitting}
-            className="w-full py-4 px-6 rounded-xl font-mono text-xs tracking-widest uppercase font-bold text-black bg-emerald-400 hover:bg-emerald-300 transition flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-emerald-500/20"
+            className="w-full py-4 px-6 rounded-xl font-mono text-xs tracking-widest uppercase font-bold text-white bg-[#C92A42] hover:bg-[#C92A42]/90 transition flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-[#C92A42]/20"
           >
             {submitting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>MINTING CRYPTOGRAPHIC PASSES...</span>
+                <span>MINTING 35MM PASSES...</span>
               </>
             ) : (
               <>
                 <Ticket className="w-4 h-4" />
-                <span>CONFIRM FREE RESERVATION & ISSUE 35MM PASS</span>
+                <span>CONFIRM FREE ALLOCATION & ISSUE PASS</span>
               </>
             )}
           </button>

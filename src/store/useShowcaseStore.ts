@@ -5,34 +5,28 @@ interface ShowcaseState {
   activeMovie: MovieItem;
   normalizedScroll: number;
   scrollVelocity: number;
-  isBookingOpen: boolean;
-  isTransitioningToBooking: boolean;
-  selectedShowtime: MovieShowtimeConfig | null;
+  isPageTransitioning: boolean;
+  isBookingRoute: boolean;
+  selectedShowtime: MovieShowtimeConfig;
 
   setActiveMovie: (movie: MovieItem) => void;
   setScrollState: (normalizedScroll: number, scrollVelocity: number) => void;
-  openBooking: (movie: MovieItem, showtime?: MovieShowtimeConfig) => void;
-  closeBooking: () => void;
-  setTransitioning: (status: boolean) => void;
+  setSelectedShowtime: (showtime: MovieShowtimeConfig) => void;
+  setIsPageTransitioning: (status: boolean) => void;
+  setIsBookingRoute: (status: boolean) => void;
 }
 
 export const useShowcaseStore = create<ShowcaseState>((set) => ({
   activeMovie: MOVIE_CATALOG[0],
   normalizedScroll: 0,
   scrollVelocity: 0,
-  isBookingOpen: false,
-  isTransitioningToBooking: false,
-  selectedShowtime: MOVIE_CATALOG[0].showtimes[0] || null,
+  isPageTransitioning: false,
+  isBookingRoute: false,
+  selectedShowtime: MOVIE_CATALOG[0].showtimes[0],
 
   setActiveMovie: (movie) => set({ activeMovie: movie }),
   setScrollState: (normalizedScroll, scrollVelocity) => set({ normalizedScroll, scrollVelocity }),
-  openBooking: (movie, showtime) => {
-    set({
-      activeMovie: movie,
-      selectedShowtime: showtime || movie.showtimes[0],
-      isTransitioningToBooking: true,
-    });
-  },
-  closeBooking: () => set({ isBookingOpen: false, isTransitioningToBooking: false }),
-  setTransitioning: (status) => set({ isTransitioningToBooking: status }),
+  setSelectedShowtime: (showtime) => set({ selectedShowtime: showtime }),
+  setIsPageTransitioning: (status) => set({ isPageTransitioning: status }),
+  setIsBookingRoute: (status) => set({ isBookingRoute: status }),
 }));

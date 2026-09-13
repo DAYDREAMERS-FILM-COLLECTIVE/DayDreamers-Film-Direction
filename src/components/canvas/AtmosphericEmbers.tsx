@@ -5,13 +5,12 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useShowcaseStore } from '@/store/useShowcaseStore';
 
-const PARTICLE_COUNT = 900;
+const PARTICLE_COUNT = 700;
 
 export const AtmosphericEmbers: React.FC = () => {
   const pointsRef = useRef<THREE.Points>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
 
-  // Generate deterministic particle distributions
   const [positions, randomOffsets, scales] = useMemo(() => {
     const pos = new Float32Array(PARTICLE_COUNT * 3);
     const rand = new Float32Array(PARTICLE_COUNT * 3);
@@ -27,7 +26,7 @@ export const AtmosphericEmbers: React.FC = () => {
       rand[i3 + 1] = Math.random();
       rand[i3 + 2] = Math.random();
 
-      scl[i] = Math.random() * 0.8 + 0.3;
+      scl[i] = Math.random() * 0.7 + 0.3;
     }
     return [pos, rand, scl];
   }, []);
@@ -36,7 +35,7 @@ export const AtmosphericEmbers: React.FC = () => {
     () => ({
       uTime: { value: 0 },
       uScrollVelocity: { value: 0 },
-      uColor: { value: new THREE.Color('#00f0ff') },
+      uColor: { value: new THREE.Color('#E8E3D9') },
       uMouse: { value: new THREE.Vector2(0, 0) },
     }),
     []
@@ -56,22 +55,21 @@ export const AtmosphericEmbers: React.FC = () => {
       vUv = uv;
       vec3 pos = position;
 
-      // Vertical drift influenced by time and Lenis scroll velocity
-      float speed = 0.2 + aRandomOffset.x * 0.4;
-      pos.y += sin(uTime * 0.6 + aRandomOffset.y * 6.28) * 0.3;
-      pos.y -= uScrollVelocity * 0.05 * (0.5 + aRandomOffset.z);
+      // Soft vertical dust drift
+      float speed = 0.15 + aRandomOffset.x * 0.35;
+      pos.y += sin(uTime * 0.5 + aRandomOffset.y * 6.28) * 0.25;
+      pos.y -= uScrollVelocity * 0.04 * (0.4 + aRandomOffset.z);
 
-      // Subtle horizontal turbulence and mouse sway
-      pos.x += cos(uTime * 0.4 + aRandomOffset.z * 6.28) * 0.2 + (uMouse.x * 0.35);
+      // Mouse sway
+      pos.x += cos(uTime * 0.3 + aRandomOffset.z * 6.28) * 0.15 + (uMouse.x * 0.25);
 
       // Cycle Z boundary
       pos.z = mod(pos.z + uTime * speed + 6.0, 14.0) - 7.0;
 
       vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-      gl_PointSize = aScale * (120.0 / -mvPosition.z);
+      gl_PointSize = aScale * (110.0 / -mvPosition.z);
       gl_Position = projectionMatrix * mvPosition;
 
-      // Soft edge falloff
       vAlpha = smoothstep(7.0, 2.0, abs(pos.z));
     }
   `;
@@ -81,18 +79,16 @@ export const AtmosphericEmbers: React.FC = () => {
     varying float vAlpha;
 
     void main() {
-      // Soft radial circular particle
       vec2 center = gl_PointCoord - vec2(0.5);
       float dist = length(center);
       if (dist > 0.5) discard;
 
-      float glow = smoothstep(0.5, 0.05, dist);
-      gl_FragColor = vec4(uColor, glow * vAlpha * 0.85);
+      float glow = smoothstep(0.5, 0.08, dist);
+      gl_FragColor = vec4(uColor, glow * vAlpha * 0.7);
     }
   `;
 
   useFrame((state, delta) => {
-    // Read transient state
     const { scrollVelocity, activeMovie } = useShowcaseStore.getState();
     const damping = 1 - Math.exp(-4 * delta);
 
@@ -117,18 +113,9 @@ export const AtmosphericEmbers: React.FC = () => {
   return (
     <points ref={pointsRef}>
       <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          args={[positions, 3]}
-        />
-        <bufferAttribute
-          attach="attributes-aRandomOffset"
-          args={[randomOffsets, 3]}
-        />
-        <bufferAttribute
-          attach="attributes-aScale"
-          args={[scales, 1]}
-        />
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+        <bufferAttribute attach="attributes-aRandomOffset" args={[randomOffsets, 3]} />
+        <bufferAttribute attach="attributes-aScale" args={[scales, 1]} />
       </bufferGeometry>
       <shaderMaterial
         ref={materialRef}

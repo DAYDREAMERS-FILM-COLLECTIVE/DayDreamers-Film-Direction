@@ -4,12 +4,9 @@ export interface MovieSceneConfig {
   glassTransmission: number;
   roughness: number;
   ior: number;
-  apertureBladeOpen: number; // 0.0 to 1.0
-  particleVelocity: number;
   particleColor: string;
-  splineProgressTarget: number; // [0, 1]
+  modelRotation: [number, number, number];
   lensFocalLength: string;
-  bloomIntensity: number;
 }
 
 export interface MovieShowtimeConfig {
@@ -34,6 +31,7 @@ export interface MovieItem {
   domConfig: {
     accentColor: string;
     secondaryColor: string;
+    badgeBg: string;
   };
 }
 
@@ -41,33 +39,31 @@ export const MOVIE_CATALOG: MovieItem[] = [
   {
     id: "film-01",
     slug: "the-neon-protocol",
-    title: "THE NEON PROTOCOL",
+    title: "THE SILENT PROTOCOL",
     tagline: "In the shadow of synthetic memory, truth is rendered.",
     director: "Kaelen Voss",
     year: "2026",
     aspectRatio: "2.39:1 Anamorphic",
     runtime: "114 MIN",
-    logline: "An optical engineer uncovers encrypted audio waveforms pressed into the glass of high-frequency surveillance lenses.",
+    logline: "An optical engineer uncovers encrypted acoustic waveforms pressed into the glass of vintage cinema lenses.",
     showtimes: [
       { id: "st-01", venue: "FPS Screening Auditorium Alpha", timeLabel: "19:00 IST", isoDate: "2026-09-20T19:00:00+05:30" },
       { id: "st-02", venue: "FPS Screening Auditorium Alpha", timeLabel: "22:15 IST", isoDate: "2026-09-20T22:15:00+05:30" }
     ],
     sceneConfig: {
-      ambientColor: "#040b14",
-      keyLightColor: "#00f0ff",
-      glassTransmission: 0.96,
-      roughness: 0.08,
+      ambientColor: "#060814",
+      keyLightColor: "#C92A42", // Crimson
+      glassTransmission: 0.94,
+      roughness: 0.12,
       ior: 1.54,
-      apertureBladeOpen: 0.85,
-      particleVelocity: 1.8,
-      particleColor: "#00f0ff",
-      splineProgressTarget: 0.2,
-      lensFocalLength: "50mm T/1.3",
-      bloomIntensity: 1.2
+      particleColor: "#E8E3D9",
+      modelRotation: [0.15, 0.4, 0],
+      lensFocalLength: "50mm T/1.3 Cooke",
     },
     domConfig: {
-      accentColor: "#00f0ff",
-      secondaryColor: "rgba(0, 240, 255, 0.15)"
+      accentColor: "#C92A42", // Crimson
+      secondaryColor: "rgba(201, 42, 66, 0.2)",
+      badgeBg: "#C92A42",
     }
   },
   {
@@ -85,21 +81,19 @@ export const MOVIE_CATALOG: MovieItem[] = [
       { id: "st-04", venue: "FPS Main Auditorium 70mm", timeLabel: "21:45 IST", isoDate: "2026-09-21T21:45:00+05:30" }
     ],
     sceneConfig: {
-      ambientColor: "#140902",
-      keyLightColor: "#ff7a00",
+      ambientColor: "#120E15",
+      keyLightColor: "#D4AF37", // Muted Gold
       glassTransmission: 0.88,
-      roughness: 0.16,
+      roughness: 0.22,
       ior: 1.62,
-      apertureBladeOpen: 0.35,
-      particleVelocity: 1.1,
-      particleColor: "#ff7a00",
-      splineProgressTarget: 0.55,
-      lensFocalLength: "85mm T/1.5",
-      bloomIntensity: 1.5
+      particleColor: "#D4AF37",
+      modelRotation: [-0.2, -0.6, 0.1],
+      lensFocalLength: "85mm T/1.5 Zeiss",
     },
     domConfig: {
-      accentColor: "#ff7a00",
-      secondaryColor: "rgba(255, 122, 0, 0.15)"
+      accentColor: "#D4AF37", // Muted Gold
+      secondaryColor: "rgba(212, 175, 55, 0.2)",
+      badgeBg: "#D4AF37",
     }
   },
   {
@@ -111,26 +105,24 @@ export const MOVIE_CATALOG: MovieItem[] = [
     year: "2026",
     aspectRatio: "1.85:1 Academy Flat",
     runtime: "98 MIN",
-    logline: "A projectionist in an abandoned art-house theater discovers that shifting the optical prism block projects events that have not yet occurred.",
+    logline: "A projectionist in an abandoned art-house theater discovers that rotating the anamorphic prism block projects events that have not yet occurred.",
     showtimes: [
       { id: "st-05", venue: "FPS Chamber Theater", timeLabel: "20:00 IST", isoDate: "2026-09-22T20:00:00+05:30" }
     ],
     sceneConfig: {
-      ambientColor: "#0f0518",
-      keyLightColor: "#d946ef",
+      ambientColor: "#080c1e",
+      keyLightColor: "#E8E3D9", // Bone White
       glassTransmission: 0.98,
-      roughness: 0.04,
+      roughness: 0.08,
       ior: 1.72,
-      apertureBladeOpen: 1.0,
-      particleVelocity: 2.2,
-      particleColor: "#d946ef",
-      splineProgressTarget: 0.9,
-      lensFocalLength: "35mm T/1.2",
-      bloomIntensity: 1.8
+      particleColor: "#C92A42",
+      modelRotation: [0.3, 0.8, -0.15],
+      lensFocalLength: "35mm T/1.2 Panavision",
     },
     domConfig: {
-      accentColor: "#d946ef",
-      secondaryColor: "rgba(217, 70, 239, 0.15)"
+      accentColor: "#E8E3D9", // Bone White
+      secondaryColor: "rgba(232, 227, 217, 0.2)",
+      badgeBg: "#120E15",
     }
   }
 ];

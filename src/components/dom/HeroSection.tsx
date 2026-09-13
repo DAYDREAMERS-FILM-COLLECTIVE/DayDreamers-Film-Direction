@@ -8,45 +8,45 @@ export const HeroSection: React.FC = () => {
   const activeMovie = useShowcaseStore((s) => s.activeMovie);
 
   return (
-    <section className="relative min-h-screen w-full flex flex-col justify-between px-6 md:px-16 pt-32 pb-16 pointer-events-none">
-      {/* Top Statement */}
-      <div className="max-w-3xl pointer-events-auto space-y-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-surface/60 backdrop-blur-sm text-xs font-mono text-zinc-300">
-          <Aperture className="w-3.5 h-3.5 text-neon-cyan animate-spin" style={{ animationDuration: '10s' }} />
-          <span>SYNCHRONIZED WEBGL & PARAMETRIC ARCHITECTURE</span>
+    <section className="relative min-h-screen w-full flex flex-col justify-between px-6 md:px-16 pt-36 pb-16 pointer-events-none">
+      {/* Top Statement in Editorial Serif */}
+      <div className="max-w-4xl pointer-events-auto space-y-6">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-white/10 bg-[#0c0f1d]/70 backdrop-blur-md text-[11px] font-mono text-[#D4AF37] tracking-widest uppercase">
+          <Aperture className="w-3.5 h-3.5 text-[#C92A42] animate-spin" style={{ animationDuration: '16s' }} />
+          <span>SYNCHRONIZED WEBGL & EDITORIAL CINEMA ARCHITECTURE</span>
         </div>
 
-        <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight text-white leading-[1.05]">
-          OPTICAL <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-cyan via-white to-prism-magenta">ANAMORPHICS</span> & CINEMATIC SPACE
+        <h1 className="hero-heading text-5xl sm:text-7xl md:text-8xl font-serif text-[#E8E3D9] leading-[1.0] tracking-tight">
+          Anamorphic <span className="italic font-serif text-[#C92A42]">Visions</span> & Space.
         </h1>
 
-        <p className="text-sm sm:text-base md:text-lg text-zinc-400 font-light leading-relaxed max-w-2xl">
-          A synchronized film direction portfolio and real-time seat reservation engine. 
-          Scroll down to traverse the optical assembly—each featured film shifts the mechanical aperture, refraction indices, and ambient chromatic field.
+        <p className="text-base sm:text-lg md:text-xl text-zinc-400 font-light leading-relaxed max-w-2xl">
+          An atmospheric direction archive and synchronized cinema seat reservation platform. 
+          As you traverse the virtual scroll, the persistent 3D lens shifts its optical refraction, materials, and ambient illumination.
         </p>
       </div>
 
-      {/* Center Reticle Info */}
+      {/* Center Reticle Metadata HUD */}
       <div className="hidden lg:flex items-center justify-between border-t border-b border-white/[0.08] py-4 pointer-events-auto text-xs font-mono text-zinc-400">
         <div className="flex items-center gap-3">
-          <Eye className="w-4 h-4 text-neon-cyan" />
-          <span>FOCUS TARGET // {activeMovie.title}</span>
+          <Eye className="w-4 h-4 text-[#C92A42]" />
+          <span className="text-[#E8E3D9]">FOCAL SUBJECT // {activeMovie.title}</span>
         </div>
-        <div>OPTICS // {activeMovie.sceneConfig.lensFocalLength}</div>
-        <div>APERTURE IRIS // {(activeMovie.sceneConfig.apertureBladeOpen * 100).toFixed(0)}% OPEN</div>
-        <div>TICKETING // 100% FREE ADMISSION RESERVATION</div>
+        <div>MODEL OPTICS // {activeMovie.sceneConfig.lensFocalLength}</div>
+        <div>PALETTE // MIDNIGHT & CRIMSON</div>
+        <div>ADMISSION // 100% FREE TICKETING</div>
       </div>
 
-      {/* Bottom Scroll Prompt */}
+      {/* Bottom Scroll Indicator */}
       <div className="flex items-center justify-between pointer-events-auto pt-6">
-        <div className="text-xs font-mono text-zinc-400 flex items-center gap-2">
-          <span>SCROLL TO ENTER SHOWCASE</span>
-          <span className="w-8 h-[1px] bg-zinc-600" />
+        <div className="text-xs font-mono text-zinc-400 flex items-center gap-3">
+          <span>SCROLL TO SCRUB TIMELINE</span>
+          <span className="w-12 h-[1px] bg-white/20" />
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-mono text-neon-cyan animate-bounce">
-          <span>TRAVERSE PRISM</span>
-          <ArrowDown className="w-4 h-4" />
+        <div className="flex items-center gap-2 text-xs font-mono text-[#E8E3D9] animate-bounce">
+          <span>TRAVERSE ARCHIVE</span>
+          <ArrowDown className="w-4 h-4 text-[#C92A42]" />
         </div>
       </div>
     </section>

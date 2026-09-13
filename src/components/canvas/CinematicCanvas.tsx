@@ -1,23 +1,25 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { Suspense, useRef } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { LensCore } from './LensCore';
+import { BlendkitModel } from './BlendkitModel';
 import { AtmosphericEmbers } from './AtmosphericEmbers';
-import { SplineCameraRig } from './SplineCameraRig';
 import { useShowcaseStore } from '@/store/useShowcaseStore';
 
-const DynamicLighting: React.FC = () => {
-  const spotLightRef = useRef<THREE.SpotLight>(null);
+const DogstudioLighting: React.FC = () => {
+  const keyLightRef = useRef<THREE.SpotLight>(null);
   const ambientLightRef = useRef<THREE.AmbientLight>(null);
+  const rimLightRef = useRef<THREE.DirectionalLight>(null);
+
 
   useFrame((_, delta) => {
     const { activeMovie } = useShowcaseStore.getState();
     const damping = 1 - Math.exp(-4 * delta);
 
-    if (spotLightRef.current) {
-      spotLightRef.current.color.lerp(new THREE.Color(activeMovie.sceneConfig.keyLightColor), damping);
+    // Muted editorial palette transitions
+    if (keyLightRef.current) {
+      keyLightRef.current.color.lerp(new THREE.Color(activeMovie.sceneConfig.keyLightColor), damping);
     }
     if (ambientLightRef.current) {
       ambientLightRef.current.color.lerp(new THREE.Color(activeMovie.sceneConfig.ambientColor), damping);
@@ -26,39 +28,44 @@ const DynamicLighting: React.FC = () => {
 
   return (
     <>
-      <ambientLight ref={ambientLightRef} intensity={1.2} />
+      {/* Soft abyssal ambient tone */}
+      <ambientLight ref={ambientLightRef} intensity={1.5} color="#060814" />
+
+      {/* Warm editorial key spotlight (illuminating Blendkit geometry) */}
       <spotLight
-        ref={spotLightRef}
-        position={[4, 5, 6]}
-        angle={0.6}
-        penumbra={0.8}
-        intensity={2.5}
-        castShadow
+        ref={keyLightRef}
+        position={[3.5, 4.5, 5.0]}
+        angle={0.55}
+        penumbra={0.9}
+        intensity={2.8}
+        color="#C92A42"
       />
-      <pointLight position={[-4, -3, -2]} intensity={1.0} color="#ffffff" />
-      <directionalLight position={[0, -5, 2]} intensity={0.5} color="#404040" />
+
+      {/* Soft Blue fill light */}
+      <pointLight position={[-4, -2, -3]} intensity={1.4} color="#1c2b4d" />
+
+      {/* Muted Gold rim light */}
+      <directionalLight ref={rimLightRef} position={[0, -4, 3]} intensity={0.8} color="#D4AF37" />
     </>
   );
 };
 
 export default function CinematicCanvas() {
-  const isBookingOpen = useShowcaseStore((s) => s.isBookingOpen);
-
   return (
-    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-void">
+    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-[#060814]">
       <Canvas
-        camera={{ position: [0, 0, 5], fov: 45, near: 0.1, far: 50 }}
+        camera={{ position: [0, 0, 4.8], fov: 42, near: 0.1, far: 50 }}
         dpr={[1, 1.5]}
         gl={{
           antialias: true,
           powerPreference: 'high-performance',
           alpha: true,
         }}
-        frameloop={isBookingOpen ? 'demand' : 'always'}
       >
-        <DynamicLighting />
-        <SplineCameraRig />
-        <LensCore />
+        <DogstudioLighting />
+        <Suspense fallback={null}>
+          <BlendkitModel />
+        </Suspense>
         <AtmosphericEmbers />
       </Canvas>
     </div>
