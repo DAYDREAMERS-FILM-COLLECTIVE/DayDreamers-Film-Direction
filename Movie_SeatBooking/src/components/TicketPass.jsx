@@ -50,7 +50,7 @@ export function TicketPass({ bookingData, onBookAnother }) {
         width: 240,
         margin: 1,
         color: {
-          dark: '#0e0d0c',
+          dark: '#11100f',
           light: '#ffffff',
         },
       },
@@ -81,7 +81,7 @@ export function TicketPass({ bookingData, onBookAnother }) {
             </p>
           </div>
         </div>
-        <div className="text-[10px] font-mono uppercase px-2.5 py-1 bg-[#0e0d0c] border border-[#2a2622] text-[#d83128]">
+        <div className="text-[10px] font-mono uppercase px-2.5 py-1 bg-[#11100f] border border-[#2a2622] text-[#d83128]">
           STATUS: VALID FOR ENTRY
         </div>
       </div>
@@ -125,7 +125,7 @@ export function TicketPass({ bookingData, onBookAnother }) {
             </div>
 
             <div className="grid grid-cols-2 gap-3 text-xs font-mono">
-              <div className="p-3 bg-[#0e0d0c] border border-[#2a2622] space-y-1 print:bg-slate-100 print:border-black">
+              <div className="p-3 bg-[#11100f] border border-[#2a2622] space-y-1 print:bg-slate-100 print:border-black">
                 <span className="text-[9px] text-[#9f9b94] uppercase flex items-center space-x-1">
                   <MapPin className="w-3 h-3 text-[#d83128]" />
                   <span>HALL</span>
@@ -133,7 +133,7 @@ export function TicketPass({ bookingData, onBookAnother }) {
                 <span className="font-bold text-[#eee9df] block truncate print:text-black">{showtime.auditorium_name}</span>
               </div>
 
-              <div className="p-3 bg-[#0e0d0c] border border-[#2a2622] space-y-1 print:bg-slate-100 print:border-black">
+              <div className="p-3 bg-[#11100f] border border-[#2a2622] space-y-1 print:bg-slate-100 print:border-black">
                 <span className="text-[9px] text-[#9f9b94] uppercase flex items-center space-x-1">
                   <Calendar className="w-3 h-3 text-[#d83128]" />
                   <span>SCHEDULE</span>
@@ -145,7 +145,7 @@ export function TicketPass({ bookingData, onBookAnother }) {
             </div>
 
             {/* Reserved Seats List */}
-            <div className="p-3 bg-[#0e0d0c] border border-[#2a2622] space-y-2 print:bg-slate-100 print:border-black">
+            <div className="p-3 bg-[#11100f] border border-[#2a2622] space-y-2 print:bg-slate-100 print:border-black">
               <span className="text-[10px] font-mono text-[#9f9b94] uppercase flex items-center space-x-1">
                 <Ticket className="w-3 h-3 text-[#d83128]" />
                 <span>ALLOCATED SEATS ({seats.length})</span>
@@ -167,7 +167,7 @@ export function TicketPass({ bookingData, onBookAnother }) {
             </div>
 
             {/* Student Credentials */}
-            <div className="p-3 bg-[#0e0d0c] border border-[#2a2622] space-y-1 text-xs font-mono print:bg-slate-100 print:border-black">
+            <div className="p-3 bg-[#11100f] border border-[#2a2622] space-y-1 text-xs font-mono print:bg-slate-100 print:border-black">
               <span className="text-[10px] text-[#9f9b94] uppercase block">PASS HOLDER</span>
               <div className="font-bold text-[#eee9df] print:text-black">
                 {primaryBooker.name} • USN: {primaryBooker.usn}
@@ -212,7 +212,7 @@ export function TicketPass({ bookingData, onBookAnother }) {
         {/* Pass Footer */}
         <div className="border-t border-[#2a2622] pt-4 flex flex-col sm:flex-row items-center justify-between text-[10px] font-mono text-[#9f9b94] gap-2 print:border-black print:text-black">
           <div>RV UNIVERSITY • CAMPUS CINEMA SOCIETY • BANGALORE</div>
-          <div className="font-bold text-[#eee9df] print:text-black">TOTAL PAID: ₹{totalAmount}</div>
+          <div className="font-bold text-[#eee9df] print:text-black uppercase tracking-wider">CAMPUS ACCESS • COMPLIMENTARY</div>
         </div>
       </div>
 
@@ -220,7 +220,7 @@ export function TicketPass({ bookingData, onBookAnother }) {
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-[#171513] border border-[#2a2622] print:hidden">
         <button
           onClick={handlePrint}
-          className="w-full sm:w-auto px-5 py-2.5 bg-[#0e0d0c] hover:bg-[#1e1b18] text-[#eee9df] text-xs font-sans font-bold uppercase tracking-wider border border-[#2a2622] flex items-center justify-center space-x-2 transition-colors cursor-pointer"
+          className="w-full sm:w-auto px-5 py-2.5 bg-[#11100f] hover:bg-[#1e1b18] text-[#eee9df] text-xs font-sans font-bold uppercase tracking-wider border border-[#2a2622] flex items-center justify-center space-x-2 transition-colors cursor-pointer"
         >
           <Printer className="w-4 h-4 text-[#d83128]" />
           <span>PRINT / SAVE PASS (PDF)</span>

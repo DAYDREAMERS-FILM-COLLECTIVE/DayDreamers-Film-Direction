@@ -293,11 +293,6 @@ export function SeatGrid({
     return acc;
   }, {});
 
-  const totalPrice = selectedSeats.reduce((sum, s) => {
-    const price = s.seat_tier === 'vip' ? showtime.price_vip : showtime.price_regular;
-    return sum + Number(price);
-  }, 0);
-
   // Analog Timecode Format [ 04:59 ]
   const formatTimecode = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -312,7 +307,7 @@ export function SeatGrid({
         <div className="flex items-center space-x-3">
           <button
             onClick={onBack}
-            className="p-2 bg-[#0e0d0c] hover:bg-[#1e1b18] border border-[#2a2622] text-[#9f9b94] hover:text-[#eee9df] transition-colors"
+            className="p-2 bg-[#11100f] hover:bg-[#1e1b18] border border-[#2a2622] text-[#9f9b94] hover:text-[#eee9df] transition-colors"
             title="Return to Premiere Drop"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -328,7 +323,7 @@ export function SeatGrid({
         </div>
 
         {/* Mode Selector */}
-        <div className="flex items-center space-x-1 bg-[#0e0d0c] p-1 border border-[#2a2622]">
+        <div className="flex items-center space-x-1 bg-[#11100f] p-1 border border-[#2a2622]">
           <button
             onClick={() => handleModeSwitch('individual')}
             className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-sans font-medium uppercase tracking-wider transition-colors ${
@@ -404,12 +399,12 @@ export function SeatGrid({
         {/* Legend */}
         <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-[11px] font-sans">
           <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-[#22201d] border border-[#3a3530]" />
-            <span className="text-[#9f9b94]">Regular (₹{showtime.price_regular})</span>
+            <div className="w-4 h-4 bg-[#22201d] border border-[#37342f]" />
+            <span className="text-[#9f9b94]">Regular Tier</span>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-4 h-4 bg-[#2d241e] border border-[#5c4738]" />
-            <span className="text-[#d4af37]">VIP Bronze (₹{showtime.price_vip})</span>
+            <span className="text-[#d4af37]">VIP Bronze Tier</span>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-4 h-4 bg-[#d83128]" />
@@ -420,7 +415,7 @@ export function SeatGrid({
             <span className="text-[#f59e0b]">Held</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-[#131211] opacity-30 border border-[#2a2622]" />
+            <div className="w-4 h-4 bg-[#13110f] opacity-30 border border-[#2a2622]" />
             <span className="text-[#64748b]">Booked</span>
           </div>
         </div>
@@ -501,7 +496,7 @@ export function SeatGrid({
                             disabled={isBooked || isLockedByOther || locking}
                             onClick={() => handleSeatClick(seat)}
                             title={`${seat.row_label}${seat.col_number} • ${
-                              isVip ? 'VIP ₹' + showtime.price_vip : 'REGULAR ₹' + showtime.price_regular
+                              isVip ? 'VIP TIER' : 'REGULAR ARCHIVE'
                             }`}
                             className={`h-9 w-full border font-mono text-xs flex items-center justify-center transition-all duration-150 ${seatStyles}`}
                           >
@@ -519,7 +514,7 @@ export function SeatGrid({
 
         {/* Tier Annotations */}
         <div className="pt-3 border-t border-[#2a2622] flex flex-col sm:flex-row items-center justify-between text-[11px] font-mono text-[#9f9b94] gap-2">
-          <div>ROWS A–C: REGULAR ARCHIVE TIER (₹{showtime.price_regular})</div>
+          <div>ROWS A–C: REGULAR ARCHIVE TIER</div>
           <div className="flex items-center space-x-2">
             {isSyncing && (
               <span className="flex items-center space-x-1 text-[#d83128]">
@@ -527,19 +522,19 @@ export function SeatGrid({
                 <span>SYNCING LIVE</span>
               </span>
             )}
-            <span className="text-[#d4af37]">ROWS D–E: VIP BRONZE TIER (₹{showtime.price_vip})</span>
+            <span className="text-[#d4af37]">ROWS D–E: VIP BRONZE TIER</span>
           </div>
         </div>
       </div>
 
       {/* Sticky Bottom Dock: Physical Ticket Preview & Analog Timecode */}
-      <div className="sticky bottom-4 z-40 bg-[#0e0d0c] border border-[#d83128] p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xl">
+      <div className="sticky bottom-4 z-40 bg-[#11100f] border border-[#d83128] p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xl">
         {/* Left: Physical Ticket Preview with Tearing Perforation Line */}
         <div className="flex items-center space-x-4">
           <div className="relative bg-[#171513] border border-[#2a2622] px-4 py-2 flex items-center space-x-3">
             {/* Ticket Notches */}
-            <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-[#0e0d0c] border-r border-[#2a2622]" />
-            <div className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-[#0e0d0c] border-l border-[#2a2622]" />
+            <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-[#11100f] border-r border-[#2a2622]" />
+            <div className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-[#11100f] border-l border-[#2a2622]" />
 
             <div className="space-y-0.5">
               <span className="text-[9px] font-mono uppercase text-[#9f9b94] block">
@@ -564,10 +559,10 @@ export function SeatGrid({
             {/* Tearing Perforation Line */}
             <div className="h-7 border-r-2 border-dashed border-[#d83128]/50 mx-2" />
 
-            {/* Total Price */}
+            {/* Admission Status */}
             <div>
-              <span className="text-[9px] font-mono uppercase text-[#9f9b94] block">TOTAL</span>
-              <span className="text-base font-mono font-bold text-[#eee9df]">₹{totalPrice}</span>
+              <span className="text-[9px] font-mono uppercase text-[#9f9b94] block">ADMISSION</span>
+              <span className="text-xs font-mono font-bold text-[#eee9df] uppercase">FREE CAMPUS PASS</span>
             </div>
           </div>
 

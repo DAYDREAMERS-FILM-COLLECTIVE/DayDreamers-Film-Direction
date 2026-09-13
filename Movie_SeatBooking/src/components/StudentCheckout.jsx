@@ -40,11 +40,6 @@ export function StudentCheckout({
   const [submitting, setSubmitting] = useState(false);
   const [validationError, setValidationError] = useState('');
 
-  const totalPrice = selectedSeats.reduce((sum, s) => {
-    const price = s.seat_tier === 'vip' ? showtime.price_vip : showtime.price_regular;
-    return sum + Number(price);
-  }, 0);
-
   const handleAttendeeChange = (index, field, value) => {
     setAttendees((prev) => {
       const updated = [...prev];
@@ -128,7 +123,7 @@ export function StudentCheckout({
         onBookingConfirmed({
           bookingId: res.booking_id,
           ticketHash: res.ticket_hash,
-          totalAmount: res.total_amount || totalPrice,
+          totalAmount: 0,
           primaryBooker: {
             name: fullName,
             usn: cleanPrimaryUsn,
@@ -194,7 +189,7 @@ export function StudentCheckout({
                     Primary Pass Holder ({selectedSeats[0]?.row_label}{selectedSeats[0]?.col_number})
                   </h3>
                 </div>
-                <span className="text-[10px] font-mono bg-[#0e0d0c] border border-[#2a2622] px-2 py-0.5 text-[#9f9b94] uppercase">
+                <span className="text-[10px] font-mono bg-[#11100f] border border-[#2a2622] px-2 py-0.5 text-[#9f9b94] uppercase">
                   LEAD BOOKER
                 </span>
               </div>
@@ -208,7 +203,7 @@ export function StudentCheckout({
                     value={primaryFirstName}
                     onChange={(e) => setPrimaryFirstName(e.target.value)}
                     placeholder="e.g. Arjun"
-                    className="w-full bg-[#0e0d0c] border border-[#2a2622] px-3 py-2 text-xs font-sans text-[#eee9df] placeholder-[#64748b] focus:outline-none focus:border-[#d83128]"
+                    className="w-full bg-[#11100f] border border-[#2a2622] px-3 py-2 text-xs font-sans text-[#eee9df] placeholder-[#64748b] focus:outline-none focus:border-[#d83128]"
                   />
                 </div>
 
@@ -220,7 +215,7 @@ export function StudentCheckout({
                     value={primaryLastName}
                     onChange={(e) => setPrimaryLastName(e.target.value)}
                     placeholder="e.g. Sharma"
-                    className="w-full bg-[#0e0d0c] border border-[#2a2622] px-3 py-2 text-xs font-sans text-[#eee9df] placeholder-[#64748b] focus:outline-none focus:border-[#d83128]"
+                    className="w-full bg-[#11100f] border border-[#2a2622] px-3 py-2 text-xs font-sans text-[#eee9df] placeholder-[#64748b] focus:outline-none focus:border-[#d83128]"
                   />
                 </div>
               </div>
@@ -237,7 +232,7 @@ export function StudentCheckout({
                     value={primaryUsn}
                     onChange={(e) => setPrimaryUsn(e.target.value)}
                     placeholder="e.g. RVU23BSE042"
-                    className="w-full bg-[#0e0d0c] border border-[#2a2622] px-3 py-2 text-xs font-mono uppercase text-[#eee9df] placeholder-[#64748b] focus:outline-none focus:border-[#d83128]"
+                    className="w-full bg-[#11100f] border border-[#2a2622] px-3 py-2 text-xs font-mono uppercase text-[#eee9df] placeholder-[#64748b] focus:outline-none focus:border-[#d83128]"
                   />
                 </div>
 
@@ -252,7 +247,7 @@ export function StudentCheckout({
                     value={primaryEmail}
                     onChange={(e) => setPrimaryEmail(e.target.value)}
                     placeholder="arjun@rvu.edu.in"
-                    className="w-full bg-[#0e0d0c] border border-[#2a2622] px-3 py-2 text-xs font-sans text-[#eee9df] placeholder-[#64748b] focus:outline-none focus:border-[#d83128]"
+                    className="w-full bg-[#11100f] border border-[#2a2622] px-3 py-2 text-xs font-sans text-[#eee9df] placeholder-[#64748b] focus:outline-none focus:border-[#d83128]"
                   />
                 </div>
               </div>
@@ -283,7 +278,7 @@ export function StudentCheckout({
                           value={att.firstName}
                           onChange={(e) => handleAttendeeChange(idx, 'firstName', e.target.value)}
                           placeholder="e.g. Diya"
-                          className="w-full bg-[#0e0d0c] border border-[#2a2622] px-3 py-2 text-xs font-sans text-[#eee9df] placeholder-[#64748b] focus:outline-none focus:border-[#d83128]"
+                          className="w-full bg-[#11100f] border border-[#2a2622] px-3 py-2 text-xs font-sans text-[#eee9df] placeholder-[#64748b] focus:outline-none focus:border-[#d83128]"
                         />
                       </div>
 
@@ -295,7 +290,7 @@ export function StudentCheckout({
                           value={att.lastName}
                           onChange={(e) => handleAttendeeChange(idx, 'lastName', e.target.value)}
                           placeholder="e.g. Verma"
-                          className="w-full bg-[#0e0d0c] border border-[#2a2622] px-3 py-2 text-xs font-sans text-[#eee9df] placeholder-[#64748b] focus:outline-none focus:border-[#d83128]"
+                          className="w-full bg-[#11100f] border border-[#2a2622] px-3 py-2 text-xs font-sans text-[#eee9df] placeholder-[#64748b] focus:outline-none focus:border-[#d83128]"
                         />
                       </div>
                     </div>
@@ -309,7 +304,7 @@ export function StudentCheckout({
                           value={att.usn}
                           onChange={(e) => handleAttendeeChange(idx, 'usn', e.target.value)}
                           placeholder="e.g. RVU23BSE088"
-                          className="w-full bg-[#0e0d0c] border border-[#2a2622] px-3 py-2 text-xs font-mono uppercase text-[#eee9df] placeholder-[#64748b] focus:outline-none focus:border-[#d83128]"
+                          className="w-full bg-[#11100f] border border-[#2a2622] px-3 py-2 text-xs font-mono uppercase text-[#eee9df] placeholder-[#64748b] focus:outline-none focus:border-[#d83128]"
                         />
                       </div>
 
@@ -321,7 +316,7 @@ export function StudentCheckout({
                           value={att.email}
                           onChange={(e) => handleAttendeeChange(idx, 'email', e.target.value)}
                           placeholder="diya@rvu.edu.in"
-                          className="w-full bg-[#0e0d0c] border border-[#2a2622] px-3 py-2 text-xs font-sans text-[#eee9df] placeholder-[#64748b] focus:outline-none focus:border-[#d83128]"
+                          className="w-full bg-[#11100f] border border-[#2a2622] px-3 py-2 text-xs font-sans text-[#eee9df] placeholder-[#64748b] focus:outline-none focus:border-[#d83128]"
                         />
                       </div>
                     </div>
@@ -378,30 +373,27 @@ export function StudentCheckout({
             <div className="space-y-2 border-t border-[#2a2622] pt-3">
               <span className="text-[10px] font-mono text-[#d83128] uppercase block">ALLOCATED SEATS</span>
               <div className="space-y-1">
-                {selectedSeats.map((s) => {
-                  const price = s.seat_tier === 'vip' ? showtime.price_vip : showtime.price_regular;
-                  return (
-                    <div key={s.id} className="flex items-center justify-between text-xs font-mono">
-                      <span className="text-[#9f9b94]">Seat {s.row_label}{s.col_number} ({s.seat_tier.toUpperCase()})</span>
-                      <span className="text-[#eee9df] font-bold">₹{price}</span>
-                    </div>
-                  );
-                })}
+                {selectedSeats.map((s) => (
+                  <div key={s.id} className="flex items-center justify-between text-xs font-mono">
+                    <span className="text-[#9f9b94]">Seat {s.row_label}{s.col_number}</span>
+                    <span className="text-[#eee9df] font-medium uppercase tracking-wider">{s.seat_tier} TIER</span>
+                  </div>
+                ))}
               </div>
             </div>
 
             <div className="border-t border-[#2a2622] pt-3 space-y-1.5 text-xs font-mono">
               <div className="flex justify-between text-[#9f9b94]">
-                <span>Total ({selectedSeats.length} seats)</span>
-                <span>₹{totalPrice}</span>
+                <span>Allocated Capacity</span>
+                <span className="text-[#eee9df]">{selectedSeats.length} {selectedSeats.length === 1 ? 'Seat' : 'Seats'}</span>
               </div>
               <div className="flex justify-between text-[#d83128]">
-                <span>Student Society Subsidy</span>
-                <span>₹0 (Zero Fee)</span>
+                <span>Society Privilege</span>
+                <span>Free Campus Admission</span>
               </div>
               <div className="border-t border-[#2a2622] pt-2 flex justify-between text-sm font-bold text-[#eee9df]">
-                <span className="font-serif">TOTAL PAYABLE</span>
-                <span className="text-[#d83128]">₹{totalPrice}</span>
+                <span className="font-serif">ADMISSION STATUS</span>
+                <span className="text-[#d83128] uppercase">COMPLIMENTARY</span>
               </div>
             </div>
           </div>

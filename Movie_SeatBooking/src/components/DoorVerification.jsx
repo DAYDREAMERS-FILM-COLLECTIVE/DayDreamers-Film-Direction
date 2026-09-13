@@ -53,7 +53,7 @@ export function DoorVerification({ onBackToBrowse }) {
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Header */}
       <div className="bg-[#171513] border border-[#2a2622] p-6 space-y-2 text-center">
-        <div className="w-10 h-10 mx-auto bg-[#0e0d0c] border border-[#2a2622] flex items-center justify-center text-white">
+        <div className="w-10 h-10 mx-auto bg-[#11100f] border border-[#2a2622] flex items-center justify-center text-white">
           <QrCode className="w-5 h-5 text-[#d83128]" />
         </div>
         <span className="text-[10px] font-mono tracking-widest text-[#d83128] uppercase block">
@@ -81,7 +81,7 @@ export function DoorVerification({ onBackToBrowse }) {
               value={ticketHashInput}
               onChange={(e) => setTicketHashInput(e.target.value)}
               placeholder="e.g. FPS-RVU23BSE042-..."
-              className="w-full bg-[#0e0d0c] border border-[#2a2622] p-2 font-mono text-[#eee9df] placeholder-[#64748b] focus:border-[#d83128] focus:outline-none"
+              className="w-full bg-[#11100f] border border-[#2a2622] p-2 font-mono text-[#eee9df] placeholder-[#64748b] focus:border-[#d83128] focus:outline-none"
             />
           </div>
 
@@ -98,7 +98,7 @@ export function DoorVerification({ onBackToBrowse }) {
               value={usnInput}
               onChange={(e) => setUsnInput(e.target.value)}
               placeholder="e.g. RVU23BSE042"
-              className="w-full bg-[#0e0d0c] border border-[#2a2622] p-2 font-mono uppercase text-[#eee9df] placeholder-[#64748b] focus:border-[#d83128] focus:outline-none"
+              className="w-full bg-[#11100f] border border-[#2a2622] p-2 font-mono uppercase text-[#eee9df] placeholder-[#64748b] focus:border-[#d83128] focus:outline-none"
             />
           </div>
 
@@ -108,7 +108,7 @@ export function DoorVerification({ onBackToBrowse }) {
               disabled={verifying || (!ticketHashInput.trim() && !usnInput.trim())}
               className={`flex-1 py-3 px-4 font-sans text-xs font-bold uppercase tracking-wider border transition-colors ${
                 verifying || (!ticketHashInput.trim() && !usnInput.trim())
-                  ? 'bg-[#0e0d0c] text-[#64748b] border-[#2a2622] cursor-not-allowed'
+                  ? 'bg-[#11100f] text-[#64748b] border-[#2a2622] cursor-not-allowed'
                   : 'bg-[#d83128] hover:bg-[#b8241c] text-white border-[#d83128] cursor-pointer'
               }`}
             >
@@ -119,7 +119,7 @@ export function DoorVerification({ onBackToBrowse }) {
               <button
                 type="button"
                 onClick={handleClear}
-                className="px-4 py-3 bg-[#0e0d0c] hover:bg-[#1e1b18] text-[#9f9b94] hover:text-white border border-[#2a2622] text-xs font-mono uppercase transition-colors"
+                className="px-4 py-3 bg-[#11100f] hover:bg-[#1e1b18] text-[#9f9b94] hover:text-white border border-[#2a2622] text-xs font-mono uppercase transition-colors"
               >
                 RESET
               </button>
@@ -146,7 +146,7 @@ export function DoorVerification({ onBackToBrowse }) {
               </div>
 
               {verificationResult.ticket && (
-                <div className="bg-[#0e0d0c] border border-[#2a2622] p-4 text-xs font-mono space-y-2">
+                <div className="bg-[#11100f] border border-[#2a2622] p-4 text-xs font-mono space-y-2">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <span className="text-[10px] text-[#9f9b94] uppercase block">STUDENT</span>

@@ -46,7 +46,7 @@ export function PremiereHero({ movie, showtime, onEnterScreeningRoom }) {
   const embedUrl = getEmbedUrl(movie.trailer_url);
 
   return (
-    <div className="relative w-full min-h-[85vh] flex flex-col justify-center border-b border-[#2a2622] bg-[#0e0d0c] overflow-hidden">
+    <div className="relative w-full min-h-[85vh] flex flex-col justify-center border-b border-[#2a2622] bg-[#11100f] overflow-hidden">
       {/* 1. Immersive 35mm Background with Film Grain and Vignette */}
       <div className="absolute inset-0">
         <img
@@ -55,9 +55,9 @@ export function PremiereHero({ movie, showtime, onEnterScreeningRoom }) {
           className="w-full h-full object-cover object-center opacity-30 filter grayscale contrast-125 scale-105 transition-transform duration-1000 ease-out"
         />
         {/* Film Grain & Dark Archival Vignette */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0e0d0c] via-[#0e0d0c]/75 to-[#0e0d0c]/40" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0e0d0c] via-[#0e0d0c]/85 to-transparent" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(14,13,12,0.85)_100%)]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#11100f] via-[#11100f]/75 to-[#11100f]/40" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#11100f] via-[#11100f]/85 to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(17,16,15,0.85)_100%)]" />
       </div>
 
       {/* 2. Hero Content Container */}
@@ -65,6 +65,7 @@ export function PremiereHero({ movie, showtime, onEnterScreeningRoom }) {
         {/* Society Premiere Badge & Live Availability Pill */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="inline-flex items-center space-x-2 px-3 py-1 bg-[#171513] border border-[#2a2622] text-[10px] font-mono tracking-widest text-[#d83128] uppercase">
+            <span className="inline-block w-[18px] border-t border-current align-middle" />
             <span>MONTHLY CAMPUS PREMIERE DROP</span>
           </div>
 

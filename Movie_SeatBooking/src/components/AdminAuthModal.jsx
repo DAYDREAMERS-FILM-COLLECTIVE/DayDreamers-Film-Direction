@@ -53,7 +53,7 @@ export function AdminAuthModal({ isOpen, onClose, onSuccess }) {
                 setError(false);
               }}
               placeholder="••••••••"
-              className="w-full bg-[#0e0d0c] border border-[#2a2622] px-3 py-2 text-sm font-mono text-[#eee9df] tracking-widest focus:outline-none focus:border-[#d83128]"
+              className="w-full bg-[#11100f] border border-[#2a2622] px-3 py-2 text-sm font-mono text-[#eee9df] tracking-widest focus:outline-none focus:border-[#d83128]"
             />
             {error && (
               <p className="text-[11px] font-mono text-[#d83128] mt-1 flex items-center space-x-1">
@@ -67,7 +67,7 @@ export function AdminAuthModal({ isOpen, onClose, onSuccess }) {
             <button
               type="button"
               onClick={onClose}
-              className="px-3 py-1.5 bg-[#0e0d0c] text-[#9f9b94] hover:text-white text-xs font-mono uppercase border border-[#2a2622]"
+              className="px-3 py-1.5 bg-[#11100f] text-[#9f9b94] hover:text-white text-xs font-mono uppercase border border-[#2a2622]"
             >
               CANCEL
             </button>

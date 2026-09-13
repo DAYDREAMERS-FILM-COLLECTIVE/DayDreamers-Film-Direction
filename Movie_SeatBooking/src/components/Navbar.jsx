@@ -3,7 +3,7 @@ import { Film, Ticket, ShieldAlert, QrCode, Lock } from 'lucide-react';
 
 export function Navbar({ currentView, onSelectView, onOpenAdminModal, isAdminUnlocked }) {
   return (
-    <header className="sticky top-0 z-50 bg-[#0e0d0c]/95 backdrop-blur-md border-b border-[#2a2622]">
+    <header className="sticky top-0 z-50 bg-[#11100f]/95 backdrop-blur-md border-b border-[#2a2622]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo & Society Branding */}

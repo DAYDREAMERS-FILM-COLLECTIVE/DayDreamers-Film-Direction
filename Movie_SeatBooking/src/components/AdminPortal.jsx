@@ -59,8 +59,8 @@ export function AdminPortal({ onBackToScreenings, onOpenDoorScanner }) {
     movie_id: '',
     auditorium_name: 'Campus Audi 1 - Main Stage',
     start_time: '',
-    price_regular: 150,
-    price_vip: 250,
+    price_regular: 0,
+    price_vip: 0,
   });
 
   // Load Admin Data from live Supabase
@@ -201,7 +201,7 @@ export function AdminPortal({ onBackToScreenings, onOpenDoorScanner }) {
             <span className="text-[10px] font-mono tracking-widest text-[#d83128] uppercase">
               FPS MANAGEMENT DASHBOARD
             </span>
-            <span className="px-2 py-0.5 bg-[#0e0d0c] border border-[#2a2622] text-[10px] font-mono text-[#9f9b94]">
+            <span className="px-2 py-0.5 bg-[#11100f] border border-[#2a2622] text-[10px] font-mono text-[#9f9b94]">
               AUTH LEVEL: ADMIN
             </span>
           </div>
@@ -213,7 +213,7 @@ export function AdminPortal({ onBackToScreenings, onOpenDoorScanner }) {
         <div className="flex items-center space-x-3">
           <button
             onClick={onOpenDoorScanner}
-            className="px-4 py-2 bg-[#0e0d0c] hover:bg-[#1e1b18] text-[#eee9df] border border-[#2a2622] text-xs font-mono uppercase tracking-wider transition-colors"
+            className="px-4 py-2 bg-[#11100f] hover:bg-[#1e1b18] text-[#eee9df] border border-[#2a2622] text-xs font-mono uppercase tracking-wider transition-colors"
           >
             SCANNER GATE
           </button>
@@ -291,9 +291,9 @@ export function AdminPortal({ onBackToScreenings, onOpenDoorScanner }) {
                 </div>
 
                 <div className="p-5 bg-[#171513] border border-[#2a2622] space-y-1">
-                  <span className="text-[10px] font-mono uppercase text-[#9f9b94] block">GROSS BOX OFFICE</span>
-                  <div className="text-3xl font-mono font-bold text-[#d83128]">₹{stats.totalRevenue}</div>
-                  <span className="text-[11px] font-mono text-[#9f9b94]">Zero booking fee model</span>
+                  <span className="text-[10px] font-mono uppercase text-[#9f9b94] block">ADMISSION MODEL</span>
+                  <div className="text-xl font-serif font-bold text-[#d83128] uppercase mt-1">COMPLIMENTARY</div>
+                  <span className="text-[11px] font-mono text-[#9f9b94]">100% Subsidized Campus Screenings</span>
                 </div>
 
                 <div className="p-5 bg-[#171513] border border-[#2a2622] space-y-1">
@@ -312,7 +312,7 @@ export function AdminPortal({ onBackToScreenings, onOpenDoorScanner }) {
                   {showtimes.map((st) => (
                     <div
                       key={st.id}
-                      className="p-4 bg-[#0e0d0c] border border-[#2a2622] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-mono"
+                      className="p-4 bg-[#11100f] border border-[#2a2622] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-mono"
                     >
                       <div>
                         <span className="font-serif font-bold text-sm text-[#eee9df] block">
@@ -325,7 +325,7 @@ export function AdminPortal({ onBackToScreenings, onOpenDoorScanner }) {
                       <div className="flex items-center space-x-3">
                         <span className="text-[#eee9df]">50 SEATS PER SHOW</span>
                         <span className="px-2 py-0.5 bg-[#171513] border border-[#2a2622] text-[#d83128]">
-                          REG: ₹{st.price_regular} / VIP: ₹{st.price_vip}
+                          COMPLIMENTARY ACCESS
                         </span>
                       </div>
                     </div>
@@ -356,13 +356,13 @@ export function AdminPortal({ onBackToScreenings, onOpenDoorScanner }) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {movies.map((movie) => (
               <div key={movie.id} className="bg-[#171513] border border-[#2a2622] p-5 space-y-4">
-                <div className="aspect-video relative overflow-hidden bg-[#0e0d0c]">
+                <div className="aspect-video relative overflow-hidden bg-[#11100f]">
                   <img
                     src={movie.backdrop_url || movie.poster_url}
                     alt={movie.title}
                     className={`w-full h-full object-cover ${movie.is_active ? 'filter contrast-110' : 'filter grayscale opacity-40'}`}
                   />
-                  <div className="absolute top-2 right-2 px-2 py-0.5 text-[9px] font-mono font-bold uppercase bg-[#0e0d0c] border border-[#2a2622]">
+                  <div className="absolute top-2 right-2 px-2 py-0.5 text-[9px] font-mono font-bold uppercase bg-[#11100f] border border-[#2a2622]">
                     {movie.is_active ? (
                       <span className="text-[#10b981]">ACTIVE</span>
                     ) : (
@@ -385,7 +385,7 @@ export function AdminPortal({ onBackToScreenings, onOpenDoorScanner }) {
                   </span>
                   <button
                     onClick={() => handleToggleArchiveMovie(movie)}
-                    className="px-3 py-1 bg-[#0e0d0c] hover:bg-[#1e1b18] text-xs font-mono uppercase text-[#eee9df] border border-[#2a2622] transition-colors"
+                    className="px-3 py-1 bg-[#11100f] hover:bg-[#1e1b18] text-xs font-mono uppercase text-[#eee9df] border border-[#2a2622] transition-colors"
                   >
                     {movie.is_active ? 'ARCHIVE' : 'RESTORE'}
                   </button>
@@ -414,11 +414,11 @@ export function AdminPortal({ onBackToScreenings, onOpenDoorScanner }) {
 
           <div className="bg-[#171513] border border-[#2a2622] overflow-x-auto">
             <table className="w-full text-left text-xs font-mono">
-              <thead className="bg-[#0e0d0c] border-b border-[#2a2622] text-[#9f9b94]">
+              <thead className="bg-[#11100f] border-b border-[#2a2622] text-[#9f9b94]">
                 <tr>
                   <th className="p-3 uppercase">Auditorium</th>
                   <th className="p-3 uppercase">Date & Time</th>
-                  <th className="p-3 uppercase">Pricing</th>
+                  <th className="p-3 uppercase">Admission</th>
                   <th className="p-3 uppercase">Capacity</th>
                 </tr>
               </thead>
@@ -431,11 +431,10 @@ export function AdminPortal({ onBackToScreenings, onOpenDoorScanner }) {
                     <td className="p-3 text-[#eee9df]">
                       {new Date(st.start_time).toLocaleString('en-IN')}
                     </td>
-                    <td className="p-3 text-[#9f9b94]">
-                      REG: <span className="text-[#eee9df]">₹{st.price_regular}</span> / VIP:{' '}
-                      <span className="text-[#d4af37]">₹{st.price_vip}</span>
+                    <td className="p-3 text-[#d83128] font-bold uppercase">
+                      Complimentary Pass
                     </td>
-                    <td className="p-3 text-[#d83128] font-bold">50 SEATS (PROVISIONED)</td>
+                    <td className="p-3 text-[#eee9df]">50 SEATS (PROVISIONED)</td>
                   </tr>
                 ))}
               </tbody>
@@ -460,14 +459,14 @@ export function AdminPortal({ onBackToScreenings, onOpenDoorScanner }) {
                 value={rosterSearch}
                 onChange={(e) => setRosterSearch(e.target.value)}
                 placeholder="Search USN, Name, Pass..."
-                className="w-full bg-[#0e0d0c] border border-[#2a2622] pl-9 pr-3 py-2 text-xs font-mono text-[#eee9df] placeholder-[#64748b] focus:outline-none focus:border-[#d83128]"
+                className="w-full bg-[#11100f] border border-[#2a2622] pl-9 pr-3 py-2 text-xs font-mono text-[#eee9df] placeholder-[#64748b] focus:outline-none focus:border-[#d83128]"
               />
             </div>
           </div>
 
           <div className="bg-[#171513] border border-[#2a2622] overflow-x-auto">
             <table className="w-full text-left text-xs font-mono">
-              <thead className="bg-[#0e0d0c] border-b border-[#2a2622] text-[#9f9b94]">
+              <thead className="bg-[#11100f] border-b border-[#2a2622] text-[#9f9b94]">
                 <tr>
                   <th className="p-3 uppercase">Student</th>
                   <th className="p-3 uppercase">USN / Email</th>
@@ -543,14 +542,14 @@ export function AdminPortal({ onBackToScreenings, onOpenDoorScanner }) {
                 placeholder="Title (e.g. 2001: A Space Odyssey)"
                 value={newMovie.title}
                 onChange={(e) => setNewMovie({ ...newMovie, title: e.target.value })}
-                className="w-full bg-[#0e0d0c] border border-[#2a2622] p-2 text-[#eee9df] focus:border-[#d83128] focus:outline-none"
+                className="w-full bg-[#11100f] border border-[#2a2622] p-2 text-[#eee9df] focus:border-[#d83128] focus:outline-none"
               />
               <input
                 type="text"
                 placeholder="Tagline"
                 value={newMovie.tagline}
                 onChange={(e) => setNewMovie({ ...newMovie, tagline: e.target.value })}
-                className="w-full bg-[#0e0d0c] border border-[#2a2622] p-2 text-[#eee9df] focus:border-[#d83128] focus:outline-none"
+                className="w-full bg-[#11100f] border border-[#2a2622] p-2 text-[#eee9df] focus:border-[#d83128] focus:outline-none"
               />
               <textarea
                 required
@@ -558,7 +557,7 @@ export function AdminPortal({ onBackToScreenings, onOpenDoorScanner }) {
                 placeholder="Curatorial synopsis..."
                 value={newMovie.description}
                 onChange={(e) => setNewMovie({ ...newMovie, description: e.target.value })}
-                className="w-full bg-[#0e0d0c] border border-[#2a2622] p-2 text-[#eee9df] focus:border-[#d83128] focus:outline-none"
+                className="w-full bg-[#11100f] border border-[#2a2622] p-2 text-[#eee9df] focus:border-[#d83128] focus:outline-none"
               />
               <div className="grid grid-cols-2 gap-2">
                 <input
@@ -567,14 +566,14 @@ export function AdminPortal({ onBackToScreenings, onOpenDoorScanner }) {
                   placeholder="Poster Image URL"
                   value={newMovie.poster_url}
                   onChange={(e) => setNewMovie({ ...newMovie, poster_url: e.target.value })}
-                  className="w-full bg-[#0e0d0c] border border-[#2a2622] p-2 text-[#eee9df] focus:border-[#d83128] focus:outline-none"
+                  className="w-full bg-[#11100f] border border-[#2a2622] p-2 text-[#eee9df] focus:border-[#d83128] focus:outline-none"
                 />
                 <input
                   type="url"
                   placeholder="Backdrop URL (optional)"
                   value={newMovie.backdrop_url}
                   onChange={(e) => setNewMovie({ ...newMovie, backdrop_url: e.target.value })}
-                  className="w-full bg-[#0e0d0c] border border-[#2a2622] p-2 text-[#eee9df] focus:border-[#d83128] focus:outline-none"
+                  className="w-full bg-[#11100f] border border-[#2a2622] p-2 text-[#eee9df] focus:border-[#d83128] focus:outline-none"
                 />
               </div>
               <div className="grid grid-cols-3 gap-2">
@@ -584,7 +583,7 @@ export function AdminPortal({ onBackToScreenings, onOpenDoorScanner }) {
                   placeholder="Duration (Mins)"
                   value={newMovie.duration_mins}
                   onChange={(e) => setNewMovie({ ...newMovie, duration_mins: e.target.value })}
-                  className="w-full bg-[#0e0d0c] border border-[#2a2622] p-2 text-[#eee9df] focus:border-[#d83128] focus:outline-none"
+                  className="w-full bg-[#11100f] border border-[#2a2622] p-2 text-[#eee9df] focus:border-[#d83128] focus:outline-none"
                 />
                 <input
                   type="text"
@@ -592,7 +591,7 @@ export function AdminPortal({ onBackToScreenings, onOpenDoorScanner }) {
                   placeholder="Genre"
                   value={newMovie.genre}
                   onChange={(e) => setNewMovie({ ...newMovie, genre: e.target.value })}
-                  className="w-full bg-[#0e0d0c] border border-[#2a2622] p-2 text-[#eee9df] focus:border-[#d83128] focus:outline-none"
+                  className="w-full bg-[#11100f] border border-[#2a2622] p-2 text-[#eee9df] focus:border-[#d83128] focus:outline-none"
                 />
                 <input
                   type="text"
@@ -600,7 +599,7 @@ export function AdminPortal({ onBackToScreenings, onOpenDoorScanner }) {
                   placeholder="Rating (U/UA/A)"
                   value={newMovie.age_rating}
                   onChange={(e) => setNewMovie({ ...newMovie, age_rating: e.target.value })}
-                  className="w-full bg-[#0e0d0c] border border-[#2a2622] p-2 text-[#eee9df] focus:border-[#d83128] focus:outline-none"
+                  className="w-full bg-[#11100f] border border-[#2a2622] p-2 text-[#eee9df] focus:border-[#d83128] focus:outline-none"
                 />
               </div>
               <input
@@ -608,14 +607,14 @@ export function AdminPortal({ onBackToScreenings, onOpenDoorScanner }) {
                 placeholder="Trailer YouTube URL"
                 value={newMovie.trailer_url}
                 onChange={(e) => setNewMovie({ ...newMovie, trailer_url: e.target.value })}
-                className="w-full bg-[#0e0d0c] border border-[#2a2622] p-2 text-[#eee9df] focus:border-[#d83128] focus:outline-none"
+                className="w-full bg-[#11100f] border border-[#2a2622] p-2 text-[#eee9df] focus:border-[#d83128] focus:outline-none"
               />
 
               <div className="flex items-center justify-end space-x-2 pt-3 border-t border-[#2a2622]">
                 <button
                   type="button"
                   onClick={() => setShowAddMovieModal(false)}
-                  className="px-4 py-2 bg-[#0e0d0c] text-[#9f9b94] border border-[#2a2622]"
+                  className="px-4 py-2 bg-[#11100f] text-[#9f9b94] border border-[#2a2622]"
                 >
                   CANCEL
                 </button>
@@ -643,7 +642,7 @@ export function AdminPortal({ onBackToScreenings, onOpenDoorScanner }) {
                 <select
                   value={newShowtime.movie_id}
                   onChange={(e) => setNewShowtime({ ...newShowtime, movie_id: e.target.value })}
-                  className="w-full bg-[#0e0d0c] border border-[#2a2622] p-2 text-[#eee9df] focus:border-[#d83128] focus:outline-none"
+                  className="w-full bg-[#11100f] border border-[#2a2622] p-2 text-[#eee9df] focus:border-[#d83128] focus:outline-none"
                 >
                   {movies.map((m) => (
                     <option key={m.id} value={m.id}>
@@ -658,7 +657,7 @@ export function AdminPortal({ onBackToScreenings, onOpenDoorScanner }) {
                 <select
                   value={newShowtime.auditorium_name}
                   onChange={(e) => setNewShowtime({ ...newShowtime, auditorium_name: e.target.value })}
-                  className="w-full bg-[#0e0d0c] border border-[#2a2622] p-2 text-[#eee9df] focus:border-[#d83128] focus:outline-none"
+                  className="w-full bg-[#11100f] border border-[#2a2622] p-2 text-[#eee9df] focus:border-[#d83128] focus:outline-none"
                 >
                   <option value="Campus Audi 1 - Main Stage">Campus Audi 1 - Main Stage</option>
                   <option value="Campus Audi 2 - Film Lab">Campus Audi 2 - Film Lab</option>
@@ -672,40 +671,20 @@ export function AdminPortal({ onBackToScreenings, onOpenDoorScanner }) {
                   required
                   value={newShowtime.start_time}
                   onChange={(e) => setNewShowtime({ ...newShowtime, start_time: e.target.value })}
-                  className="w-full bg-[#0e0d0c] border border-[#2a2622] p-2 text-[#eee9df] focus:border-[#d83128] focus:outline-none"
+                  className="w-full bg-[#11100f] border border-[#2a2622] p-2 text-[#eee9df] focus:border-[#d83128] focus:outline-none"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-[10px] font-mono text-[#9f9b94] uppercase block mb-1">Regular Price (₹)</label>
-                  <input
-                    type="number"
-                    value={newShowtime.price_regular}
-                    onChange={(e) => setNewShowtime({ ...newShowtime, price_regular: e.target.value })}
-                    className="w-full bg-[#0e0d0c] border border-[#2a2622] p-2 text-[#eee9df] focus:border-[#d83128] focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-mono text-[#9f9b94] uppercase block mb-1">VIP Bronze Price (₹)</label>
-                  <input
-                    type="number"
-                    value={newShowtime.price_vip}
-                    onChange={(e) => setNewShowtime({ ...newShowtime, price_vip: e.target.value })}
-                    className="w-full bg-[#0e0d0c] border border-[#2a2622] p-2 text-[#eee9df] focus:border-[#d83128] focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="p-2 bg-[#0e0d0c] border border-[#2a2622] text-[10px] font-mono text-[#9f9b94]">
-                Notice: Creating this screening will automatically provision its 50-seat acoustic grid.
+              <div className="p-3 bg-[#11100f] border border-[#2a2622] text-[11px] font-mono text-[#9f9b94] space-y-1">
+                <div className="text-[#eee9df] font-bold uppercase">Campus Admission Policy</div>
+                <p>All screenings are complimentary for RVU students. Saving this showtime automatically provisions the 50-seat acoustic grid (Rows A–C Regular, Rows D–E VIP).</p>
               </div>
 
               <div className="flex items-center justify-end space-x-2 pt-3 border-t border-[#2a2622]">
                 <button
                   type="button"
                   onClick={() => setShowAddShowtimeModal(false)}
-                  className="px-4 py-2 bg-[#0e0d0c] text-[#9f9b94] border border-[#2a2622]"
+                  className="px-4 py-2 bg-[#11100f] text-[#9f9b94] border border-[#2a2622]"
                 >
                   CANCEL
                 </button>

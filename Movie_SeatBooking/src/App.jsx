@@ -115,7 +115,10 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0e0d0c] text-[#eee9df] selection:bg-[#d83128] selection:text-white font-sans">
+    <div className="min-h-screen flex flex-col bg-[#11100f] text-[#eee9df] selection:bg-[#d83128] selection:text-white font-sans relative">
+      {/* 35mm Grain Overlay matching root index.html */}
+      <div className="cinema-noise" aria-hidden="true" />
+
       {/* Top Navbar */}
       <Navbar
         currentView={currentView}
@@ -245,7 +248,7 @@ export default function App() {
       </main>
 
       {/* 35mm Minimalist Archival Footer */}
-      <footer className="mt-20 border-t border-[#2a2622] bg-[#0e0d0c] py-10 text-xs font-sans text-[#9f9b94]">
+      <footer className="mt-20 border-t border-[#2a2622] bg-[#11100f] py-10 text-xs font-sans text-[#9f9b94]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-1 text-center md:text-left">
             <p className="font-serif font-bold text-sm text-[#eee9df] uppercase tracking-wider">
