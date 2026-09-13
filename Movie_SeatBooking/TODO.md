@@ -19,10 +19,10 @@
   - [x] 2.2 GSAP 4-act camera choreography (Act I Projection Booth -> Act II The Descent -> Act III Seat Claim -> Act IV Tear-off pass)
   - [x] 2.3 35mm camera viewfinder custom magnetic cursor with lerp tracking (`src/components/ui/ViewfinderCursor.jsx`)
   - [x] 2.4 Ambient audio controller (`src/lib/audio.js`) with theater drone, shutter click, and stamp SFX
-- [ ] **Phase 3: Supabase Real-Time Concurrency Integration (`NOWAIT` locks + 5-min timer)**
-  - [ ] 3.1 Deferred WebSocket subscription (connected exclusively in Act II/auditorium view)
-  - [ ] 3.2 Non-blocking `NOWAIT` atomic lock exception trap (`55P03` -> `SEAT_CONTESTED` in <50ms)
-  - [ ] 3.3 Lazy expiration handling & atomic countdown hold dock
+- [x] **Phase 3: Supabase Real-Time Concurrency Integration (`NOWAIT` locks + 5-min timer)**
+  - [x] 3.1 Deferred WebSocket subscription (connected exclusively in Act II/auditorium view, `src/hooks/useRealtimeSeats.js`)
+  - [x] 3.2 Non-blocking `NOWAIT` atomic lock exception trap (`55P03` -> `SEAT_CONTESTED` in <50ms with Viewfinder jitter shake)
+  - [x] 3.3 Client-side lazy expiration engine (1-second tick) & atomic crimson progress bar hold timer dock
 - [ ] **Phase 4: Perforated Pass Checkout, RVU Validation & EmailJS Delivery**
   - [ ] 4.1 ReactBits-inspired perforated ticket slide-over modal
   - [ ] 4.2 Individual (1 seat) & Group (2–4 seats) RVU credential validation (`@rvu.edu.in` + USN)

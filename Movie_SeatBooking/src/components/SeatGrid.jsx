@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  fetchSeats,
   acquireSeatLocks,
   releaseSeatLocks,
-  subscribeToSeats,
 } from '../lib/supabase.js';
+import { useRealtimeSeats } from '../hooks/useRealtimeSeats.js';
 import {
   Clock,
   AlertTriangle,
@@ -13,7 +12,6 @@ import {
   ChevronLeft,
   ArrowRight,
   RefreshCw,
-  Ticket,
   Box,
   Layers,
 } from 'lucide-react';
@@ -32,13 +30,18 @@ export function SeatGrid({
   onProceedToCheckout,
   onBack,
 }) {
-  const [seats, setSeats] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    seats,
+    setSeats,
+    loading,
+    isSyncing,
+    refreshSeats,
+  } = useRealtimeSeats(showtime?.id, sessionId);
+
   const [locking, setLocking] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [contestedSeatToast, setContestedSeatToast] = useState('');
   const [timeLeft, setTimeLeft] = useState(HOLD_DURATION_SECONDS);
-  const [isSyncing, setIsSyncing] = useState(false);
   const [view3D, setView3D] = useState(true);
   const [focusedSeat, setFocusedSeat] = useState(null);
 
@@ -46,48 +49,17 @@ export function SeatGrid({
   const selectedSeatsRef = useRef(selectedSeats);
   selectedSeatsRef.current = selectedSeats;
 
-  // Strict quota limit
+  // Strict quota limit: 1 for individual, 4 for group
   const maxSeats = bookingMode === 'individual' ? 1 : 4;
 
-  // Deferred WebSocket & Initial Seats Fetch: Only active when user is in the auditorium
-  const loadSeatMap = useCallback(async (quiet = false) => {
-    if (!showtime?.id) return;
-    if (!quiet) setLoading(true);
-    else setIsSyncing(true);
-
-    try {
-      const res = await fetchSeats(showtime.id, sessionId);
-      if (res.data) {
-        setSeats(res.data);
-      }
-    } catch (err) {
-      console.error('[SeatGrid] Error connecting to live Supabase seats:', err);
-    } finally {
-      if (!quiet) setLoading(false);
-      else setIsSyncing(false);
+  // Trigger Viewfinder Cursor Jitter Shake
+  const triggerViewfinderJitter = () => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cursor-jitter'));
     }
-  }, [showtime?.id, sessionId]);
+  };
 
-  useEffect(() => {
-    loadSeatMap();
-
-    // 1. DEFERRED WEBSOCKET: Subscribed only while viewing auditorium seat map
-    const unsubscribe = subscribeToSeats(showtime.id, () => {
-      loadSeatMap(true);
-    });
-
-    // 2. Periodic background poll to refresh lazy locks
-    const pollInterval = setInterval(() => {
-      loadSeatMap(true);
-    }, 7000);
-
-    return () => {
-      unsubscribe();
-      clearInterval(pollInterval);
-    };
-  }, [showtime.id, loadSeatMap]);
-
-  // Analog Timecode Countdown Timer
+  // Hold Timer: 5-minute countdown
   useEffect(() => {
     if (selectedSeats.length > 0) {
       if (timeLeft <= 0) {
@@ -116,7 +88,7 @@ export function SeatGrid({
     };
   }, [selectedSeats.length]);
 
-  // Auto-release on page close
+  // Auto-release on page close or tab navigation
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (selectedSeatsRef.current.length > 0) {
@@ -137,7 +109,7 @@ export function SeatGrid({
       await releaseSeatLocks(seatIds, sessionId);
       setSelectedSeats([]);
       setErrorMessage('Your 5-minute atomic reservation has expired. Please reselect your seats.');
-      loadSeatMap(true);
+      refreshSeats(true);
     }
   };
 
@@ -149,12 +121,14 @@ export function SeatGrid({
     if (seat.effective_status === 'booked') return;
 
     if (seat.effective_status === 'locked_by_other') {
-      setContestedSeatToast(`Seat ${seat.row_label}${seat.col_number} is currently held by another attendee.`);
+      triggerViewfinderJitter();
+      setContestedSeatToast(`Another student just clicked Seat ${seat.row_label}${seat.col_number}!`);
       return;
     }
 
     const isAlreadySelected = selectedSeats.some((s) => s.id === seat.id);
 
+    // Deselect seat
     if (isAlreadySelected) {
       setLocking(true);
       try {
@@ -176,9 +150,10 @@ export function SeatGrid({
       return;
     }
 
-    // Checking max quota
+    // Quota Enforcement
     if (selectedSeats.length >= maxSeats) {
       if (bookingMode === 'individual') {
+        // In individual mode, replace current selection
         const currentSeatId = selectedSeats[0].id;
         setLocking(true);
         try {
@@ -193,19 +168,19 @@ export function SeatGrid({
           if (lockRes && lockRes.success) {
             setSelectedSeats([seat]);
             setTimeLeft(HOLD_DURATION_SECONDS);
-            loadSeatMap(true);
+            refreshSeats(true);
           } else if (lockRes?.error === 'SEAT_CONTESTED') {
-            // Rapid Contestation Toast & 50ms deselection
-            setContestedSeatToast(`Another student is simultaneously grabbing Seat ${seat.row_label}${seat.col_number}!`);
+            triggerViewfinderJitter();
+            setContestedSeatToast(`Another student just clicked Seat ${seat.row_label}${seat.col_number}!`);
             setTimeout(() => {
-              loadSeatMap(true);
+              refreshSeats(true);
             }, 50);
           } else if (lockRes?.error === 'SOLD_OUT') {
             setErrorMessage('Premiere is sold out! All seats have been reserved.');
-            loadSeatMap(true);
+            refreshSeats(true);
           } else {
             setErrorMessage(lockRes?.error || 'Could not acquire lock on seat.');
-            loadSeatMap(true);
+            refreshSeats(true);
           }
         } catch (err) {
           console.error('[SeatGrid] Swap error:', err);
@@ -214,7 +189,8 @@ export function SeatGrid({
         }
         return;
       } else {
-        setErrorMessage('Group quota limit reached (Maximum 4 seats per reservation).');
+        // Group Mode: Strict 4 seat cap
+        setErrorMessage('Group cap is 4 seats. Click an existing seat to swap or proceed to checkout.');
         return;
       }
     }
@@ -241,17 +217,18 @@ export function SeatGrid({
           )
         );
       } else if (lockRes?.error === 'SEAT_CONTESTED') {
-        // Fast Contestation Bailout without freezing UI
-        setContestedSeatToast(`Another student is grabbing Seat ${seat.row_label}${seat.col_number}! Pick another seat.`);
+        // Fast Contestation Bailout (<50ms) + Jitter
+        triggerViewfinderJitter();
+        setContestedSeatToast(`Another student just clicked Seat ${seat.row_label}${seat.col_number}!`);
         setTimeout(() => {
-          loadSeatMap(true);
+          refreshSeats(true);
         }, 50);
       } else if (lockRes?.error === 'SOLD_OUT') {
         setErrorMessage('Premiere is sold out! All seats have been reserved.');
-        loadSeatMap(true);
+        refreshSeats(true);
       } else {
         setErrorMessage(lockRes?.error || 'Could not reserve seat.');
-        loadSeatMap(true);
+        refreshSeats(true);
       }
     } catch (err) {
       console.error('[SeatGrid] Lock error:', err);
@@ -269,7 +246,7 @@ export function SeatGrid({
       const toRelease = selectedSeats.slice(1).map((s) => s.id);
       await releaseSeatLocks(toRelease, sessionId);
       setSelectedSeats(keep);
-      loadSeatMap(true);
+      refreshSeats(true);
     }
 
     setBookingMode(newMode);
@@ -285,7 +262,7 @@ export function SeatGrid({
       await releaseSeatLocks(seatIds, sessionId);
       setSelectedSeats([]);
       setTimeLeft(0);
-      loadSeatMap(true);
+      refreshSeats(true);
     } finally {
       setLocking(false);
     }
@@ -305,6 +282,9 @@ export function SeatGrid({
     return `[ ${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')} ]`;
   };
 
+  // Progress Bar Percentage (300s -> 100%)
+  const progressPercent = Math.max(0, Math.min(100, (timeLeft / HOLD_DURATION_SECONDS) * 100));
+
   return (
     <div className="space-y-6">
       {/* Top Bar with Mode Switcher & Back Navigation */}
@@ -312,7 +292,7 @@ export function SeatGrid({
         <div className="flex items-center space-x-3">
           <button
             onClick={onBack}
-            className="p-2 bg-[#080706] hover:bg-[#1e1b18] border border-[#26221f] text-[#8c867e] hover:text-[#eee9df] transition-colors"
+            className="p-2 bg-[#080706] hover:bg-[#1e1b18] border border-[#26221f] text-[#8c867e] hover:text-[#eee9df] transition-colors cursor-pointer"
             title="Return to Premiere Drop"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -332,7 +312,7 @@ export function SeatGrid({
           <div className="flex items-center space-x-1 bg-[#080706] p-1 border border-[#26221f]">
             <button
               onClick={() => setView3D(true)}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-sans font-medium uppercase tracking-wider transition-colors ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-sans font-medium uppercase tracking-wider transition-colors cursor-pointer ${
                 view3D
                   ? 'bg-[#d83128] text-white'
                   : 'text-[#8c867e] hover:text-[#eee9df]'
@@ -344,7 +324,7 @@ export function SeatGrid({
 
             <button
               onClick={() => setView3D(false)}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-sans font-medium uppercase tracking-wider transition-colors ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-sans font-medium uppercase tracking-wider transition-colors cursor-pointer ${
                 !view3D
                   ? 'bg-[#d83128] text-white'
                   : 'text-[#8c867e] hover:text-[#eee9df]'
@@ -359,7 +339,7 @@ export function SeatGrid({
           <div className="flex items-center space-x-1 bg-[#080706] p-1 border border-[#26221f]">
             <button
               onClick={() => handleModeSwitch('individual')}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-sans font-medium uppercase tracking-wider transition-colors ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-sans font-medium uppercase tracking-wider transition-colors cursor-pointer ${
                 bookingMode === 'individual'
                   ? 'bg-[#d83128] text-white'
                   : 'text-[#8c867e] hover:text-[#eee9df]'
@@ -371,7 +351,7 @@ export function SeatGrid({
 
             <button
               onClick={() => handleModeSwitch('group')}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-sans font-medium uppercase tracking-wider transition-colors ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-sans font-medium uppercase tracking-wider transition-colors cursor-pointer ${
                 bookingMode === 'group'
                   ? 'bg-[#d83128] text-white'
                   : 'text-[#8c867e] hover:text-[#eee9df]'
@@ -384,15 +364,20 @@ export function SeatGrid({
         </div>
       </div>
 
-      {/* Contested Seat Toast Alert (55P03 Fast Response) */}
+      {/* Contested Seat Toast Alert (55P03 Fast Response in <50ms) */}
       {contestedSeatToast && (
-        <div className="p-3 bg-[#1e1411] border-2 border-[#d83128] text-[#eee9df] flex items-center justify-between text-xs font-mono animate-pulse">
-          <div className="flex items-center space-x-2">
-            <AlertTriangle className="w-4 h-4 text-[#d83128]" />
-            <span className="font-bold text-[#d83128] uppercase">SEAT CONTESTED:</span>
-            <span>{contestedSeatToast}</span>
+        <div className="p-3.5 bg-[#1e1411] border-2 border-[#d83128] text-[#eee9df] flex items-center justify-between text-xs font-mono shadow-2xl animate-bounce">
+          <div className="flex items-center space-x-2.5">
+            <AlertTriangle className="w-4 h-4 text-[#d83128] shrink-0" />
+            <div>
+              <span className="font-bold text-[#d83128] uppercase mr-2">[ 55P03 NOWAIT CONFLICT ]</span>
+              <span>{contestedSeatToast}</span>
+            </div>
           </div>
-          <button onClick={() => setContestedSeatToast('')} className="text-[#8c867e] hover:text-white uppercase text-[10px]">
+          <button
+            onClick={() => setContestedSeatToast('')}
+            className="text-[#8c867e] hover:text-white uppercase text-[10px] font-mono px-2 py-1 bg-[#26221f] cursor-pointer"
+          >
             DISMISS
           </button>
         </div>
@@ -402,7 +387,7 @@ export function SeatGrid({
         <div className="p-3 bg-[#1e1411] border border-[#d83128]/70 text-[#eee9df] flex items-start space-x-2 text-xs font-sans">
           <AlertTriangle className="w-4 h-4 text-[#d83128] shrink-0 mt-0.5" />
           <div className="flex-1">{errorMessage}</div>
-          <button onClick={() => setErrorMessage('')} className="text-[#8c867e] hover:text-white uppercase font-mono text-[10px]">
+          <button onClick={() => setErrorMessage('')} className="text-[#8c867e] hover:text-white uppercase font-mono text-[10px] cursor-pointer">
             DISMISS
           </button>
         </div>
@@ -427,7 +412,7 @@ export function SeatGrid({
             focusedSeat={focusedSeat}
           />
 
-          {/* ReactBits-Inspired Floating HUD Overlay */}
+          {/* Floating HUD Telemetry Overlay */}
           <div className="absolute top-4 left-4 pointer-events-none z-10 flex flex-col space-y-2">
             <div className="bg-[#131110]/90 backdrop-blur-md border border-[#26221f] p-3 pointer-events-auto space-y-1 shadow-xl">
               <div className="flex items-center space-x-2">
@@ -435,6 +420,12 @@ export function SeatGrid({
                 <span className="text-[10px] font-mono tracking-widest text-[#d83128] uppercase font-bold">
                   LIVE 3D WEBGL AUDITORIUM
                 </span>
+                {isSyncing && (
+                  <span className="flex items-center space-x-1 text-[9px] font-mono text-[#8c867e]">
+                    <RefreshCw className="w-2.5 h-2.5 animate-spin text-[#d83128]" />
+                    <span>SYNCING</span>
+                  </span>
+                )}
               </div>
               <h3 className="text-sm font-serif font-bold text-[#eee9df] uppercase">
                 {movie.title}
@@ -479,142 +470,142 @@ export function SeatGrid({
             </div>
           </div>
 
-        {/* Legend */}
-        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-[11px] font-sans">
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-[#22201d] border border-[#37342f]" />
-            <span className="text-[#8c867e]">Regular Tier</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-[#2d241e] border border-[#5c4738]" />
-            <span className="text-[#d4af37]">VIP Bronze Tier</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-[#d83128]" />
-            <span className="text-[#eee9df] font-bold">Selected</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-[#523009] border border-[#854d0e]" />
-            <span className="text-[#f59e0b]">Held</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-[#13110f] opacity-30 border border-[#26221f]" />
-            <span className="text-[#64748b]">Booked</span>
-          </div>
-        </div>
-
-        {/* 3D Physical Amphitheater Perspective Box (perspective: 900px, rotateX(10deg)) */}
-        {loading ? (
-          <div className="py-20 text-center space-y-2">
-            <div className="w-6 h-6 border-2 border-[#d83128] border-t-transparent animate-spin mx-auto" />
-            <p className="text-xs font-mono text-[#8c867e] uppercase">Synchronizing 50-seat acoustic grid...</p>
-          </div>
-        ) : (
-          <div
-            className="overflow-x-auto pb-8 pt-2"
-            style={{
-              perspective: '900px',
-            }}
-          >
-            <div
-              className="min-w-[560px] max-w-xl mx-auto space-y-3.5 transition-transform duration-500 ease-out"
-              style={{
-                transform: 'rotateX(10deg)',
-                transformOrigin: 'top center',
-              }}
-            >
-              {/* Columns Header */}
-              <div className="flex items-center space-x-2 px-8">
-                <div className="w-6 text-center text-[10px] font-mono text-[#8c867e] font-bold"></div>
-                <div className="flex-1 grid grid-cols-10 gap-2.5 text-center text-[10px] font-mono text-[#8c867e]">
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((col) => (
-                    <span key={col}>{col}</span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Rows A through E */}
-              {rows.map((rowLabel) => {
-                const rowSeats = seatsByRow[rowLabel] || [];
-                const isVipRow = rowLabel === 'D' || rowLabel === 'E';
-
-                return (
-                  <div key={rowLabel} className="flex items-center space-x-2 px-8">
-                    {/* Row Label */}
-                    <div
-                      className={`w-6 text-center text-xs font-mono font-bold ${
-                        isVipRow ? 'text-[#d4af37]' : 'text-[#8c867e]'
-                      }`}
-                    >
-                      {rowLabel}
-                    </div>
-
-                    {/* 10 Seats */}
-                    <div className="flex-1 grid grid-cols-10 gap-2.5">
-                      {rowSeats.map((seat) => {
-                        const isSelectedByMe = seat.effective_status === 'selected_by_me';
-                        const isLockedByOther = seat.effective_status === 'locked_by_other';
-                        const isBooked = seat.effective_status === 'booked';
-                        const isVip = seat.seat_tier === 'vip';
-
-                        let seatStyles = '';
-                        if (isBooked) {
-                          seatStyles = 'bg-[#131211] opacity-25 border-[#26221f] text-[#64748b] cursor-not-allowed line-through';
-                        } else if (isLockedByOther) {
-                          seatStyles = 'bg-[#523009] border-[#854d0e] text-[#f59e0b] cursor-not-allowed';
-                        } else if (isSelectedByMe) {
-                          seatStyles =
-                            'bg-[#d83128] border-[#d83128] text-white font-bold shadow-[0_4px_16px_rgba(216,49,40,0.5)] -translate-y-1';
-                        } else if (isVip) {
-                          seatStyles =
-                            'bg-[#2d241e] border-[#5c4738] text-[#eee9df] hover:border-[#d4af37] hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(212,175,55,0.2)] cursor-pointer';
-                        } else {
-                          seatStyles =
-                            'bg-[#22201d] border-[#3a3530] text-[#8c867e] hover:border-[#eee9df] hover:text-[#eee9df] hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(238,233,223,0.15)] cursor-pointer';
-                        }
-
-                        return (
-                          <button
-                            key={seat.id}
-                            disabled={isBooked || isLockedByOther || locking}
-                            onClick={() => handleSeatClick(seat)}
-                            title={`${seat.row_label}${seat.col_number} • ${
-                              isVip ? 'VIP TIER' : 'REGULAR ARCHIVE'
-                            }`}
-                            className={`h-9 w-full border font-mono text-xs flex items-center justify-center transition-all duration-150 ${seatStyles}`}
-                          >
-                            <span>{seat.col_number}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
+          {/* Legend */}
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-[11px] font-sans">
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-[#22201d] border border-[#37342f]" />
+              <span className="text-[#8c867e]">Regular Tier</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-[#2d241e] border border-[#5c4738]" />
+              <span className="text-[#d4af37]">VIP Bronze Tier</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-[#d83128]" />
+              <span className="text-[#eee9df] font-bold">Selected</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-[#523009] border border-[#854d0e]" />
+              <span className="text-[#f59e0b]">Held</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-[#13110f] opacity-30 border border-[#26221f]" />
+              <span className="text-[#64748b]">Booked</span>
             </div>
           </div>
-        )}
 
-        {/* Tier Annotations */}
-        <div className="pt-3 border-t border-[#26221f] flex flex-col sm:flex-row items-center justify-between text-[11px] font-mono text-[#8c867e] gap-2">
-          <div>ROWS A–C: REGULAR ARCHIVE TIER</div>
-          <div className="flex items-center space-x-2">
-            {isSyncing && (
-              <span className="flex items-center space-x-1 text-[#d83128]">
-                <RefreshCw className="w-3 h-3 animate-spin" />
-                <span>SYNCING LIVE</span>
-              </span>
-            )}
-            <span className="text-[#d4af37]">ROWS D–E: VIP BRONZE TIER</span>
+          {/* 3D Physical Amphitheater Perspective Box */}
+          {loading ? (
+            <div className="py-20 text-center space-y-2">
+              <div className="w-6 h-6 border-2 border-[#d83128] border-t-transparent animate-spin mx-auto" />
+              <p className="text-xs font-mono text-[#8c867e] uppercase">Synchronizing 50-seat acoustic grid...</p>
+            </div>
+          ) : (
+            <div
+              className="overflow-x-auto pb-8 pt-2"
+              style={{
+                perspective: '900px',
+              }}
+            >
+              <div
+                className="min-w-[560px] max-w-xl mx-auto space-y-3.5 transition-transform duration-500 ease-out"
+                style={{
+                  transform: 'rotateX(10deg)',
+                  transformOrigin: 'top center',
+                }}
+              >
+                {/* Columns Header */}
+                <div className="flex items-center space-x-2 px-8">
+                  <div className="w-6 text-center text-[10px] font-mono text-[#8c867e] font-bold"></div>
+                  <div className="flex-1 grid grid-cols-10 gap-2.5 text-center text-[10px] font-mono text-[#8c867e]">
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((col) => (
+                      <span key={col}>{col}</span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Rows A through E */}
+                {rows.map((rowLabel) => {
+                  const rowSeats = seatsByRow[rowLabel] || [];
+                  const isVipRow = rowLabel === 'D' || rowLabel === 'E';
+
+                  return (
+                    <div key={rowLabel} className="flex items-center space-x-2 px-8">
+                      {/* Row Label */}
+                      <div
+                        className={`w-6 text-center text-xs font-mono font-bold ${
+                          isVipRow ? 'text-[#d4af37]' : 'text-[#8c867e]'
+                        }`}
+                      >
+                        {rowLabel}
+                      </div>
+
+                      {/* 10 Seats */}
+                      <div className="flex-1 grid grid-cols-10 gap-2.5">
+                        {rowSeats.map((seat) => {
+                          const isSelectedByMe = seat.effective_status === 'selected_by_me';
+                          const isLockedByOther = seat.effective_status === 'locked_by_other';
+                          const isBooked = seat.effective_status === 'booked';
+                          const isVip = seat.seat_tier === 'vip';
+
+                          let seatStyles = '';
+                          if (isBooked) {
+                            seatStyles = 'bg-[#131211] opacity-25 border-[#26221f] text-[#64748b] cursor-not-allowed line-through';
+                          } else if (isLockedByOther) {
+                            seatStyles = 'bg-[#523009] border-[#854d0e] text-[#f59e0b] cursor-not-allowed';
+                          } else if (isSelectedByMe) {
+                            seatStyles =
+                              'bg-[#d83128] border-[#d83128] text-white font-bold shadow-[0_4px_16px_rgba(216,49,40,0.5)] -translate-y-1';
+                          } else if (isVip) {
+                            seatStyles =
+                              'bg-[#2d241e] border-[#5c4738] text-[#eee9df] hover:border-[#d4af37] hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(212,175,55,0.2)] cursor-pointer';
+                          } else {
+                            seatStyles =
+                              'bg-[#22201d] border-[#3a3530] text-[#8c867e] hover:border-[#eee9df] hover:text-[#eee9df] hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(238,233,223,0.15)] cursor-pointer';
+                          }
+
+                          return (
+                            <button
+                              key={seat.id}
+                              disabled={isBooked || isLockedByOther || locking}
+                              onClick={() => handleSeatClick(seat)}
+                              title={`${seat.row_label}${seat.col_number} • ${
+                                isVip ? 'VIP TIER' : 'REGULAR ARCHIVE'
+                              }`}
+                              className={`h-9 w-full border font-mono text-xs flex items-center justify-center transition-all duration-150 ${seatStyles}`}
+                            >
+                              <span>{seat.col_number}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Tier Annotations */}
+          <div className="pt-3 border-t border-[#26221f] flex flex-col sm:flex-row items-center justify-between text-[11px] font-mono text-[#8c867e] gap-2">
+            <div>ROWS A–C: REGULAR ARCHIVE TIER</div>
+            <div className="flex items-center space-x-2">
+              {isSyncing && (
+                <span className="flex items-center space-x-1 text-[#d83128]">
+                  <RefreshCw className="w-3 h-3 animate-spin" />
+                  <span>SYNCING LIVE</span>
+                </span>
+              )}
+              <span className="text-[#d4af37]">ROWS D–E: VIP BRONZE TIER</span>
+            </div>
           </div>
         </div>
-      </div>
       )}
 
-      {/* Sticky Bottom Dock: Physical Ticket Preview & Analog Timecode */}
+      {/* Floating 35mm Hold Timer Dock with Atomic Progress Bar */}
       <div className="sticky bottom-4 z-40 bg-[#080706] border border-[#d83128] p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xl">
-        {/* Left: Physical Ticket Preview with Tearing Perforation Line */}
-        <div className="flex items-center space-x-4">
+        {/* Left: Physical Ticket Preview & Timecode Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
           <div className="relative bg-[#131110] border border-[#26221f] px-4 py-2 flex items-center space-x-3">
             {/* Ticket Notches */}
             <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-[#080706] border-r border-[#26221f]" />
@@ -650,13 +641,22 @@ export function SeatGrid({
             </div>
           </div>
 
-          {/* Analog Timecode Hold Timer */}
+          {/* Analog Timecode Hold Timer Dock */}
           {selectedSeats.length > 0 && (
-            <div className="flex items-center space-x-2 text-xs font-mono">
-              <span className="text-[#8c867e] uppercase text-[10px]">TIME REMAINING:</span>
-              <span className="font-bold text-[#d83128] tracking-widest text-sm sm:text-base">
-                {formatTimecode(timeLeft)}
-              </span>
+            <div className="flex flex-col space-y-1 bg-[#131110] border border-[#26221f] px-3.5 py-2">
+              <div className="flex items-center justify-between space-x-3 text-xs font-mono">
+                <span className="text-[#8c867e] uppercase text-[10px]">HOLD TIME REMAINING:</span>
+                <span className="font-bold text-[#d83128] tracking-widest text-sm">
+                  {formatTimecode(timeLeft)}
+                </span>
+              </div>
+              {/* Atomic Crimson Progress Bar */}
+              <div className="w-full h-1 bg-[#26221f] overflow-hidden">
+                <div
+                  className="h-full bg-[#d83128] transition-all duration-1000 ease-linear"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
             </div>
           )}
         </div>
@@ -667,7 +667,7 @@ export function SeatGrid({
             <button
               onClick={handleReleaseAll}
               disabled={locking}
-              className="px-3 py-2 bg-[#131110] hover:bg-[#22201d] text-[#8c867e] hover:text-[#eee9df] text-xs font-mono uppercase border border-[#26221f] transition-colors"
+              className="px-3 py-2 bg-[#131110] hover:bg-[#22201d] text-[#8c867e] hover:text-[#eee9df] text-xs font-mono uppercase border border-[#26221f] transition-colors cursor-pointer"
             >
               RELEASE
             </button>

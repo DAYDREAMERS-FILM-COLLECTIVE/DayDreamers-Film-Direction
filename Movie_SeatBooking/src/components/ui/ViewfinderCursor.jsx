@@ -13,10 +13,25 @@ export function ViewfinderCursor() {
   const [isHovered, setIsHovered] = useState(false);
   const [hoverLabel, setHoverLabel] = useState('');
   const [isVisible, setIsVisible] = useState(false);
+  const [isJittering, setIsJittering] = useState(false);
 
   const mouse = useRef({ x: -100, y: -100 });
   const cursor = useRef({ x: -100, y: -100 });
   const magneticTarget = useRef(null);
+
+  useEffect(() => {
+    const handleJitter = () => {
+      setIsJittering(true);
+      setTimeout(() => {
+        setIsJittering(false);
+      }, 500);
+    };
+
+    window.addEventListener('cursor-jitter', handleJitter);
+    return () => {
+      window.removeEventListener('cursor-jitter', handleJitter);
+    };
+  }, []);
 
   useEffect(() => {
     // Only enable on desktop pointer devices
@@ -110,7 +125,9 @@ export function ViewfinderCursor() {
       <div
         ref={cursorRef}
         className={`fixed top-0 left-0 pointer-events-none z-[9999] -translate-x-1/2 -translate-y-1/2 flex items-center justify-center transition-[width,height,border-color] duration-200 ease-out ${
-          isHovered
+          isJittering
+            ? 'w-16 h-16 border-2 border-[#d83128] bg-[#d83128]/25 animate-bounce'
+            : isHovered
             ? 'w-14 h-14 border border-[#d83128] bg-[#d83128]/10'
             : 'w-8 h-8 border border-[#8c867e]/60'
         }`}
@@ -126,9 +143,13 @@ export function ViewfinderCursor() {
         <div className="absolute h-2 w-[1px] bg-[#8c867e]/40" />
 
         {/* Viewfinder Telemetry Label */}
-        {isHovered && (
-          <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[8px] font-mono tracking-widest text-[#d83128] uppercase whitespace-nowrap bg-[#080706] px-1 border border-[#26221f]">
-            {hoverLabel || '35MM [ FOCUS ]'}
+        {(isHovered || isJittering) && (
+          <span className={`absolute -bottom-5 left-1/2 -translate-x-1/2 text-[8px] font-mono tracking-widest uppercase whitespace-nowrap px-1 border ${
+            isJittering
+              ? 'bg-[#1e1411] text-[#d83128] border-[#d83128] font-bold'
+              : 'bg-[#080706] text-[#d83128] border-[#26221f]'
+          }`}>
+            {isJittering ? 'CONTESTED // LOCK BUSY' : (hoverLabel || '35MM [ FOCUS ]')}
           </span>
         )}
       </div>
