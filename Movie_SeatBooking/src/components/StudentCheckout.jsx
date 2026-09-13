@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { confirmBookingAtomic } from '../lib/supabase.js';
+import { cinemaAudio } from '../lib/audio.js';
 import {
   User,
   Mail,
@@ -120,6 +121,7 @@ export function StudentCheckout({
       });
 
       if (res && res.success) {
+        cinemaAudio.playStampSound();
         onBookingConfirmed({
           bookingId: res.booking_id,
           ticketHash: res.ticket_hash,

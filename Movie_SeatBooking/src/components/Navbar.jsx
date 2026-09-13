@@ -1,7 +1,9 @@
-import React from 'react';
-import { Film, Ticket, ShieldAlert, QrCode, Lock } from 'lucide-react';
+import React, { useState } from 'react';
+import { Film, Ticket, ShieldAlert, QrCode, Lock, Volume2, VolumeX } from 'lucide-react';
+import { cinemaAudio } from '../lib/audio.js';
 
 export function Navbar({ currentView, onSelectView, onOpenAdminModal, isAdminUnlocked }) {
+  const [isAudioActive, setIsAudioActive] = useState(!cinemaAudio.getMuted());
   return (
     <header className="sticky top-0 z-50 bg-[#11100f]/95 backdrop-blur-md border-b border-[#2a2622]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -59,6 +61,37 @@ export function Navbar({ currentView, onSelectView, onOpenAdminModal, isAdminUnl
             >
               <QrCode className="w-3.5 h-3.5 text-[#9f9b94]" />
               <span className="hidden sm:inline">Door Scanner</span>
+            </button>
+
+            {/* Procedural 35mm Audio Engine Toggle */}
+            <button
+              onClick={() => {
+                const playing = cinemaAudio.toggleMute();
+                setIsAudioActive(playing);
+              }}
+              className={`px-3 py-2 border font-mono text-[11px] tracking-wider uppercase flex items-center space-x-1.5 transition-colors ${
+                isAudioActive
+                  ? 'bg-[#171513] text-[#d83128] border-[#d83128]'
+                  : 'bg-[#171513] text-[#8c867e] border-[#26221f] hover:text-[#eee9df]'
+              }`}
+              title={isAudioActive ? 'Mute 35mm Atmospheric Drone' : 'Unmute 35mm Atmospheric Drone'}
+            >
+              {isAudioActive ? (
+                <>
+                  <Volume2 className="w-3.5 h-3.5 text-[#d83128]" />
+                  <span className="flex items-center space-x-0.5">
+                    <span className="w-0.5 h-2 bg-[#d83128] animate-pulse" />
+                    <span className="w-0.5 h-3 bg-[#d83128] animate-pulse [animation-delay:150ms]" />
+                    <span className="w-0.5 h-1.5 bg-[#d83128] animate-pulse [animation-delay:300ms]" />
+                  </span>
+                  <span className="hidden sm:inline">35MM SFX</span>
+                </>
+              ) : (
+                <>
+                  <VolumeX className="w-3.5 h-3.5 text-[#8c867e]" />
+                  <span className="hidden sm:inline">SFX OFF</span>
+                </>
+              )}
             </button>
 
             {/* Admin Portal Button with Passcode Protection */}

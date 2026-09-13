@@ -14,11 +14,11 @@
     - Real-time volumetric projector cone radiating from rear booth to screen
     - Interactive particle field (`THREE.Points`, 1,200 motes) reacting to mouse velocity
     - Subtle cinematic postprocessing (Bloom, Vignette)
-- [ ] **Phase 2: Lenis Inertial Scroll, GSAP Camera Rig & Dogstudio Viewfinder Cursor**
-  - [ ] 2.1 Lenis smooth inertial scrolling integration across viewports
-  - [ ] 2.2 GSAP 4-act camera choreography (Act I Projection Booth -> Act II The Descent -> Act III Seat Claim -> Act IV Tear-off pass)
-  - [ ] 2.3 35mm camera viewfinder custom magnetic cursor with lerp tracking
-  - [ ] 2.4 Ambient audio controller (`src/lib/audio.js`) with theater drone, shutter click, and stamp SFX
+- [x] **Phase 2: Lenis Inertial Scroll, GSAP Camera Rig & Dogstudio Viewfinder Cursor**
+  - [x] 2.1 Lenis smooth inertial scrolling integration across viewports (`src/lib/lenis.js`)
+  - [x] 2.2 GSAP 4-act camera choreography (Act I Projection Booth -> Act II The Descent -> Act III Seat Claim -> Act IV Tear-off pass)
+  - [x] 2.3 35mm camera viewfinder custom magnetic cursor with lerp tracking (`src/components/ui/ViewfinderCursor.jsx`)
+  - [x] 2.4 Ambient audio controller (`src/lib/audio.js`) with theater drone, shutter click, and stamp SFX
 - [ ] **Phase 3: Supabase Real-Time Concurrency Integration (`NOWAIT` locks + 5-min timer)**
   - [ ] 3.1 Deferred WebSocket subscription (connected exclusively in Act II/auditorium view)
   - [ ] 3.2 Non-blocking `NOWAIT` atomic lock exception trap (`55P03` -> `SEAT_CONTESTED` in <50ms)

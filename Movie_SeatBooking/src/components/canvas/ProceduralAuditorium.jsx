@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { cinemaAudio } from '../../lib/audio.js';
 
 /**
  * Procedural 50-Seat Cinema Chair Mesh
@@ -114,6 +115,7 @@ function ProceduralSeat({
     }
     document.body.style.cursor = 'pointer';
     setHovered(true);
+    cinemaAudio.playShutterClick();
   };
 
   const handlePointerOut = (e) => {
@@ -125,6 +127,7 @@ function ProceduralSeat({
   const handlePointerDown = (e) => {
     e.stopPropagation();
     if (isBooked || isLockedByOther || locking) return;
+    cinemaAudio.playStampSound();
     onSeatClick(seat);
   };
 

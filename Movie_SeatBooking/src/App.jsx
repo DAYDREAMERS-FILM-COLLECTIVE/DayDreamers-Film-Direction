@@ -10,6 +10,7 @@ import { AdminAuthModal } from './components/AdminAuthModal.jsx';
 import { fetchMovies, fetchShowtimes } from './lib/supabase.js';
 import { getSessionId, resetSessionId } from './lib/session.js';
 import { initLenis, destroyLenis } from './lib/lenis.js';
+import { ViewfinderCursor } from './components/ui/ViewfinderCursor.jsx';
 import { RotateCcw, AlertTriangle } from 'lucide-react';
 
 export default function App() {
@@ -120,6 +121,9 @@ export default function App() {
     <div className="min-h-screen flex flex-col bg-[#11100f] text-[#eee9df] selection:bg-[#d83128] selection:text-white font-sans relative">
       {/* 35mm Grain Overlay matching root index.html */}
       <div className="cinema-noise" aria-hidden="true" />
+
+      {/* Dogstudio-Inspired 35mm Magnetic Viewfinder Cursor */}
+      <ViewfinderCursor />
 
       {/* Top Navbar */}
       <Navbar
