@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ArrowRight,
   RefreshCw,
+  Ticket,
 } from 'lucide-react';
 
 const HOLD_DURATION_SECONDS = 300; // 5 minutes
@@ -34,15 +35,16 @@ export function SeatGrid({
   const [errorMessage, setErrorMessage] = useState('');
   const [timeLeft, setTimeLeft] = useState(0);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [contestedSeatToast, setContestedSeatToast] = useState('');
 
   const timerRef = useRef(null);
   const selectedSeatsRef = useRef(selectedSeats);
   selectedSeatsRef.current = selectedSeats;
 
-  // Max quota per mode
+  // Strict quota limit
   const maxSeats = bookingMode === 'individual' ? 1 : 4;
 
-  // Load seats directly from Supabase RPC
+  // Deferred WebSocket & Initial Seats Fetch: Only active when user is in the auditorium
   const loadSeatMap = useCallback(async (quiet = false) => {
     if (!showtime?.id) return;
     if (!quiet) setLoading(true);
@@ -54,25 +56,25 @@ export function SeatGrid({
         setSeats(res.data);
       }
     } catch (err) {
-      console.error('[SeatGrid] Supabase error fetching seats:', err);
-      setErrorMessage('Unable to connect to live Supabase seating service.');
+      console.error('[SeatGrid] Error connecting to live Supabase seats:', err);
     } finally {
       if (!quiet) setLoading(false);
       else setIsSyncing(false);
     }
   }, [showtime?.id, sessionId]);
 
-  // Initial load + Realtime Channel subscription
   useEffect(() => {
     loadSeatMap();
 
+    // 1. DEFERRED WEBSOCKET: Subscribed only while viewing auditorium seat map
     const unsubscribe = subscribeToSeats(showtime.id, () => {
       loadSeatMap(true);
     });
 
+    // 2. Periodic background poll to refresh lazy locks
     const pollInterval = setInterval(() => {
       loadSeatMap(true);
-    }, 8000);
+    }, 7000);
 
     return () => {
       unsubscribe();
@@ -80,7 +82,7 @@ export function SeatGrid({
     };
   }, [showtime.id, loadSeatMap]);
 
-  // Manage 5-minute countdown hold timer
+  // Analog Timecode Countdown Timer
   useEffect(() => {
     if (selectedSeats.length > 0) {
       if (timeLeft <= 0) {
@@ -109,7 +111,7 @@ export function SeatGrid({
     };
   }, [selectedSeats.length]);
 
-  // Auto-release seats on window beforeunload
+  // Auto-release on page close
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (selectedSeatsRef.current.length > 0) {
@@ -129,19 +131,20 @@ export function SeatGrid({
     if (seatIds.length > 0) {
       await releaseSeatLocks(seatIds, sessionId);
       setSelectedSeats([]);
-      setErrorMessage('Your 5-minute seat reservation has expired. Please reselect your seats.');
+      setErrorMessage('Your 5-minute atomic reservation has expired. Please reselect your seats.');
       loadSeatMap(true);
     }
   };
 
-  // Seat click handler
+  // Seat Click with NOWAIT and 55P03 Contestation Handling
   const handleSeatClick = async (seat) => {
     setErrorMessage('');
+    setContestedSeatToast('');
 
     if (seat.effective_status === 'booked') return;
 
     if (seat.effective_status === 'locked_by_other') {
-      setErrorMessage(`Seat ${seat.row_label}${seat.col_number} is held by another attendee.`);
+      setContestedSeatToast(`Seat ${seat.row_label}${seat.col_number} is currently held by another attendee.`);
       return;
     }
 
@@ -168,6 +171,7 @@ export function SeatGrid({
       return;
     }
 
+    // Checking max quota
     if (selectedSeats.length >= maxSeats) {
       if (bookingMode === 'individual') {
         const currentSeatId = selectedSeats[0].id;
@@ -185,6 +189,15 @@ export function SeatGrid({
             setSelectedSeats([seat]);
             setTimeLeft(HOLD_DURATION_SECONDS);
             loadSeatMap(true);
+          } else if (lockRes?.error === 'SEAT_CONTESTED') {
+            // Rapid Contestation Toast & 50ms deselection
+            setContestedSeatToast(`Another student is simultaneously grabbing Seat ${seat.row_label}${seat.col_number}!`);
+            setTimeout(() => {
+              loadSeatMap(true);
+            }, 50);
+          } else if (lockRes?.error === 'SOLD_OUT') {
+            setErrorMessage('Premiere is sold out! All seats have been reserved.');
+            loadSeatMap(true);
           } else {
             setErrorMessage(lockRes?.error || 'Could not acquire lock on seat.');
             loadSeatMap(true);
@@ -201,6 +214,7 @@ export function SeatGrid({
       }
     }
 
+    // Acquire lock with NOWAIT
     setLocking(true);
     try {
       const candidateIds = [...selectedSeats.map((s) => s.id), seat.id];
@@ -221,8 +235,17 @@ export function SeatGrid({
               : s
           )
         );
+      } else if (lockRes?.error === 'SEAT_CONTESTED') {
+        // Fast Contestation Bailout without freezing UI
+        setContestedSeatToast(`Another student is grabbing Seat ${seat.row_label}${seat.col_number}! Pick another seat.`);
+        setTimeout(() => {
+          loadSeatMap(true);
+        }, 50);
+      } else if (lockRes?.error === 'SOLD_OUT') {
+        setErrorMessage('Premiere is sold out! All seats have been reserved.');
+        loadSeatMap(true);
       } else {
-        setErrorMessage(lockRes?.error || 'Could not reserve seat. It may have just been claimed.');
+        setErrorMessage(lockRes?.error || 'Could not reserve seat.');
         loadSeatMap(true);
       }
     } catch (err) {
@@ -246,6 +269,7 @@ export function SeatGrid({
 
     setBookingMode(newMode);
     setErrorMessage('');
+    setContestedSeatToast('');
   };
 
   const handleReleaseAll = async () => {
@@ -262,7 +286,7 @@ export function SeatGrid({
     }
   };
 
-  // 5 Rows: A, B, C, D, E
+  // 5 Rows: A, B, C, D, E (50 Seats Total)
   const rows = ['A', 'B', 'C', 'D', 'E'];
   const seatsByRow = rows.reduce((acc, row) => {
     acc[row] = seats.filter((s) => s.row_label === row).sort((a, b) => a.col_number - b.col_number);
@@ -274,29 +298,30 @@ export function SeatGrid({
     return sum + Number(price);
   }, 0);
 
-  const formatTimer = (seconds) => {
+  // Analog Timecode Format [ 04:59 ]
+  const formatTimecode = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    return `[ ${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')} ]`;
   };
 
   return (
     <div className="space-y-6">
-      {/* Top Bar with Mode Toggle */}
+      {/* Top Bar with Mode Switcher & Back Navigation */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-[#171513] border border-[#2a2622]">
         <div className="flex items-center space-x-3">
           <button
             onClick={onBack}
             className="p-2 bg-[#0e0d0c] hover:bg-[#1e1b18] border border-[#2a2622] text-[#9f9b94] hover:text-[#eee9df] transition-colors"
-            title="Return to Schedule"
+            title="Return to Premiere Drop"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
           <div>
             <span className="text-[10px] font-mono tracking-widest text-[#d83128] uppercase block">
-              SEATING ALLOCATION
+              CAMPUS PREMIERE SCREENING
             </span>
-            <h2 className="text-lg font-serif font-bold text-[#eee9df] uppercase">
+            <h2 className="text-base font-serif font-bold text-[#eee9df] uppercase">
               {movie.title} • {showtime.auditorium_name}
             </h2>
           </div>
@@ -330,40 +355,54 @@ export function SeatGrid({
         </div>
       </div>
 
-      {/* Error Alert */}
-      {errorMessage && (
-        <div className="p-3 bg-[#1e1411] border border-[#d83128]/70 text-[#eee9df] flex items-start space-x-2.5 text-xs font-sans">
-          <AlertTriangle className="w-4 h-4 text-[#d83128] shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <span className="font-bold text-[#d83128] uppercase font-mono mr-1">NOTICE:</span>
-            {errorMessage}
+      {/* Contested Seat Toast Alert (55P03 Fast Response) */}
+      {contestedSeatToast && (
+        <div className="p-3 bg-[#1e1411] border-2 border-[#d83128] text-[#eee9df] flex items-center justify-between text-xs font-mono animate-pulse">
+          <div className="flex items-center space-x-2">
+            <AlertTriangle className="w-4 h-4 text-[#d83128]" />
+            <span className="font-bold text-[#d83128] uppercase">SEAT CONTESTED:</span>
+            <span>{contestedSeatToast}</span>
           </div>
-          <button
-            onClick={() => setErrorMessage('')}
-            className="text-[#9f9b94] hover:text-white uppercase font-mono text-[10px]"
-          >
+          <button onClick={() => setContestedSeatToast('')} className="text-[#9f9b94] hover:text-white uppercase text-[10px]">
             DISMISS
           </button>
         </div>
       )}
 
-      {/* Seating Container */}
-      <div className="bg-[#171513] border border-[#2a2622] p-6 sm:p-10 space-y-10">
-        {/* Soft Curved Acoustic Screen Banner with Top-Down Lighting */}
-        <div className="relative max-w-xl mx-auto text-center space-y-3">
-          <div className="relative">
-            {/* Top-down subtle white radial glow */}
-            <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-3/4 h-12 bg-white/10 blur-xl pointer-events-none" />
-            {/* Curved acoustic bar */}
-            <div className="h-1.5 w-full bg-gradient-to-r from-transparent via-[#eee9df] to-transparent shadow-[0_4px_16px_rgba(238,233,223,0.2)]" />
+      {errorMessage && (
+        <div className="p-3 bg-[#1e1411] border border-[#d83128]/70 text-[#eee9df] flex items-start space-x-2 text-xs font-sans">
+          <AlertTriangle className="w-4 h-4 text-[#d83128] shrink-0 mt-0.5" />
+          <div className="flex-1">{errorMessage}</div>
+          <button onClick={() => setErrorMessage('')} className="text-[#9f9b94] hover:text-white uppercase font-mono text-[10px]">
+            DISMISS
+          </button>
+        </div>
+      )}
+
+      {/* Interactive 3D Perspective Amphitheater Container */}
+      <div className="bg-[#171513] border border-[#2a2622] p-6 sm:p-12 space-y-12 overflow-hidden relative">
+        {/* Projector Light Cone Effect */}
+        <div className="relative max-w-2xl mx-auto text-center">
+          {/* Subtle Projector Beam shining down from ceiling */}
+          <div
+            className="w-full h-24 mx-auto pointer-events-none opacity-20"
+            style={{
+              background: 'linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 70%, transparent 100%)',
+              clipPath: 'polygon(35% 0%, 65% 0%, 100% 100%, 0% 100%)',
+            }}
+          />
+
+          {/* Soft Curved Acoustic Screen Banner */}
+          <div className="relative mt-2">
+            <div className="h-1.5 w-full bg-gradient-to-r from-transparent via-[#eee9df] to-transparent shadow-[0_6px_24px_rgba(238,233,223,0.35)]" />
+            <span className="text-[10px] font-mono tracking-widest text-[#9f9b94] uppercase block mt-2">
+              ACOUSTIC 35MM PROJECTION SCREEN
+            </span>
           </div>
-          <span className="text-[10px] font-mono tracking-widest text-[#9f9b94] uppercase block">
-            CURVED ACOUSTIC CINEMA SCREEN
-          </span>
         </div>
 
         {/* Legend */}
-        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 pt-2 text-[11px] font-sans">
+        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-[11px] font-sans">
           <div className="flex items-center space-x-2">
             <div className="w-4 h-4 bg-[#22201d] border border-[#3a3530]" />
             <span className="text-[#9f9b94]">Regular (₹{showtime.price_regular})</span>
@@ -374,7 +413,7 @@ export function SeatGrid({
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-4 h-4 bg-[#d83128]" />
-            <span className="text-[#eee9df] font-bold">Selected by You</span>
+            <span className="text-[#eee9df] font-bold">Selected</span>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-4 h-4 bg-[#523009] border border-[#854d0e]" />
@@ -386,19 +425,30 @@ export function SeatGrid({
           </div>
         </div>
 
-        {/* 5 Rows x 10 Columns Center-Aligned Continuous Block */}
+        {/* 3D Physical Amphitheater Perspective Box (perspective: 900px, rotateX(10deg)) */}
         {loading ? (
           <div className="py-20 text-center space-y-2">
             <div className="w-6 h-6 border-2 border-[#d83128] border-t-transparent animate-spin mx-auto" />
-            <p className="text-xs text-[#9f9b94] font-mono uppercase">Connecting to live Supabase seating grid...</p>
+            <p className="text-xs font-mono text-[#9f9b94] uppercase">Synchronizing 50-seat acoustic grid...</p>
           </div>
         ) : (
-          <div className="overflow-x-auto pb-4">
-            <div className="min-w-[540px] max-w-xl mx-auto space-y-3">
-              {/* Column numbers header */}
+          <div
+            className="overflow-x-auto pb-8 pt-2"
+            style={{
+              perspective: '900px',
+            }}
+          >
+            <div
+              className="min-w-[560px] max-w-xl mx-auto space-y-3.5 transition-transform duration-500 ease-out"
+              style={{
+                transform: 'rotateX(10deg)',
+                transformOrigin: 'top center',
+              }}
+            >
+              {/* Columns Header */}
               <div className="flex items-center space-x-2 px-8">
                 <div className="w-6 text-center text-[10px] font-mono text-[#9f9b94] font-bold"></div>
-                <div className="flex-1 grid grid-cols-10 gap-2 text-center text-[10px] font-mono text-[#9f9b94]">
+                <div className="flex-1 grid grid-cols-10 gap-2.5 text-center text-[10px] font-mono text-[#9f9b94]">
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((col) => (
                     <span key={col}>{col}</span>
                   ))}
@@ -421,8 +471,8 @@ export function SeatGrid({
                       {rowLabel}
                     </div>
 
-                    {/* 10 Seats Continuous Block */}
-                    <div className="flex-1 grid grid-cols-10 gap-2">
+                    {/* 10 Seats */}
+                    <div className="flex-1 grid grid-cols-10 gap-2.5">
                       {rowSeats.map((seat) => {
                         const isSelectedByMe = seat.effective_status === 'selected_by_me';
                         const isLockedByOther = seat.effective_status === 'locked_by_other';
@@ -435,11 +485,14 @@ export function SeatGrid({
                         } else if (isLockedByOther) {
                           seatStyles = 'bg-[#523009] border-[#854d0e] text-[#f59e0b] cursor-not-allowed';
                         } else if (isSelectedByMe) {
-                          seatStyles = 'bg-[#d83128] border-[#d83128] text-white font-bold shadow-[0_2px_10px_rgba(216,49,40,0.4)]';
+                          seatStyles =
+                            'bg-[#d83128] border-[#d83128] text-white font-bold shadow-[0_4px_16px_rgba(216,49,40,0.5)] -translate-y-1';
                         } else if (isVip) {
-                          seatStyles = 'bg-[#2d241e] border-[#5c4738] text-[#eee9df] hover:border-[#d4af37] cursor-pointer';
+                          seatStyles =
+                            'bg-[#2d241e] border-[#5c4738] text-[#eee9df] hover:border-[#d4af37] hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(212,175,55,0.2)] cursor-pointer';
                         } else {
-                          seatStyles = 'bg-[#22201d] border-[#3a3530] text-[#9f9b94] hover:border-[#eee9df] hover:text-[#eee9df] cursor-pointer';
+                          seatStyles =
+                            'bg-[#22201d] border-[#3a3530] text-[#9f9b94] hover:border-[#eee9df] hover:text-[#eee9df] hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(238,233,223,0.15)] cursor-pointer';
                         }
 
                         return (
@@ -450,7 +503,7 @@ export function SeatGrid({
                             title={`${seat.row_label}${seat.col_number} • ${
                               isVip ? 'VIP ₹' + showtime.price_vip : 'REGULAR ₹' + showtime.price_regular
                             }`}
-                            className={`h-9 w-full border font-mono text-xs flex items-center justify-center transition-all ${seatStyles}`}
+                            className={`h-9 w-full border font-mono text-xs flex items-center justify-center transition-all duration-150 ${seatStyles}`}
                           >
                             <span>{seat.col_number}</span>
                           </button>
@@ -464,14 +517,14 @@ export function SeatGrid({
           </div>
         )}
 
-        {/* Tier Division Annotation */}
+        {/* Tier Annotations */}
         <div className="pt-3 border-t border-[#2a2622] flex flex-col sm:flex-row items-center justify-between text-[11px] font-mono text-[#9f9b94] gap-2">
-          <div>ROWS A–C: REGULAR TIER (₹{showtime.price_regular})</div>
+          <div>ROWS A–C: REGULAR ARCHIVE TIER (₹{showtime.price_regular})</div>
           <div className="flex items-center space-x-2">
             {isSyncing && (
               <span className="flex items-center space-x-1 text-[#d83128]">
                 <RefreshCw className="w-3 h-3 animate-spin" />
-                <span>LIVE SYNC</span>
+                <span>SYNCING LIVE</span>
               </span>
             )}
             <span className="text-[#d4af37]">ROWS D–E: VIP BRONZE TIER (₹{showtime.price_vip})</span>
@@ -479,77 +532,80 @@ export function SeatGrid({
         </div>
       </div>
 
-      {/* Sticky Bottom Dock (35mm Archival Noir with Film Leader Crimson) */}
+      {/* Sticky Bottom Dock: Physical Ticket Preview & Analog Timecode */}
       <div className="sticky bottom-4 z-40 bg-[#0e0d0c] border border-[#d83128] p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xl">
-        <div className="space-y-1">
-          <div className="flex items-center space-x-3">
-            <span className="text-xs font-mono tracking-wider text-[#9f9b94] uppercase">
-              SELECTED SEATS ({selectedSeats.length}/{maxSeats}):
-            </span>
-            {selectedSeats.length > 0 ? (
-              <div className="flex items-center space-x-1.5 flex-wrap">
-                {selectedSeats.map((s) => (
-                  <span
-                    key={s.id}
-                    className={`px-2 py-0.5 text-xs font-mono font-bold border ${
-                      s.seat_tier === 'vip'
-                        ? 'bg-[#2d241e] border-[#5c4738] text-[#d4af37]'
-                        : 'bg-[#22201d] border-[#3a3530] text-[#eee9df]'
-                    }`}
-                  >
-                    {s.row_label}{s.col_number}
-                  </span>
-                ))}
+        {/* Left: Physical Ticket Preview with Tearing Perforation Line */}
+        <div className="flex items-center space-x-4">
+          <div className="relative bg-[#171513] border border-[#2a2622] px-4 py-2 flex items-center space-x-3">
+            {/* Ticket Notches */}
+            <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-[#0e0d0c] border-r border-[#2a2622]" />
+            <div className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-[#0e0d0c] border-l border-[#2a2622]" />
+
+            <div className="space-y-0.5">
+              <span className="text-[9px] font-mono uppercase text-[#9f9b94] block">
+                TICKET PREVIEW ({selectedSeats.length}/{maxSeats})
+              </span>
+              <div className="flex items-center space-x-1">
+                {selectedSeats.length > 0 ? (
+                  selectedSeats.map((s) => (
+                    <span
+                      key={s.id}
+                      className="px-2 py-0.5 text-xs font-mono font-bold bg-[#d83128] text-white"
+                    >
+                      {s.row_label}{s.col_number}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-xs font-mono text-[#9f9b94] italic">No seats selected</span>
+                )}
               </div>
-            ) : (
-              <span className="text-xs font-mono text-[#9f9b94] italic">Select available seats above</span>
-            )}
+            </div>
+
+            {/* Tearing Perforation Line */}
+            <div className="h-7 border-r-2 border-dashed border-[#d83128]/50 mx-2" />
+
+            {/* Total Price */}
+            <div>
+              <span className="text-[9px] font-mono uppercase text-[#9f9b94] block">TOTAL</span>
+              <span className="text-base font-mono font-bold text-[#eee9df]">₹{totalPrice}</span>
+            </div>
           </div>
 
+          {/* Analog Timecode Hold Timer */}
           {selectedSeats.length > 0 && (
             <div className="flex items-center space-x-2 text-xs font-mono">
-              <Clock className="w-3.5 h-3.5 text-[#d83128]" />
-              <span className="text-[#9f9b94] uppercase">HOLD TIMER:</span>
-              <span className="font-bold text-[#d83128] tracking-widest">
-                {formatTimer(timeLeft)}
+              <span className="text-[#9f9b94] uppercase text-[10px]">TIME REMAINING:</span>
+              <span className="font-bold text-[#d83128] tracking-widest text-sm sm:text-base">
+                {formatTimecode(timeLeft)}
               </span>
-              <span className="text-[10px] text-[#9f9b94]">(Auto-releases at 00:00)</span>
             </div>
           )}
         </div>
 
-        <div className="flex items-center space-x-4 w-full sm:w-auto justify-between sm:justify-end">
+        {/* Right: Actions */}
+        <div className="flex items-center space-x-2 w-full sm:w-auto justify-between sm:justify-end">
           {selectedSeats.length > 0 && (
-            <div className="text-right">
-              <div className="text-[10px] font-mono text-[#9f9b94] uppercase">TOTAL AMOUNT</div>
-              <div className="text-lg font-mono font-bold text-[#eee9df]">₹{totalPrice}</div>
-            </div>
+            <button
+              onClick={handleReleaseAll}
+              disabled={locking}
+              className="px-3 py-2 bg-[#171513] hover:bg-[#22201d] text-[#9f9b94] hover:text-[#eee9df] text-xs font-mono uppercase border border-[#2a2622] transition-colors"
+            >
+              RELEASE
+            </button>
           )}
 
-          <div className="flex items-center space-x-2">
-            {selectedSeats.length > 0 && (
-              <button
-                onClick={handleReleaseAll}
-                disabled={locking}
-                className="px-3 py-2 bg-[#171513] hover:bg-[#22201d] text-[#9f9b94] hover:text-[#eee9df] text-xs font-mono uppercase border border-[#2a2622] transition-colors"
-              >
-                RELEASE
-              </button>
-            )}
-
-            <button
-              disabled={selectedSeats.length === 0 || locking}
-              onClick={onProceedToCheckout}
-              className={`px-5 py-2.5 text-xs font-sans font-bold uppercase tracking-wider border flex items-center space-x-2 transition-colors ${
-                selectedSeats.length > 0
-                  ? 'bg-[#d83128] hover:bg-[#b8241c] text-white border-[#d83128] cursor-pointer'
-                  : 'bg-[#171513] text-[#64748b] border-[#2a2622] cursor-not-allowed'
-              }`}
-            >
-              <span>CONTINUE TO BOOKING</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
+          <button
+            disabled={selectedSeats.length === 0 || locking}
+            onClick={onProceedToCheckout}
+            className={`px-6 py-3 text-xs font-sans font-bold uppercase tracking-wider border flex items-center space-x-2 transition-colors ${
+              selectedSeats.length > 0
+                ? 'bg-[#d83128] hover:bg-[#b8241c] text-white border-[#d83128] cursor-pointer shadow-[0_0_15px_rgba(216,49,40,0.4)]'
+                : 'bg-[#171513] text-[#64748b] border-[#2a2622] cursor-not-allowed'
+            }`}
+          >
+            <span>CONFIRM ATTENDEE DETAILS</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
         </div>
       </div>
     </div>

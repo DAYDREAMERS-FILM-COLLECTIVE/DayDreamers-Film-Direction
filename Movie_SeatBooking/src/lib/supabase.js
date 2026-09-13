@@ -49,6 +49,17 @@ export async function fetchShowtimes(movieId = null) {
 }
 
 /**
+ * Fast single-query availability check without row transactions
+ */
+export async function fetchShowtimeAvailability(showtimeId) {
+  const { data, error } = await supabase.rpc('get_showtime_availability', {
+    p_showtime_id: showtimeId,
+  });
+  if (error) throw error;
+  return data;
+}
+
+/**
  * Fetch 50-seat grid for a showtime with lazy expiration calculation
  */
 export async function fetchSeats(showtimeId, sessionId) {
