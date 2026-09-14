@@ -10,15 +10,22 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <style>
 :root{
-  --bg:#07070c;
-  --bg2:#0d0d16;
-  --panel:#12121d;
-  --gold:#cfd6e4;
-  --gold2:#ffffff;
-  --gold-dim:rgba(207,214,228,.35);
-  --cream:#f3ead8;
-  --muted:#8b8778;
-  --red:#b3202c;
+  --bg:#1A0B17;
+  --bg2:#261223;
+  --panel:#3A1F33;
+  --plum-deep:#1A0B17;
+  --plum-dark:#3A1F33;
+  --plum-mid:#6D3B56;
+  --plum-accent:#C89BB2;
+  --plum-light:#F2E9ED;
+  --gold:#C89BB2;
+  --gold2:#F2E9ED;
+  --gold-dim:rgba(200,155,178,.35);
+  --cream:#F2E9ED;
+  --muted:#A88698;
+  --border:#6D3B56;
+  --border-subtle:rgba(109,59,86,.45);
+  --red:#C84668;
   --left-indent:clamp(3rem,14vw,16rem);
 }
 /* Gilroy Thin (100) and UltraLight (200) by Radomir Tinkov, self-hosted. */
@@ -42,7 +49,7 @@ body{
   -webkit-font-smoothing:antialiased;
 }
 body.menu-open{overflow:hidden}
-::selection{background:var(--gold);color:#111}
+::selection{background:var(--gold);color:#1A0B17}
 
 /* subtle grain */
 #grain{
@@ -65,8 +72,8 @@ body.menu-open{overflow:hidden}
   background-color:var(--panel);
   z-index:70;pointer-events:none;
   visibility:hidden;
-  border-right:2px solid rgba(255,255,255,.25);
-  box-shadow:25px 0 60px rgba(0,0,0,.85);
+  border-right:2px solid rgba(200,155,178,.35);
+  box-shadow:25px 0 60px rgba(16,7,14,.95);
 }
 
 /* header, brand left, burger right, no link row */
@@ -98,7 +105,7 @@ body.menu-open{overflow:hidden}
   font-size:10px;letter-spacing:.25em;text-transform:uppercase;
   color:var(--gold);white-space:nowrap;
   border:1px solid var(--gold-dim);border-radius:0;
-  padding:6px 12px;background:rgba(8,9,13,.9);
+  padding:6px 12px;background:rgba(26,11,23,.95);
   opacity:0;transform:translateY(4px);transition:opacity .25s,transform .25s;
   pointer-events:none;
 }
@@ -106,7 +113,7 @@ body.menu-open{overflow:hidden}
 .burger-toggle:focus-visible::after{opacity:1;transform:translateY(8px)}
 .burger-toggle:focus-visible{outline:2px solid var(--gold);outline-offset:4px;border-radius:0}
 .burger-icon{width:30px;height:18px;display:flex;flex-direction:column;justify-content:space-between}
-.bar{width:100%;height:1.6px;background:#fff;border-radius:0;transform-origin:center;display:block}
+.bar{width:100%;height:1.6px;background:var(--cream);border-radius:0;transform-origin:center;display:block}
 
 /* workbench stage behind the overlay */
 #demoView{
@@ -118,7 +125,7 @@ body.menu-open{overflow:hidden}
 #demoView h1{
   font-family:'Gilroy','Plus Jakarta Sans',sans-serif;
   font-weight:100;letter-spacing:-.015em;
-  font-size:clamp(2.6rem,6vw,5rem);line-height:1.05;color:#F5F5F5;
+  font-size:clamp(2.6rem,6vw,5rem);line-height:1.05;color:var(--cream);
 }
 #demoView p{color:var(--muted);font-size:15px;line-height:1.8;max-width:520px;font-weight:300}
 #demoView .hint{
@@ -132,27 +139,27 @@ body.menu-open{overflow:hidden}
   min-height:100vh;overflow-y:auto;
   padding:110px clamp(2.2rem,5vw,4.8rem) 2rem;
   background:
-    radial-gradient(120% 90% at 85% 8%, rgba(38,64,140,.30) 0%, transparent 55%),
-    radial-gradient(110% 85% at 12% 88%, rgba(70,88,130,.26) 0%, transparent 60%),
-    linear-gradient(180deg, #070b18 0%, #05070f 100%);
+    radial-gradient(120% 90% at 85% 8%, rgba(109,59,86,.45) 0%, transparent 55%),
+    radial-gradient(110% 85% at 12% 88%, rgba(58,31,51,.55) 0%, transparent 60%),
+    linear-gradient(180deg, #1A0B17 0%, #10060e 100%);
   font-family:'Gilroy','Plus Jakarta Sans',-apple-system,sans-serif;
 }
 .menu-ambient{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
 .menu-ambient .glow-indigo{
   position:absolute;width:70vw;height:70vw;max-width:850px;max-height:850px;
   top:15%;right:10%;border-radius:50%;
-  background:radial-gradient(circle,rgba(48,84,170,.30) 0%,rgba(18,30,66,.10) 50%,transparent 70%);
+  background:radial-gradient(circle,rgba(109,59,86,.42) 0%,rgba(58,31,51,.18) 50%,transparent 70%);
   filter:blur(90px);animation:menuPulse 12s ease-in-out infinite alternate;
 }
 .menu-ambient .glow-cyan{
   position:absolute;width:60vw;height:60vw;max-width:700px;max-height:700px;
   bottom:-10%;right:25%;border-radius:50%;
-  background:radial-gradient(circle,rgba(32,90,150,.28) 0%,rgba(12,30,70,.08) 55%,transparent 70%);
+  background:radial-gradient(circle,rgba(200,155,178,.30) 0%,rgba(58,31,51,.12) 55%,transparent 70%);
   filter:blur(100px);animation:menuDrift 16s ease-in-out infinite alternate;
 }
 .menu-ambient .glow-top{
   position:absolute;width:40vw;height:40vw;top:-15%;left:20%;border-radius:50%;
-  background:radial-gradient(circle,rgba(207,214,228,.08) 0%,transparent 70%);
+  background:radial-gradient(circle,rgba(242,233,237,.08) 0%,transparent 70%);
   filter:blur(100px);
 }
 .menu-ambient .grain{
@@ -170,22 +177,22 @@ body.menu-open{overflow:hidden}
 }
 .menu-item .item-number{
   font-family:'Gilroy','Plus Jakarta Sans',sans-serif;
-  font-size:.78rem;font-weight:200;color:rgba(245,245,245,.55);letter-spacing:.1em;
+  font-size:.78rem;font-weight:200;color:rgba(200,155,178,.6);letter-spacing:.1em;
   font-variant-numeric:tabular-nums;transition:color .3s ease;
   width:2ch;margin-right:clamp(1.4rem,2.2vw,2.6rem);
 }
 .menu-item .item-label{
   font-family:'Gilroy','Plus Jakarta Sans',sans-serif;
   font-size:clamp(2.4rem,4.2vw,4rem);font-weight:100;letter-spacing:-.015em;line-height:1.08;
-  color:#F5F5F5;transition:color .3s ease,text-shadow .3s ease,font-weight .3s ease;
+  color:#F2E9ED;transition:color .3s ease,text-shadow .3s ease,font-weight .3s ease;
 }
 .menu-list:hover .menu-item{opacity:.28}
 .menu-list .menu-item:hover{opacity:1;transform:translateX(12px)}
-.menu-list .menu-item:hover .item-label{color:#FFFFFF;font-weight:200;text-shadow:0 0 28px rgba(255,255,255,.35)}
-.menu-list .menu-item:hover .item-number{color:#FFFFFF}
+.menu-list .menu-item:hover .item-label{color:#FFFFFF;font-weight:200;text-shadow:0 0 28px rgba(200,155,178,.55)}
+.menu-list .menu-item:hover .item-number{color:var(--gold)}
 .menu-foot{position:relative;z-index:10;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap}
 .menu-foot-left{display:flex;flex-direction:column;gap:14px;padding-left:calc(var(--left-indent) * 0.95)}
-.nav-meta{color:rgba(228,231,242,.8);font-size:.78rem;font-weight:300;letter-spacing:.18em;text-transform:uppercase;line-height:2}
+.nav-meta{color:rgba(242,233,237,.75);font-size:.78rem;font-weight:300;letter-spacing:.18em;text-transform:uppercase;line-height:2}
 .menu-action{
   font-family:'Gilroy','Plus Jakarta Sans',sans-serif;
   color:var(--gold);text-decoration:none;font-size:.82rem;font-weight:200;letter-spacing:.22em;text-transform:uppercase;
@@ -195,10 +202,10 @@ body.menu-open{overflow:hidden}
 .menu-action:hover{color:var(--gold2);transform:translateX(8px)}
 .menu-socials{display:flex;gap:1.75rem;list-style:none;flex-wrap:wrap;align-items:baseline;margin:0;padding:0 0 4px}
 .menu-socials a{
-  color:rgba(228,231,242,.6);text-decoration:none;font-size:.78rem;font-weight:300;letter-spacing:.12em;
+  color:rgba(242,233,237,.6);text-decoration:none;font-size:.78rem;font-weight:300;letter-spacing:.12em;
   transition:color .3s ease,transform .2s ease;display:inline-block;
 }
-.menu-socials a:hover{color:#fff;transform:translateY(-1px)}
+.menu-socials a:hover{color:var(--gold);transform:translateY(-1px)}
 @media(max-width:768px){
   :root{--left-indent:1.8rem}
   .menu-view{padding:100px 2rem 2rem}
