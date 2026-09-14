@@ -266,28 +266,102 @@ function generateRefCode() {
     return `DD-${code}`;
 }
 
+const RVU_EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@(blr\.)?rvu\.edu\.in$/i;
+
 app.post('/api/bookings', async (req, res) => {
     const client = await pool.connect();
     try {
-        const { showingId, userName, userUsn, userEmail, seats } = req.body;
+        const { showingId, bookingMode } = req.body;
 
-        // Validation
-        if (!showingId || !userName || !userUsn || !userEmail) {
-            return res.status(400).json({ error: 'All fields (Name, USN, Email, Showing) are required' });
-        }
-        if (!Array.isArray(seats) || seats.length === 0) {
-            return res.status(400).json({ error: 'At least one seat must be selected' });
+        // Normalise attendees array from either group payload or single payload
+        let attendees = [];
+        if (Array.isArray(req.body.attendees) && req.body.attendees.length > 0) {
+            attendees = req.body.attendees;
+        } else if (req.body.userName && req.body.userUsn && req.body.userEmail && Array.isArray(req.body.seats)) {
+            // Legacy / single structure
+            attendees = req.body.seats.map(s => ({
+                name: req.body.userName,
+                usn: req.body.userUsn,
+                email: req.body.userEmail,
+                seat: s
+            }));
         }
 
-        // Email basic regex
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(userEmail.trim())) {
-            return res.status(400).json({ error: 'Invalid email address' });
+        // Validate basic payload
+        if (!showingId) {
+            return res.status(400).json({ error: 'showingId is required' });
         }
+        if (!attendees || attendees.length === 0) {
+            return res.status(400).json({ error: 'At least one attendee and seat must be provided' });
+        }
+
+        // Limit seat count
+        const isGroup = bookingMode === 'group' || attendees.length > 1;
+        if (!isGroup && attendees.length > 1) {
+            return res.status(400).json({ error: 'Individual bookings allow a maximum of 1 seat. Please switch to Group mode for multiple seats.' });
+        }
+        if (attendees.length > 4) {
+            return res.status(400).json({ error: 'Group bookings allow a maximum of 4 seats at once.' });
+        }
+
+        // Clean & validate attendees
+        const cleanedAttendees = [];
+        const seenSeats = new Set();
+        const seenUsns = new Set();
+        const seenEmails = new Set();
+
+        for (let i = 0; i < attendees.length; i++) {
+            const a = attendees[i];
+            const name = (a.name || '').trim();
+            const usn = (a.usn || '').trim().toUpperCase();
+            const email = (a.email || '').trim().toLowerCase();
+            const seat = (a.seat || '').trim().toUpperCase();
+
+            if (!name || !usn || !email || !seat) {
+                return res.status(400).json({
+                    error: `Attendee #${i + 1} is missing required details. Full Name, USN, RVU Email, and Seat are mandatory for all attendees.`
+                });
+            }
+
+            // RVU Email Domain Validation
+            if (!RVU_EMAIL_REGEX.test(email)) {
+                return res.status(400).json({
+                    error: `Invalid email "${email}" for attendee #${i + 1}. Only @rvu.edu.in or @blr.rvu.edu.in email addresses are accepted.`
+                });
+            }
+
+            // Duplicate seat in request check
+            if (seenSeats.has(seat)) {
+                return res.status(400).json({ error: `Seat ${seat} is selected multiple times in this booking.` });
+            }
+            seenSeats.add(seat);
+
+            // Duplicate USN in request check (Requirement 3: "no same usn should be repeated")
+            if (seenUsns.has(usn)) {
+                return res.status(400).json({
+                    error: `Duplicate USN "${usn}" detected in booking list! Every attendee must have a unique student USN.`
+                });
+            }
+            seenUsns.add(usn);
+
+            // Duplicate Email in request check
+            if (seenEmails.has(email)) {
+                return res.status(400).json({
+                    error: `Duplicate email "${email}" detected in booking list! Every attendee must have a distinct RVU email address.`
+                });
+            }
+            seenEmails.add(email);
+
+            cleanedAttendees.push({ name, usn, email, seat });
+        }
+
+        const seatList = Array.from(seenSeats);
+        const usnList = Array.from(seenUsns);
+        const emailList = Array.from(seenEmails);
 
         await client.query('BEGIN');
 
-        // Check showing exists
+        // 1. Verify showing exists
         const showingRes = await client.query(
             `SELECT s.*, m.title as movie_title, m.director, m.hall as movie_hall
              FROM showings s
@@ -301,10 +375,10 @@ app.post('/api/bookings', async (req, res) => {
         }
         const showing = showingRes.rows[0];
 
-        // Check for seat collisions in locked_seats or existing bookings
+        // 2. Check for locked seats
         const lockedCheck = await client.query(
             'SELECT seat_id FROM locked_seats WHERE showing_id = $1 AND seat_id = ANY($2)',
-            [showingId, seats]
+            [showingId, seatList]
         );
         if (lockedCheck.rows.length > 0) {
             await client.query('ROLLBACK');
@@ -312,9 +386,10 @@ app.post('/api/bookings', async (req, res) => {
             return res.status(409).json({ error: `Seat(s) ${taken} are reserved or locked by admin.` });
         }
 
+        // 3. Check for already booked seats
         const bookedCheck = await client.query(
             'SELECT unnest(seats) as seat_id FROM bookings WHERE showing_id = $1 AND seats && $2',
-            [showingId, seats]
+            [showingId, seatList]
         );
         if (bookedCheck.rows.length > 0) {
             await client.query('ROLLBACK');
@@ -322,92 +397,128 @@ app.post('/api/bookings', async (req, res) => {
             return res.status(409).json({ error: `Seat(s) ${taken} have already been booked.` });
         }
 
-        // Generate unique reference code and ID
-        let refCode = generateRefCode();
-        let unique = false;
-        while (!unique) {
-            const checkRef = await client.query('SELECT id FROM bookings WHERE ref_code = $1', [refCode]);
-            if (checkRef.rows.length === 0) {
-                unique = true;
-            } else {
-                refCode = generateRefCode();
-            }
+        // 4. Check for already registered USNs for this showing (Database Uniqueness)
+        const usnCheck = await client.query(
+            'SELECT user_usn FROM bookings WHERE showing_id = $1 AND user_usn = ANY($2)',
+            [showingId, usnList]
+        );
+        if (usnCheck.rows.length > 0) {
+            await client.query('ROLLBACK');
+            const dupUsns = usnCheck.rows.map(r => r.user_usn).join(', ');
+            return res.status(409).json({
+                error: `Student USN (${dupUsns}) already has an active reservation for this screening. Duplicate reservations are not permitted.`
+            });
         }
 
-        const idRes = await client.query('SELECT gen_random_uuid() as uuid');
-        const bookingId = idRes.rows[0].uuid;
-
-        // Generate HMAC signed ticket token
-        const qrToken = signTicket(bookingId, refCode, userUsn.trim().toUpperCase(), showingId, seats);
-
-        // Generate QR code Data URI
-        const qrDataUri = await QRCode.toDataURL(qrToken, {
-            errorCorrectionLevel: 'H',
-            margin: 1,
-            color: {
-                dark: '#000000',
-                light: '#ffffff'
-            },
-            width: 250
-        });
-
-        // Insert booking record
-        const insertRes = await client.query(
-            `INSERT INTO bookings 
-             (id, ref_code, showing_id, movie_id, user_name, user_usn, user_email, seats, qr_token)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-             RETURNING *`,
-            [
-                bookingId,
-                refCode,
-                showingId,
-                showing.movie_id,
-                userName.trim(),
-                userUsn.trim().toUpperCase(),
-                userEmail.trim().toLowerCase(),
-                seats,
-                qrToken
-            ]
+        // 5. Check for already registered Emails for this showing (Database Uniqueness)
+        const emailCheck = await client.query(
+            'SELECT user_email FROM bookings WHERE showing_id = $1 AND user_email = ANY($2)',
+            [showingId, emailList]
         );
+        if (emailCheck.rows.length > 0) {
+            await client.query('ROLLBACK');
+            const dupEmails = emailCheck.rows.map(r => r.user_email).join(', ');
+            return res.status(409).json({
+                error: `Email address (${dupEmails}) is already registered for this screening. Each ticket requires a unique student email.`
+            });
+        }
 
-        await client.query('COMMIT');
-
-        const booking = insertRes.rows[0];
-
-        // Format show date (without Friday!)
+        // Format show date (without Friday)
         const dateObj = new Date(showing.show_date);
         const dateStr = dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
 
-        // Trigger asynchronous email dispatch (fire-and-forget in isolated try/catch)
-        sendTicketEmail({
-            recipientEmail: booking.user_email,
-            attendeeName: booking.user_name,
-            filmTitle: showing.movie_title,
-            showDate: dateStr,
-            showTime: showing.show_time,
-            hall: showing.hall,
-            seats: booking.seats,
-            refCode: booking.ref_code,
-            qrDataUri
-        }).catch(e => console.error('[Background Email Error]', e));
+        const createdBookings = [];
 
-        res.status(201).json({
-            success: true,
-            booking: {
-                id: booking.id,
-                refCode: booking.ref_code,
+        // 6. Insert booking records for each attendee
+        for (const attendee of cleanedAttendees) {
+            let refCode = generateRefCode();
+            let unique = false;
+            while (!unique) {
+                const checkRef = await client.query('SELECT id FROM bookings WHERE ref_code = $1', [refCode]);
+                if (checkRef.rows.length === 0) {
+                    unique = true;
+                } else {
+                    refCode = generateRefCode();
+                }
+            }
+
+            const idRes = await client.query('SELECT gen_random_uuid() as uuid');
+            const bookingId = idRes.rows[0].uuid;
+
+            // Generate HMAC signed ticket token for this attendee & seat
+            const qrToken = signTicket(bookingId, refCode, attendee.usn, showingId, [attendee.seat]);
+
+            // Generate QR code Data URI
+            const qrDataUri = await QRCode.toDataURL(qrToken, {
+                errorCorrectionLevel: 'H',
+                margin: 1,
+                color: { dark: '#000000', light: '#ffffff' },
+                width: 250
+            });
+
+            // Insert into bookings table
+            const insertRes = await client.query(
+                `INSERT INTO bookings 
+                 (id, ref_code, showing_id, movie_id, user_name, user_usn, user_email, seats, qr_token)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                 RETURNING *`,
+                [
+                    bookingId,
+                    refCode,
+                    showingId,
+                    showing.movie_id,
+                    attendee.name,
+                    attendee.usn,
+                    attendee.email,
+                    [attendee.seat],
+                    qrToken
+                ]
+            );
+
+            const rec = insertRes.rows[0];
+
+            // Send ticket email to this attendee
+            sendTicketEmail({
+                recipientEmail: attendee.email,
+                attendeeName: attendee.name,
+                filmTitle: showing.movie_title,
+                showDate: dateStr,
+                showTime: showing.show_time,
+                hall: showing.hall,
+                seats: [attendee.seat],
+                refCode,
+                qrDataUri
+            }).catch(e => console.error(`[Background Email Error for ${attendee.email}]`, e));
+
+            createdBookings.push({
+                id: rec.id,
+                refCode: rec.ref_code,
                 filmTitle: showing.movie_title,
                 hall: showing.hall,
                 showDate: dateStr,
                 showTime: showing.show_time,
-                userName: booking.user_name,
-                userUsn: booking.user_usn,
-                userEmail: booking.user_email,
-                seats: booking.seats,
-                createdAt: booking.created_at
-            },
-            qrDataUri,
-            qrToken
+                userName: rec.user_name,
+                userUsn: rec.user_usn,
+                userEmail: rec.user_email,
+                seat: attendee.seat,
+                seats: rec.seats,
+                createdAt: rec.created_at,
+                qrDataUri,
+                qrToken
+            });
+        }
+
+        await client.query('COMMIT');
+
+        res.status(201).json({
+            success: true,
+            bookingMode: isGroup ? 'group' : 'individual',
+            totalSeats: createdBookings.length,
+            bookings: createdBookings,
+            // Backwards compatibility for single-ticket consumers:
+            booking: createdBookings[0],
+            qrDataUri: createdBookings[0].qrDataUri,
+            qrToken: createdBookings[0].qrToken
         });
 
     } catch (err) {
