@@ -3847,6 +3847,7 @@ import { OrbitControls } from 'https://esm.sh/three@0.136.0/examples/jsm/control
     var pushT = 1;
     var t0 = 0;
     var frameErrors = 0;
+    var handAnimationLoaded = false;
     function animate(){
       if(!running){ return; }
       requestAnimationFrame(animate);
@@ -3859,6 +3860,8 @@ import { OrbitControls } from 'https://esm.sh/three@0.136.0/examples/jsm/control
           pushT = Math.min(1, pushT + 1 / (60 * 5));
           camera.fov = 45 - 3 * easeInOutCubic(pushT);
           camera.updateProjectionMatrix();
+        } else if(transitionProgress >= 1){
+          handAnimationLoaded = true;
         }
         composer.render();
         update();
@@ -3872,9 +3875,14 @@ import { OrbitControls } from 'https://esm.sh/three@0.136.0/examples/jsm/control
     apiStart = function(){
       if(running){ return; }
       running = true;
-      pushT = 0;
+      if(!handAnimationLoaded){
+        pushT = 0;
+        camera.fov = 45;
+      } else {
+        pushT = 1;
+        camera.fov = 42;
+      }
       t0 = performance.now();
-      camera.fov = 45;
       camera.updateProjectionMatrix();
       onWindowResize();
       requestAnimationFrame(animate);

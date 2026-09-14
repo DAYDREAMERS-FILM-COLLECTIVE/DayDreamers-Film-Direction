@@ -123,6 +123,20 @@ Once running, access the application locally:
 - **Society Homepage**: `http://localhost:8000/index.html`
 - **Admin CMS & Scanner**: `http://localhost:8000/admin.html`
 
+### 5. Deploy to Netlify
+
+The repository is pre-configured with `netlify.toml` and serverless functions in `netlify/functions/api.js`:
+
+1. Import this repository into [Netlify](https://app.netlify.com/).
+2. In **Site Configuration > Environment Variables**, add the variables from `.env`:
+   - `DATABASE_URL`
+   - `SUPABASE_URL`
+   - `SUPABASE_ANON_KEY`
+   - `TICKET_SECRET`
+   - `RESEND_API_KEY`
+   - `SENDER_EMAIL`
+3. Deploy the site. Netlify automatically hosts all static assets from the root and routes all `/api/*` requests to the serverless function.
+
 ---
 
 ## API Endpoints
