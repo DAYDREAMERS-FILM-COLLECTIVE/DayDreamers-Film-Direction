@@ -268,6 +268,7 @@ main{position:relative;z-index:2}
   border: 1px solid rgba(109, 59, 86, 0.45);
   padding: 6px;
   margin-top: 18px;
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
 .mode-btn {
@@ -630,7 +631,9 @@ footer p{color:var(--muted);font-size:12px;letter-spacing:.12em}
 #modal{
   position:fixed;inset:0;z-index:4000;display:none;
   align-items:center;justify-content:center;padding:20px;
-  background:rgba(18,7,16,.85);backdrop-filter:blur(10px);
+  background:rgba(18,7,16,.85);
+  -webkit-backdrop-filter:blur(10px);
+  backdrop-filter:blur(10px);
 }
 #modal.open{display:flex}
 .ticket{
@@ -639,6 +642,16 @@ footer p{color:var(--muted);font-size:12px;letter-spacing:.12em}
   box-shadow:0 40px 120px rgba(16,7,14,.9),0 0 60px rgba(200,155,178,.15);
   scrollbar-width: thin;
   scrollbar-color: #6D3B56 rgba(26,11,23,0.8);
+}
+.ticket::-webkit-scrollbar, .passes-container::-webkit-scrollbar {
+  width: 6px;
+}
+.ticket::-webkit-scrollbar-track, .passes-container::-webkit-scrollbar-track {
+  background: rgba(26,11,23,0.8);
+}
+.ticket::-webkit-scrollbar-thumb, .passes-container::-webkit-scrollbar-thumb {
+  background: #6D3B56;
+  border-radius: 3px;
 }
 .ticket .t-top{padding:30px 30px 20px;text-align:center;border-bottom:2px dashed rgba(200,155,178,.3);position:relative}
 .ticket .t-top::before,.ticket .t-top::after{
@@ -741,6 +754,7 @@ body.c-seat #cursor-frame{width:30px;height:30px}
   border-radius: 0;
   border: 1px solid rgba(109, 59, 86, 0.45);
   background: rgba(36, 18, 33, 0.75);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   box-shadow: 0 30px 60px -20px rgba(16, 7, 14, 0.9), inset 0 0 0 1px rgba(200, 155, 178, 0.1);
   overflow: hidden;
@@ -1177,11 +1191,19 @@ body.c-seat #cursor-frame{width:30px;height:30px}
   border: 1px solid rgba(109, 59, 86, 0.6);
   color: var(--cream);
   padding: 12px 14px;
-  font-size: 13px;
+  font-size: 14px;
   border-radius: 0;
   outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
   transition: border-color 0.2s, box-shadow 0.2s;
   box-sizing: border-box;
+}
+@media (max-width: 768px) {
+  .f-group input {
+    font-size: 16px; /* Prevents auto-zoom on iOS Safari */
+  }
 }
 .f-group input:focus {
   border-color: var(--gold);
@@ -1601,13 +1623,27 @@ var pendingHash = null;
 var hasGsap = typeof window.gsap !== 'undefined';
 var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+function getScrollTop(){
+  return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+}
+
+function setScrollTop(y){
+  window.scrollTo(0, y);
+  if(document.documentElement && document.documentElement.scrollTop !== undefined){
+    document.documentElement.scrollTop = y;
+  }
+  if(document.body && document.body.scrollTop !== undefined){
+    document.body.scrollTop = y;
+  }
+}
+
 /* Slow smooth scroll to #booking to showcase 3D voxel animation (Requirement 2) */
 function slowScrollToBooking(duration){
   var d = typeof duration === 'number' ? duration : 2200;
   var target = document.getElementById('booking');
   if(!target) return;
-  var targetY = target.getBoundingClientRect().top + window.pageYOffset - 30;
-  var startY = window.pageYOffset;
+  var startY = getScrollTop();
+  var targetY = target.getBoundingClientRect().top + startY - 30;
   var diff = targetY - startY;
   if(Math.abs(diff) < 10) return;
 
@@ -1618,7 +1654,7 @@ function slowScrollToBooking(duration){
       duration: d / 1000,
       ease: 'power2.inOut',
       onUpdate: function(){
-        window.scrollTo(0, obj.y);
+        setScrollTop(obj.y);
       }
     });
   } else {
@@ -1628,7 +1664,7 @@ function slowScrollToBooking(duration){
       var elapsed = ts - start;
       var progress = Math.min(elapsed / d, 1);
       var ease = progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-      window.scrollTo(0, startY + diff * ease);
+      setScrollTop(startY + diff * ease);
       if(progress < 1){
         requestAnimationFrame(anim);
       }
@@ -1656,7 +1692,9 @@ function initLandingScroll(){
   if(!window.location.hash || window.location.hash === '#movies'){
     var moviesEl = document.getElementById('movies');
     if(moviesEl){
-      moviesEl.scrollIntoView({ behavior: 'auto' });
+      var moviesTop = moviesEl.getBoundingClientRect().top + getScrollTop();
+      setScrollTop(moviesTop);
+      try { moviesEl.scrollIntoView({ behavior: 'auto' }); } catch(e){}
     }
   } else if(window.location.hash === '#booking'){
     setTimeout(function(){ slowScrollToBooking(2200); }, 250);
