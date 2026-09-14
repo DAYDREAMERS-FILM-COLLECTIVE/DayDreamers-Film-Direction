@@ -32,3 +32,13 @@ dist-ssr
 
 # Antigravity system generated
 .system_generated
+
+# Temporary and archive files
+temp/
+archive/
+
+# Markdown and text files (preserve README.md)
+*.md
+!README.md
+*.txt
+

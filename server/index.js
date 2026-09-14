@@ -669,17 +669,16 @@ app.get('/api/admin/bookings', requireAdmin, async (req, res) => {
 // 5. STATIC FILES & CATCH-ALL
 // -------------------------------------------------------------
 const rootDir = path.resolve(__dirname, '..');
-app.use('/booking', express.static(path.join(rootDir, 'booking')));
-app.use('/temp', express.static(path.join(rootDir, 'temp')));
 app.use(express.static(rootDir));
+app.use('/booking', express.static(rootDir));
 
 app.get('/', (req, res) => {
-    res.redirect('/booking/index.html');
+    res.sendFile(path.join(rootDir, 'index.html'));
 });
 
 // Start Server
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Daydreamers Film Club API Server listening on http://0.0.0.0:${PORT}`);
-    console.log(`   Public Web: http://localhost:${PORT}/booking/screening.html`);
-    console.log(`   Admin CMS:  http://localhost:${PORT}/booking/admin.html`);
+    console.log(`   Public Web: http://localhost:${PORT}/screening.html`);
+    console.log(`   Admin CMS:  http://localhost:${PORT}/admin.html`);
 });
