@@ -622,41 +622,562 @@ body.c-seat #cursor-frame{width:30px;height:30px}
   .reveal{opacity:1;transform:none}
   #grain{animation:none}
 }
-</style>
-  <div class="top details" id="details">
-    <div class="details-poster" id="detPoster" aria-hidden="true">
-      <div class="stripes"></div><div class="glyph" id="detGlyph">D</div>
-    </div>
-    <div class="details-info">
-      <div class="eyebrow" id="detHall">Daydreamers Box Office</div>
-      <h1 id="detTitle">Choose a <span>film</span> below</h1>
-      <p id="detMeta">Browse the bill to load a title here.</p>
-      <p class="details-blurb" id="detBlurb">Pick any title from the current bill to see its story and screening details.</p>
-      <div class="details-actions">
-        <a class="btn-solid" href="#booking" data-cursor="SELECT">Reserve Seats</a>
-        <a class="btn-line" href="#venue" data-cursor="GO">View Venue</a>
-      </div>
-    </div>
-  </div>
 
-  <section class="block" id="dates">
-    <div class="date-panel">
-      <div class="date-left">
-        <h2>Choose Date</h2>
-        <div class="date-pills" id="datePills"></div>
+/* Hero section layout matching reference image */
+.hero-section {
+  padding: 120px clamp(20px, 5vw, 70px) 40px;
+  max-width: 1350px;
+  margin: 0 auto;
+}
+.hero-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr 280px;
+  gap: clamp(24px, 3.5vw, 54px);
+  align-items: start;
+}
+@media (max-width: 1024px) {
+  .hero-grid {
+    grid-template-columns: 260px 1fr;
+  }
+  .hero-next-card {
+    grid-column: 1 / -1;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-top: 24px;
+    margin-top: 10px;
+  }
+}
+@media (max-width: 768px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .hero-poster-frame {
+    max-width: 240px;
+    margin: 0 auto;
+  }
+}
+.hero-poster-frame {
+  position: relative;
+  border-radius: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(15, 17, 24, 0.6);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 30px 60px -20px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.05);
+  overflow: hidden;
+}
+.hero-poster {
+  position: relative;
+  aspect-ratio: 3 / 4.4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--pg, linear-gradient(150deg,#1c1828 0%,#343b5c 55%,#0a0b12 100%));
+}
+.hero-poster img.hero-poster-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+.hero-poster .glyph {
+  position: absolute;
+  top: -6%;
+  right: -8%;
+  font-family: 'Playfair Display', serif;
+  font-weight: 900;
+  font-size: clamp(140px, 16vw, 210px);
+  color: rgba(255, 255, 255, 0.05);
+  line-height: 1;
+  font-style: italic;
+  pointer-events: none;
+}
+.hero-poster .stripes {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: repeating-linear-gradient(-45deg, rgba(255,255,255,0.3) 0 6px, transparent 6px 12px);
+  opacity: 0.4;
+  z-index: 2;
+}
+.hero-poster .poster-tag {
+  position: relative;
+  z-index: 2;
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+  text-align: center;
+  margin-top: auto;
+}
+
+/* Center column */
+.hero-info {
+  display: flex;
+  flex-direction: column;
+}
+.hero-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(38px, 4.8vw, 64px);
+  line-height: 1.05;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+.hero-director {
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 14px;
+}
+.hero-meta {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 14px;
+}
+.hero-blurb {
+  font-size: 14px;
+  line-height: 1.8;
+  color: rgba(243, 234, 216, 0.82);
+  margin-top: 20px;
+  max-width: 520px;
+  font-weight: 300;
+}
+.hero-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 32px;
+  flex-wrap: wrap;
+}
+.btn-solid {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 28px;
+  background: var(--cream);
+  color: #0c0e14;
+  text-decoration: none;
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  font-weight: 700;
+  border: 1px solid var(--cream);
+  transition: all 0.25s ease;
+}
+.btn-solid:hover {
+  background: var(--gold);
+  border-color: var(--gold);
+  box-shadow: 0 0 25px rgba(227, 185, 78, 0.35);
+  transform: translateY(-1px);
+}
+.btn-line {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 28px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #fff;
+  text-decoration: none;
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  font-weight: 600;
+  transition: all 0.25s ease;
+}
+.btn-line:hover {
+  border-color: var(--cream);
+  color: var(--cream);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Right column */
+.hero-next-card {
+  display: flex;
+  flex-direction: column;
+}
+.next-label {
+  font-size: 10px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+.next-time {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(34px, 3.8vw, 50px);
+  line-height: 1.1;
+  color: #fff;
+  font-weight: 500;
+}
+.next-divider {
+  width: 44px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 18px 0 24px;
+}
+.next-carousel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.carousel-arrow {
+  width: 32px;
+  height: 58px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+  padding: 0;
+}
+.carousel-arrow:hover {
+  color: #fff;
+}
+.date-cards-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.date-cards-scroll::-webkit-scrollbar {
+  display: none;
+}
+.hero-date-card {
+  width: 58px;
+  height: 68px;
+  background: rgba(18, 21, 30, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  flex: none;
+  color: var(--cream);
+}
+.hero-date-card b {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1;
+}
+.hero-date-card span {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 5px;
+}
+.hero-date-card.active {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(30, 36, 52, 0.9);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.08);
+}
+.hero-date-card.active span {
+  color: var(--cream);
+}
+.hero-date-card:not(.active):hover {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.hero-separator {
+  max-width: 1350px;
+  margin: 20px auto 40px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Current Bill Section */
+.bill-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 30px;
+  flex-wrap: wrap;
+  margin-bottom: 34px;
+}
+.bill-tag {
+  font-size: 10px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.bill-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(32px, 4vw, 52px);
+  line-height: 1.05;
+  color: #fff;
+  font-weight: 600;
+}
+.bill-title i {
+  font-style: italic;
+  font-weight: 400;
+}
+.bill-desc {
+  color: var(--muted);
+  max-width: 380px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* 3-card Movie Grid matching reference image */
+.movies-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: clamp(20px, 2.5vw, 32px);
+}
+.movie-card-row {
+  background: #0d1017;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+}
+.movie-card-row:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.7);
+  transform: translateY(-2px);
+}
+.movie-card-row.selected-ring {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold), 0 20px 50px -15px rgba(227, 185, 78, 0.2);
+}
+.movie-card-top {
+  display: flex;
+  gap: 20px;
+  padding: 24px;
+  align-items: center;
+}
+.movie-thumb {
+  width: 90px;
+  aspect-ratio: 3 / 4;
+  flex: none;
+  background: #151822;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.movie-thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.movie-thumb-text {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+}
+.movie-card-details {
+  flex: 1;
+  min-width: 0;
+}
+.movie-card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.2;
+}
+.movie-card-dir {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 8px;
+}
+.movie-card-tags {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 10px;
+}
+.movie-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+.movie-card-time {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.movie-card-btn {
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--cream);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.movie-card-row:hover .movie-card-btn {
+  color: var(--gold);
+}
+
+/* Modal Form & Pass Styling */
+.modal-form-wrap {
+  padding: 24px 30px;
+}
+.form-preview {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.form-preview div {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+}
+.form-preview span {
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.form-preview b {
+  color: var(--cream);
+}
+.f-group {
+  margin-bottom: 16px;
+}
+.f-group label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.f-group input {
+  width: 100%;
+  background: #0d1017;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  padding: 12px 14px;
+  font-size: 13px;
+  border-radius: 0;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+.f-group input:focus {
+  border-color: var(--gold);
+}
+.modal-error {
+  color: #ff6b6b;
+  font-size: 12px;
+  margin: 10px 0;
+  background: rgba(255, 107, 107, 0.1);
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+}
+.ticket-qr-container {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  background: #fff;
+  margin: 10px 30px 20px;
+  border-radius: 4px;
+}
+.ticket-qr-container img {
+  display: block;
+}
+.ticket-footer-note {
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--muted);
+  text-align: center;
+  padding: 0 30px 20px;
+}
+
+</style>
+    <section class="hero-section" id="details">
+    <div class="hero-grid">
+      <!-- 1. Left: Poster Frame -->
+      <div class="hero-poster-frame">
+        <div class="hero-poster" id="detPoster">
+          <img id="detPosterImg" class="hero-poster-img" src="" alt="Movie Poster" style="display:none;" />
+          <div class="stripes"></div>
+          <div class="glyph" id="detGlyph">D</div>
+          <div class="poster-tag" id="detTag">Movie Poster</div>
+        </div>
       </div>
-      <div class="date-right">
-        <span>Showtime</span>
-        <b id="dateShowtime">Friday, 21:00</b>
+
+      <!-- 2. Center: Movie Information -->
+      <div class="hero-info">
+        <div class="hero-eyebrow" id="detHall">D BLOCK / 3RD FLOOR</div>
+        <h1 class="hero-title" id="detTitle">Neon Reverie</h1>
+        <div class="hero-director" id="detDir">— DIR. A. MOREAU</div>
+        <div class="hero-meta" id="detMeta">SCI-FI &nbsp;|&nbsp; 2H 14M &nbsp;|&nbsp; 2024 &nbsp;|&nbsp; A</div>
+        <p class="hero-blurb" id="detBlurb">A signal lost between stations. A driver follows it past the edge of the mapped city.</p>
+        <div class="hero-actions">
+          <a class="btn-solid" href="#booking" data-cursor="SELECT">Reserve Seats</a>
+          <a class="btn-line" href="#venue" data-cursor="GO">View Venue</a>
+        </div>
+      </div>
+
+      <!-- 3. Right: Next Show & Date Carousel -->
+      <div class="hero-next-card">
+        <div class="next-label">NEXT SHOW</div>
+        <div class="next-time" id="dateShowtime">21:00</div>
+        <div class="next-divider"></div>
+        <div class="next-carousel">
+          <button class="carousel-arrow" id="prevDateBtn" aria-label="Previous date" data-cursor="PREV">&lt;</button>
+          <div class="date-cards-scroll" id="datePills"></div>
+          <button class="carousel-arrow" id="nextDateBtn" aria-label="Next date" data-cursor="NEXT">&gt;</button>
+        </div>
       </div>
     </div>
   </section>
 
+  <div class="hero-separator"></div>
+
   <section class="block" id="movies">
-    <div class="sec-tag">Current Bill</div>
-    <div class="sec-head">
-      <h2 class="reveal">Now <span>Screening</span></h2>
-      <p class="reveal">Club events are limited to a few titles each month. Select Reserve Seats on any title to load it in the box office below.</p>
+    <div class="bill-header">
+      <div class="bill-title-wrap">
+        <div class="bill-tag">CURRENT BILL</div>
+        <h2 class="bill-title">Now <i>Screening</i></h2>
+      </div>
+      <p class="bill-desc">Club events are limited to a few titles each month. Select Reserve Seats on any title to load it in the box office below.</p>
     </div>
     <div class="movies-grid" id="moviesGrid"></div>
     <div class="movies-empty" id="moviesEmpty" hidden>No films are listed right now. Please check back for the next club announcement.</div>
@@ -697,7 +1218,7 @@ body.c-seat #cursor-frame{width:30px;height:30px}
         <div class="sum-film"><span>Film</span><b id="sumFilm">Choose a film</b></div>
         <div class="sum-film"><span>Hall</span><b id="sumHall">See title details</b></div>
         <div class="sum-film"><span>Date</span><b id="sumDate">Pick a date above</b></div>
-        <div class="sum-film"><span>Showtime</span><b id="sumShowtime">Friday, 21:00</b></div>
+        <div class="sum-film"><span>Showtime</span><b id="sumShowtime">21:00</b></div>
         <div class="seats-picked" id="picked"><span class="empty-note">No seats selected yet.</span></div>
         <div class="sum-row"><span>Seats selected</span><b id="sumCount">0</b></div>
         <div class="sum-row"><span>Seats</span><span id="sumSeatsList">None yet</span></div>
@@ -764,12 +1285,12 @@ body.c-seat #cursor-frame{width:30px;height:30px}
   </div>
   <div class="menu-foot">
     <div class="menu-foot-left">
-      <div class="nav-meta">Daydreamers<br />D Block, 3rd Floor and D Block, 4th Floor<br />Fridays, 21:00</div>
+      <div class="nav-meta">Daydreamers<br />D Block, 3rd Floor and D Block, 4th Floor<br />Showtimes at 21:00</div>
       <a class="menu-action" href="screening.html#booking" data-nav data-cursor="GO"><span>&gt;</span> Reserve Seats</a>
     </div>
     <ul class="menu-socials">
       <li><a href="mailto:hello@daydreamers.club" data-nav data-cursor="OPEN">Email</a></li>
-      <li><a href="../temp/cms_Example.html" data-nav data-cursor="OPEN">Admin</a></li>
+      <li><a href="admin.html" data-nav data-cursor="OPEN">Admin</a></li>
     </ul>
   </div>
 </nav>
@@ -782,19 +1303,68 @@ body.c-seat #cursor-frame{width:30px;height:30px}
 <div id="modal" role="dialog" aria-modal="true" aria-label="Reservation ticket">
   <div class="ticket" id="ticket">
     <button class="t-close" id="modalClose" data-cursor="CLOSE">X</button>
-    <div class="t-top">
-      <div class="bebas">DAYDREAMERS</div>
-      <p>Official Reservation, Admit One</p>
+    
+    <!-- Step 1: Attendee Information Form -->
+    <div id="bookingFormStep">
+      <div class="t-top">
+        <div class="bebas">DAYDREAMERS</div>
+        <p>Complete Reservation &amp; Pass</p>
+      </div>
+      <div class="modal-form-wrap">
+        <div class="form-preview">
+          <div><span>Film</span><b id="formFilm">Neon Reverie</b></div>
+          <div><span>Showing</span><b id="formShowing">18 Sep | 21:00</b></div>
+          <div><span>Seats</span><b id="formSeats">C4, C5</b></div>
+        </div>
+        <form id="attendeeForm">
+          <div class="f-group">
+            <label for="bkName">Full Name</label>
+            <input type="text" id="bkName" required placeholder="e.g. John Doe" />
+          </div>
+          <div class="f-group">
+            <label for="bkUsn">University Serial Number (USN)</label>
+            <input type="text" id="bkUsn" required placeholder="e.g. 1RVU22CSE045" style="text-transform: uppercase;" />
+          </div>
+          <div class="f-group">
+            <label for="bkEmail">Email Address</label>
+            <input type="email" id="bkEmail" required placeholder="student@rvu.edu.in" />
+          </div>
+          <div id="bkError" class="modal-error" style="display: none;"></div>
+          <button type="submit" id="bkSubmitBtn" class="btn-solid" style="width: 100%; margin-top: 16px; justify-content: center; cursor: pointer;">
+            Confirm &amp; Generate Ticket Pass
+          </button>
+        </form>
+      </div>
     </div>
-    <div class="t-mid">
-      <div class="r"><span>Film</span><b id="tFilm">Not set</b></div>
-      <div class="r"><span>Director</span><b id="tDir">Not set</b></div>
-      <div class="r"><span>Hall</span><b id="tHall">Not set</b></div>
-      <div class="r"><span>Date</span><b id="tDate">Not set</b></div>
-      <div class="r"><span>Showtime</span><b id="tShowtime">Friday, 21:00</b></div>
-      <div class="r"><span>Seats</span><b id="tSeats">Not set</b></div>
-      <div class="r"><span>Booking No.</span><b id="tCode">Not set</b></div>
+
+    <!-- Step 2: Confirmed Cryptographic Ticket Pass -->
+    <div id="ticketSuccessStep" style="display: none;">
+      <div class="t-top">
+        <div class="bebas">DAYDREAMERS</div>
+        <p>Official Admission Pass, Admit One</p>
+      </div>
+      <div class="t-mid">
+        <div class="r"><span>Film</span><b id="tFilm">Neon Reverie</b></div>
+        <div class="r"><span>Attendee</span><b id="tName">John Doe</b></div>
+        <div class="r"><span>USN</span><b id="tUsn" style="font-family: monospace;">1RVU22CSE045</b></div>
+        <div class="r"><span>Date &amp; Time</span><b id="tDate">18 Sep | 21:00</b></div>
+        <div class="r"><span>Hall</span><b id="tHall">D Block 3rd Floor</b></div>
+        <div class="r"><span>Seats</span><b id="tSeats">C4, C5</b></div>
+        <div class="r"><span>Reference</span><b id="tCode" style="color: var(--gold); font-family: monospace;">DD-X8K2</b></div>
+      </div>
+      <div class="ticket-qr-container">
+        <img id="ticketQrImage" src="" alt="Cryptographic QR Pass" width="160" height="160" />
+      </div>
+      <div class="ticket-footer-note">
+        Cryptographic QR token verified. A copy has been dispatched to your email. Present this QR at the door scanner.
+      </div>
+      <div style="display: flex; gap: 10px; padding: 0 30px 24px;">
+        <button id="downloadPassBtn" class="btn-line" style="flex: 1; font-size: 11px; padding: 12px 10px; cursor: pointer;">Download Pass</button>
+        <button id="donePassBtn" class="btn-solid" style="flex: 1; font-size: 11px; padding: 12px 10px; cursor: pointer;">Done</button>
+      </div>
     </div>
+  </div>
+</div>
     <div class="barcode" id="barcode"></div>
   </div>
 </div>
@@ -803,124 +1373,156 @@ body.c-seat #cursor-frame{width:30px;height:30px}
 (function(){
 'use strict';
 
-/* Flexible film source. CMS or database will replace this in future.
-   To add or remove titles, only change the array returned by fetchMovies.
-   The grid, booking head, summary and ticket all render any length,
-   including zero, with no other code changes. */
 var LOCAL_MOVIES = [
   {
-    id: 'neon-reverie',
+    id: '3d0536d8-c83d-4677-99c1-aa42c77805a2',
     title: 'NEON REVERIE',
+    rawTitle: 'Neon Reverie',
     dir: 'Dir. A. Moreau',
-    genre: 'SCI FI',
+    rawDir: 'A. Moreau',
+    genre: 'SCI-FI',
     runtime: '2H 14M',
-    hall: 'D Block, 3rd Floor',
-    showtime: 'Friday, 21:00',
+    year: 2024,
+    rating: 'A',
+    hall: 'D Block 3rd Floor',
     blurb: 'A signal lost between stations. A driver follows it past the edge of the mapped city.',
+    poster_url: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=800&q=80',
     g: 'linear-gradient(150deg,#2b1055 0%,#7597de 60%,#0a0a18 100%)',
     glyph: 'N'
   },
   {
-    id: 'the-last-reel',
+    id: 'e348a230-4674-4ab2-87ad-b0058ec80028',
     title: 'THE LAST REEL',
+    rawTitle: 'The Last Reel',
     dir: 'Dir. K. Tanaka',
+    rawDir: 'K. Tanaka',
     genre: 'DRAMA',
     runtime: '1H 52M',
-    hall: 'D Block, 4th Floor',
-    showtime: 'Friday, 21:00',
-    blurb: 'A projectionist screens one final print for an audience of one.',
+    year: 2023,
+    rating: 'UA',
+    hall: 'D Block 4th Floor',
+    blurb: 'An aging projectionist discovers a single frame of unreleased nitrate film tucked into an archival spool.',
+    poster_url: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80',
     g: 'linear-gradient(150deg,#4a2c10 0%,#c98a3d 55%,#120b05 100%)',
     glyph: 'R'
   },
   {
-    id: 'silent-orbit',
+    id: '01df6de4-f766-48b8-847f-32dd4da7b159',
     title: 'SILENT ORBIT',
+    rawTitle: 'Silent Orbit',
     dir: 'Dir. E. Volkov',
+    rawDir: 'E. Volkov',
     genre: 'THRILLER',
     runtime: '2H 05M',
-    hall: 'D Block, 3rd Floor',
-    showtime: 'Friday, 21:00',
-    blurb: 'A quiet station circles a silent planet while its crew counts down to dawn.',
+    year: 2024,
+    rating: 'A',
+    hall: 'D Block 3rd Floor',
+    blurb: 'Thirty days into a lunar relay rotation, communications cease. The backup antenna begins receiving coordinates from inside the crater.',
+    poster_url: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80',
     g: 'linear-gradient(150deg,#042f2e 0%,#14b8a6 55%,#03121a 100%)',
     glyph: 'O'
   }
 ];
 
 function fetchMovies(){
-  // Future: return fetch('/api/movies').then(function(r){ return r.json(); });
-  return Promise.resolve(LOCAL_MOVIES);
+  return fetch('/api/movies')
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(list){
+      if(!list || !list.length){ return LOCAL_MOVIES; }
+      return list.map(function(m){
+        return {
+          id: m.id,
+          title: m.title.toUpperCase(),
+          rawTitle: m.title,
+          dir: 'Dir. ' + m.director,
+          rawDir: m.director,
+          genre: (m.genre || 'CINEMA').toUpperCase(),
+          runtime: m.runtime || '2H',
+          year: m.year || 2024,
+          rating: m.rating || 'A',
+          hall: m.hall || 'D Block 3rd Floor',
+          blurb: m.blurb || '',
+          poster_url: m.poster_url || '',
+          g: (m.genre || '').toLowerCase().indexOf('sci') >= 0 ? 'linear-gradient(150deg,#2b1055 0%,#7597de 60%,#0a0a18 100%)' :
+             (m.genre || '').toLowerCase().indexOf('drama') >= 0 ? 'linear-gradient(150deg,#4a2c10 0%,#c98a3d 55%,#120b05 100%)' :
+             'linear-gradient(150deg,#042f2e 0%,#14b8a6 55%,#03121a 100%)',
+          glyph: m.title.charAt(0).toUpperCase()
+        };
+      });
+    })
+    .catch(function(){ return LOCAL_MOVIES; });
+}
+
+function fetchShowings(movieId){
+  return fetch('/api/showings?movie_id=' + encodeURIComponent(movieId))
+    .then(function(r){ return r.ok ? r.json() : []; })
+    .then(function(list){
+      if(list && list.length){
+        return list.map(function(s){
+          var d = new Date(s.show_date);
+          return {
+            id: s.id,
+            date: d,
+            dayNum: d.getUTCDate ? d.getUTCDate() : d.getDate(),
+            monthStr: MONTHS[d.getMonth()].toUpperCase(),
+            fullDateStr: MONTHS[d.getMonth()] + ' ' + (d.getUTCDate ? d.getUTCDate() : d.getDate()) + ', ' + d.getFullYear(),
+            time: s.show_time,
+            hall: s.hall
+          };
+        });
+      }
+      return fallbackShowings();
+    })
+    .catch(function(){ return fallbackShowings(); });
+}
+
+function fallbackShowings(){
+  var now = new Date();
+  var s1 = new Date(now.getTime() + 86400000 * 3);
+  var s2 = new Date(now.getTime() + 86400000 * 10);
+  var s3 = new Date(now.getTime() + 86400000 * 17);
+  return [
+    { id: 'fallback-1', date: s1, dayNum: s1.getDate(), monthStr: MONTHS[s1.getMonth()].toUpperCase(), fullDateStr: MONTHS[s1.getMonth()] + ' ' + s1.getDate(), time: '21:00', hall: 'D Block 3rd Floor' },
+    { id: 'fallback-2', date: s2, dayNum: s2.getDate(), monthStr: MONTHS[s2.getMonth()].toUpperCase(), fullDateStr: MONTHS[s2.getMonth()] + ' ' + s2.getDate(), time: '21:00', hall: 'D Block 3rd Floor' },
+    { id: 'fallback-3', date: s3, dayNum: s3.getDate(), monthStr: MONTHS[s3.getMonth()].toUpperCase(), fullDateStr: MONTHS[s3.getMonth()] + ' ' + s3.getDate(), time: '21:00', hall: 'D Block 3rd Floor' }
+  ];
 }
 
 var ROWS = ['A','B','C','D','E','F','G'];
 var SEATS_PER_ROW = 10;
-var SWEEP_IN = 0.3;
-var HOLD = 0.35;
-var SWEEP_OUT = 0.3;
+var SWEEP_IN = 0.55;
+var HOLD = 0.25;
+var SWEEP_OUT = 0.55;
 
 var selectedMovie = null;
+var currentShowings = [];
+var selectedShowingIdx = 0;
+var occupiedSeatsSet = new Set();
 var picked = [];
 var MOVIES = [];
 var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-var DATES = [];
-var selectedDateIdx = 0;
-var RES_KEY = 'daydreamers_reservations';
 
-function nextFridays(n){
-  var out = [];
-  var d = new Date();
-  d.setHours(0, 0, 0, 0);
-  while(out.length < n){
-    if(d.getDay() === 5){ out.push(new Date(d.getTime())); }
-    d.setDate(d.getDate() + 1);
-  }
-  return out;
+function currentShowing(){
+  if(!currentShowings.length){ return null; }
+  return currentShowings[selectedShowingIdx] || currentShowings[0];
 }
-function dateLabel(d){
-  return 'Friday, ' + MONTHS[d.getMonth()] + ' ' + d.getDate();
+
+function currentDateLabel(){
+  var s = currentShowing();
+  if(!s){ return 'No upcoming shows'; }
+  return s.fullDateStr;
 }
-function dateKey(d){
-  return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
-}
-function loadReservations(){
-  try {
-    var raw = window.localStorage.getItem(RES_KEY);
-    if(!raw){ return []; }
-    var list = JSON.parse(raw);
-    return list || [];
-  } catch(err){
-    return [];
-  }
-}
-function saveReservations(list){
-  try {
-    window.localStorage.setItem(RES_KEY, JSON.stringify(list));
-  } catch(err){
-    return;
-  }
+
+function currentShowtimeLabel(){
+  var s = currentShowing();
+  if(!s){ return '21:00'; }
+  return s.time;
 }
 
 function tierName(r){
   if(r < 2){ return 'Front'; }
   if(r < 5){ return 'Prime'; }
   return 'Recliner';
-}
-
-function hashStr(str){
-  var h = 2166136261;
-  for(var i = 0; i < str.length; i++){
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
-
-function isOccupied(movieId, seatId, dateStr){
-  var h = hashStr(movieId + ':' + seatId + ':' + (dateStr || '') + ':daydreamers');
-  return (h % 100) < 18;
-}
-function currentDateStr(){
-  if(!DATES.length){ return ''; }
-  return dateKey(DATES[selectedDateIdx] || DATES[0]);
 }
 
 /* Wall animation elements */
@@ -935,51 +1537,48 @@ var barBottom = document.querySelector('.bar-bottom');
 var isOpen = false;
 var isAnimating = false;
 var pendingHash = null;
+
+var hasGsap = typeof window.gsap !== 'undefined';
 var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-var hasGsap = (typeof window.gsap !== 'undefined');
 
-function wallShow(){ sweepWall.style.visibility = 'visible'; }
-function wallHide(){ sweepWall.style.visibility = 'hidden'; }
-window.__dbg = [];
-try { window.__dbgOn = /[?&]dbg\b/.test(location.search); } catch(e){ window.__dbgOn = false; }
-function dbg(msg){
-  if(!window.__dbgOn){ return; }
-  try {
-    window.__dbg.push(Math.round(performance.now()) + 'ms ' + msg);
-    if(window.console && window.console.info){ window.console.info('[dbg] ' + msg); }
-  } catch(e){}
-}
-
-if(hasGsap){
-  gsap.set(sweepWall, { xPercent: -100 });
-  wallHide();
-} else {
-  sweepWall.style.display = 'none';
-}
-
-var wallEnter = null;
-try {
-  wallEnter = window.sessionStorage.getItem('wallEnter');
-  window.sessionStorage.removeItem('wallEnter');
-} catch(enterErr){}
-if(wallEnter && hasGsap && !reduceMotion){
-  isAnimating = true;
-  gsap.set(sweepWall, { xPercent: 0 });
-  wallShow();
-  var enterTl = gsap.timeline({ onComplete: function(){
-    gsap.set(sweepWall, { xPercent: -100 });
-    wallHide();
-    isAnimating = false;
-    if(window.location.hash){
-      scrollToHash(window.location.hash);
+/* Native Dogstudio transition on load */
+(function checkArrivalSweep(){
+  if(window.sessionStorage.getItem('wallEnter') === '1'){
+    window.sessionStorage.removeItem('wallEnter');
+    if(hasGsap && !reduceMotion && sweepWall){
+      gsap.set(sweepWall, { yPercent: 0 });
+      gsap.to(sweepWall, {
+        yPercent: 100,
+        duration: SWEEP_OUT,
+        ease: 'power2.inOut',
+        delay: 0.1,
+        onComplete: function(){
+          gsap.set(sweepWall, { yPercent: -100 });
+          if(window.location.hash){
+            scrollToHash(window.location.hash);
+          }
+        }
+      });
+    } else {
+      if(window.location.hash){
+        setTimeout(function(){ scrollToHash(window.location.hash); }, 100);
+      }
     }
-  }});
-  enterTl.to({}, { duration: 0.1 });
-  enterTl.to(sweepWall, { xPercent: 100, duration: SWEEP_OUT, ease: 'power3.inOut' });
-} else {
-  if(window.location.hash){
-    setTimeout(function(){ scrollToHash(window.location.hash); }, 150);
+  } else {
+    if(window.location.hash){
+      setTimeout(function(){ scrollToHash(window.location.hash); }, 150);
+    }
   }
+})();
+
+function scrollToHash(hash){
+  if(!hash){ return; }
+  try {
+    var el = document.querySelector(hash);
+    if(el){
+      el.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
+    }
+  } catch(e){}
 }
 
 function setBurger(open){
@@ -1008,143 +1607,116 @@ function swapViews(){
   }
 }
 
-function staggerMenuLinks(){
-  if(reduceMotion){ return; }
+function animateMenuText(entering){
+  if(reduceMotion || !hasGsap) return;
   var links = menuView.querySelectorAll('.menu-item');
-  gsap.fromTo(links, { y: 34, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, stagger: 0.07, ease: 'power3.out', clearProps: 'transform' });
-}
-
-function finishToggle(){
-  dbg('menu settled open=' + (!isOpen));
-  gsap.set(sweepWall, { xPercent: -100 });
-  wallHide();
-  isOpen = !isOpen;
-  isAnimating = false;
-  if(isOpen){ staggerMenuLinks(); }
-  if(!isOpen && pendingHash){
-    var target = document.querySelector(pendingHash);
-    var currentHash = pendingHash;
-    pendingHash = null;
-    if(target){
-      try { history.pushState(null, '', currentHash); } catch(e){}
-      setTimeout(function(){
-        target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
-      }, 60);
-    }
+  var meta = menuView.querySelectorAll('.nav-meta, .menu-action, .menu-socials');
+  if(entering){
+    gsap.fromTo(links,
+      { y: 60, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.7, stagger: 0.05, ease: 'power3.out', delay: 0.1 }
+    );
+    gsap.fromTo(meta,
+      { y: 30, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.6, stagger: 0.04, ease: 'power2.out', delay: 0.3 }
+    );
+  } else {
+    gsap.to(links, { y: -30, opacity: 0, duration: 0.3, stagger: 0.02, ease: 'power2.in' });
+    gsap.to(meta, { y: -15, opacity: 0, duration: 0.25, ease: 'power2.in' });
   }
 }
 
 function toggleMenu(){
-  if(isAnimating){ return; }
+  if(isAnimating) return;
+  isAnimating = true;
+  setBurger(!isOpen);
   if(reduceMotion || !hasGsap){
-    setBurger(!isOpen);
     swapViews();
     isOpen = !isOpen;
-    if(!isOpen && pendingHash){
-      var t = document.querySelector(pendingHash);
-      pendingHash = null;
-      if(t){ t.scrollIntoView(); }
-    }
+    isAnimating = false;
+    finishToggle();
     return;
   }
-  isAnimating = true;
-  dbg('toggleMenu start open=' + (!isOpen));
-  setBurger(!isOpen);
-  wallShow();
-  var tl = gsap.timeline({ onComplete: finishToggle });
-  tl.fromTo(sweepWall, { xPercent: -100 }, { xPercent: 0, duration: SWEEP_IN, ease: 'power3.inOut' });
-  tl.add(swapViews);
-  tl.to({}, { duration: HOLD });
-  tl.to(sweepWall, { xPercent: 100, duration: SWEEP_OUT, ease: 'power3.inOut' });
-}
-
-function leavePage(url, newTab){
-  if(isAnimating){ return; }
-  if(url && (url.indexOf('mailto:') === 0 || url.indexOf('tel:') === 0)){ window.location.href = url; return; }
-  if(reduceMotion || !hasGsap || !sweepWall){
-    if(newTab){ window.open(url, '_blank'); }
-    else { window.location.href = url; }
-    return;
+  if(!isOpen){
+    var openTl = gsap.timeline({
+      onComplete: function(){
+        isAnimating = false;
+        finishToggle();
+      }
+    });
+    openTl
+      .set(sweepWall, { yPercent: -100 })
+      .to(sweepWall, { yPercent: 0, duration: SWEEP_IN, ease: 'power3.inOut' })
+      .add(function(){
+        swapViews();
+        isOpen = true;
+        animateMenuText(true);
+      })
+      .to(sweepWall, { yPercent: 100, duration: SWEEP_OUT, ease: 'power2.inOut', delay: HOLD })
+      .set(sweepWall, { yPercent: -100 });
+  } else {
+    animateMenuText(false);
+    var closeTl = gsap.timeline({
+      onComplete: function(){
+        isAnimating = false;
+        finishToggle();
+      }
+    });
+    closeTl
+      .set(sweepWall, { yPercent: -100 })
+      .to(sweepWall, { yPercent: 0, duration: SWEEP_IN, ease: 'power3.inOut', delay: 0.15 })
+      .add(function(){
+        swapViews();
+        isOpen = false;
+      })
+      .to(sweepWall, { yPercent: 100, duration: SWEEP_OUT, ease: 'power2.inOut', delay: HOLD })
+      .set(sweepWall, { yPercent: -100 });
   }
-  isAnimating = true;
-  dbg('leavePage ' + url);
-  wallShow();
-  try { window.sessionStorage.setItem('wallEnter', '1'); } catch(navErr){}
-  var tl = gsap.timeline();
-  tl.fromTo(sweepWall, { xPercent: -100 }, { xPercent: 0, duration: SWEEP_IN, ease: 'power3.inOut' });
-  tl.to({}, { duration: HOLD });
-  tl.add(function(){
-    if(newTab){
-      window.open(url, '_blank');
-      gsap.set(sweepWall, { xPercent: -100 });
-      wallHide();
-      isAnimating = false;
-    } else {
-      window.location.href = url;
-    }
-  });
 }
 
-function forceMenuClosed(){
-  if(menuView){ menuView.style.display = 'none'; }
-  document.body.classList.remove('menu-open');
-  pendingHash = null;
-  if(isOpen){ setBurger(false); isOpen = false; }
-}
-function scrollToHash(hash){
-  var t = null;
-  try { t = document.querySelector(hash); } catch(e){}
-  if(!t){ return; }
-  try { history.replaceState(null, '', hash); } catch(e){}
-  setTimeout(function(){ t.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' }); }, 80);
+function finishToggle(){
+  if(pendingHash){
+    var target = document.querySelector(pendingHash);
+    if(target){
+      try { history.pushState(null, '', pendingHash); } catch(e){}
+      target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
+    }
+    pendingHash = null;
+  }
 }
 
 burgerToggle.addEventListener('click', toggleMenu);
-var menuCloseBtn = document.getElementById('menuClose');
-if(menuCloseBtn){ menuCloseBtn.addEventListener('click', toggleMenu); }
-var siteHeader = document.querySelector('.header');
-if(siteHeader){
-  window.addEventListener('scroll', function(){
-    siteHeader.classList.toggle('scrolled', window.scrollY > 40);
-  });
+
+function splitNav(href){
+  var hashIdx = href.indexOf('#');
+  if(hashIdx < 0){ return { page: href, hash: '' }; }
+  return { page: href.slice(0, hashIdx), hash: href.slice(hashIdx) };
 }
-document.addEventListener('keydown', function(e){
-  if(e.key === 'Escape' && isOpen && !isAnimating){ toggleMenu(); }
-  if(e.key === 'Escape'){ closeModal(); }
-});
-window.addEventListener('pageshow', function(e){
-  if(!e.persisted){ return; }
-  isAnimating = false;
-  if(!hasGsap || reduceMotion){
-    if(hasGsap){ gsap.set(sweepWall, { xPercent: -100 }); }
+function currentPage(){
+  var p = window.location.pathname.split('/').pop() || 'index.html';
+  return p;
+}
+function isModifiedClick(e){
+  return e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0;
+}
+
+function leavePage(url, newTab){
+  if(newTab){ window.open(url, '_blank', 'noopener'); return; }
+  if(reduceMotion || !hasGsap){
+    window.location.href = url;
     return;
   }
   isAnimating = true;
-  wallShow();
-  var reveal = gsap.timeline({ onComplete: function(){
-    gsap.set(sweepWall, { xPercent: -100 });
-    wallHide();
-    isAnimating = false;
-  }});
-  reveal.fromTo(sweepWall, { xPercent: -100 }, { xPercent: 0, duration: SWEEP_IN, ease: 'power3.inOut' });
-  reveal.to({}, { duration: HOLD });
-  reveal.to(sweepWall, { xPercent: 100, duration: SWEEP_OUT, ease: 'power3.inOut' });
-});
+  window.sessionStorage.setItem('wallEnter', '1');
+  gsap.timeline({
+    onComplete: function(){
+      window.location.href = url;
+    }
+  })
+  .set(sweepWall, { yPercent: -100 })
+  .to(sweepWall, { yPercent: 0, duration: SWEEP_IN, ease: 'power3.inOut' });
+}
 
-function currentPage(){
-  var parts = location.pathname.split('/');
-  var last = parts[parts.length - 1];
-  if(!last){ return 'index.html'; }
-  return last;
-}
-function splitNav(href){
-  var i = href.indexOf('#');
-  if(i < 0){ return { page: href, hash: null }; }
-  return { page: href.slice(0, i), hash: href.slice(i) };
-}
-function isModifiedClick(e){
-  return e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || (e.button !== undefined && e.button !== 0);
-}
 function handleNavClick(e){
   if(isModifiedClick(e)){ return; }
   var link = e.currentTarget;
@@ -1184,8 +1756,7 @@ document.getElementById('brandLink').addEventListener('click', function(e){
   leavePage(href, false);
 });
 
-/* Movies grid, renders any count. Refs refresh on every mount because
-   Barba swaps the container nodes out from under previously captured refs. */
+/* Movie and Showing Management */
 var grid = null;
 var emptyBox = null;
 function refreshScreenRefs(){
@@ -1194,10 +1765,6 @@ function refreshScreenRefs(){
   seatmap = document.getElementById('seatmap');
   tip = document.getElementById('tip');
   modal = document.getElementById('modal');
-}
-
-function movieMetaLine(m){
-  return m.genre + ' , ' + m.runtime;
 }
 
 function renderMovies(list){
@@ -1209,57 +1776,48 @@ function renderMovies(list){
   emptyBox.hidden = true;
   list.forEach(function(m){
     var card = document.createElement('article');
-    card.className = 'movie reveal in';
+    card.className = 'movie-card-row reveal in';
     card.setAttribute('data-id', m.id);
-    var poster = document.createElement('div');
-    poster.className = 'poster';
-    poster.style.setProperty('--pg', m.g);
-    poster.innerHTML = '<div class="stripes"></div><div class="glyph">' + m.glyph + '</div>' +
-      '<div class="poster-title"><div class="t">' + m.title + '</div><div class="dir">' + m.dir + '</div></div>';
-    var meta = document.createElement('div');
-    meta.className = 'movie-meta';
-    var left = document.createElement('span');
-    left.textContent = movieMetaLine(m);
-    var right = document.createElement('b');
-    right.textContent = m.hall;
-    meta.appendChild(left);
-    meta.appendChild(right);
-    var bar = document.createElement('a');
-    bar.className = 'book-bar';
-    var barLabel = document.createElement('span');
-    barLabel.textContent = 'Reserve Seats';
-    var barChip = document.createElement('span');
-    barChip.className = 'show-chip';
-    barChip.textContent = m.showtime;
-    bar.appendChild(barLabel);
-    bar.appendChild(barChip);
-    bar.setAttribute('data-cursor', 'SELECT');
-    bar.setAttribute('role', 'button');
-    bar.setAttribute('tabindex', '0');
-    bar.addEventListener('click', function(ev){
-      ev.preventDefault();
+
+    var topArea = document.createElement('div');
+    topArea.className = 'movie-card-top';
+
+    var thumb = document.createElement('div');
+    thumb.className = 'movie-thumb';
+    if(m.poster_url){
+      thumb.innerHTML = '<img src="' + m.poster_url + '" alt="' + m.title + '">';
+    } else {
+      thumb.style.background = m.g;
+      thumb.innerHTML = '<span class="movie-thumb-text">' + m.title.slice(0, 8) + '</span>';
+    }
+
+    var details = document.createElement('div');
+    details.className = 'movie-card-details';
+    details.innerHTML = '<div class="movie-card-title">' + (m.rawTitle || m.title) + '</div>' +
+                        '<div class="movie-card-dir">' + m.dir.toUpperCase() + '</div>' +
+                        '<div class="movie-card-tags">' + m.genre + ' &nbsp;|&nbsp; ' + m.runtime + '</div>';
+
+    topArea.appendChild(thumb);
+    topArea.appendChild(details);
+
+    var bottomArea = document.createElement('div');
+    bottomArea.className = 'movie-card-bottom';
+    bottomArea.innerHTML = '<span class="movie-card-time">' + (m.runtime) + ' &bull; ' + m.hall + '</span>' +
+                           '<span class="movie-card-btn">RESERVE SEATS &rarr;</span>';
+
+    card.appendChild(topArea);
+    card.appendChild(bottomArea);
+
+    card.addEventListener('click', function(){
       selectMovie(m.id, true);
     });
-    bar.addEventListener('keydown', function(ev){
-      if(ev.key === 'Enter' || ev.key === ' '){
-        ev.preventDefault();
-        selectMovie(m.id, true);
-      }
-    });
-    card.style.cursor = 'pointer';
-    card.addEventListener('click', function(ev){
-      selectMovie(m.id, true);
-    });
-    card.appendChild(poster);
-    card.appendChild(meta);
-    card.appendChild(bar);
+
     grid.appendChild(card);
   });
-  markSelected();
 }
 
 function markSelected(){
-  var cards = grid.querySelectorAll('.movie');
+  var cards = grid.querySelectorAll('.movie-card-row');
   Array.prototype.forEach.call(cards, function(c){
     var active = selectedMovie && c.getAttribute('data-id') === selectedMovie.id;
     if(active){ c.classList.add('selected-ring'); }
@@ -1274,31 +1832,22 @@ function findMovie(id){
   return null;
 }
 
-function currentDateLabel(){
-  if(!DATES.length){ return 'Pick a date above'; }
-  return dateLabel(DATES[selectedDateIdx] || DATES[0]);
-}
-
 function paintDetails(m){
   var poster = document.getElementById('detPoster');
+  var posterImg = document.getElementById('detPosterImg');
+  if(m.poster_url){
+    posterImg.src = m.poster_url;
+    posterImg.style.display = 'block';
+  } else {
+    posterImg.style.display = 'none';
+  }
   poster.style.setProperty('--pg', m.g);
   document.getElementById('detGlyph').textContent = m.glyph;
-  var tag = poster.querySelector('.poster-tag');
-  if(!tag){
-    tag = document.createElement('div');
-    tag.className = 'poster-tag';
-    poster.appendChild(tag);
-  }
-  tag.textContent = m.genre + ' , ' + m.runtime;
-  document.getElementById('detHall').textContent = m.hall;
-  document.getElementById('detTitle').innerHTML = '';
-  document.getElementById('detTitle').appendChild(document.createTextNode(m.title + ' '));
-  var tonight = document.createElement('span');
-  tonight.textContent = 'Tonight';
-  document.getElementById('detTitle').appendChild(tonight);
-  document.getElementById('detMeta').textContent = m.dir + ', ' + m.genre + ', ' + m.runtime;
+  document.getElementById('detHall').textContent = m.hall ? m.hall.toUpperCase() : 'D BLOCK / 3RD FLOOR';
+  document.getElementById('detTitle').textContent = m.rawTitle || m.title;
+  document.getElementById('detDir').textContent = '— ' + m.dir.toUpperCase();
+  document.getElementById('detMeta').textContent = m.genre + '  |  ' + m.runtime + '  |  ' + m.year + '  |  ' + m.rating;
   document.getElementById('detBlurb').textContent = m.blurb || '';
-  document.getElementById('dateShowtime').textContent = m.showtime;
 }
 
 function selectMovie(id, scroll){
@@ -1308,55 +1857,115 @@ function selectMovie(id, scroll){
   picked = [];
   markSelected();
   paintDetails(m);
-  document.getElementById('bkMovieMeta').textContent = m.title + ', ' + m.dir + ', ' + currentDateLabel() + ', ' + m.showtime + ', ' + m.hall;
-  document.getElementById('sumFilm').textContent = m.title;
-  document.getElementById('sumHall').textContent = m.hall;
-  document.getElementById('sumDate').textContent = currentDateLabel();
-  document.getElementById('sumShowtime').textContent = m.showtime;
-  rebuildSeatsAnimated();
-  if(!scroll){ return; }
-  document.getElementById('booking').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
+
+  fetchShowings(m.id).then(function(showings){
+    currentShowings = showings;
+    selectedShowingIdx = 0;
+    renderDates();
+    updateShowingLabels();
+    rebuildSeatsAnimated();
+    if(scroll){
+      document.getElementById('booking').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
+    }
+  });
 }
 
-function rebuildSeatsAnimated(){
-  picked = [];
-  buildSeatmap();
-  refreshSummary();
-  if(reduceMotion || !hasGsap){ return; }
-  var rows = document.querySelectorAll('#seatmap .rowline');
-  gsap.fromTo('#seatmap', { opacity: 0.35 }, { opacity: 1, duration: 0.35, ease: 'power2.out', clearProps: 'opacity' });
-  gsap.fromTo(rows, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.35, stagger: 0.04, ease: 'power3.out', clearProps: 'opacity,transform' });
+function updateShowingLabels(){
+  var s = currentShowing();
+  if(!s){ return; }
+  document.getElementById('dateShowtime').textContent = s.time;
+  document.getElementById('bkMovieMeta').textContent = (selectedMovie.rawTitle || selectedMovie.title) + ', ' + selectedMovie.dir + ', ' + s.fullDateStr + ', ' + s.time + ', ' + s.hall;
+  document.getElementById('sumFilm').textContent = selectedMovie.rawTitle || selectedMovie.title;
+  document.getElementById('sumHall').textContent = s.hall;
+  document.getElementById('sumDate').textContent = s.fullDateStr;
+  document.getElementById('sumShowtime').textContent = s.time;
 }
 
 function renderDates(){
   var box = document.getElementById('datePills');
+  if(!box) return;
   box.innerHTML = '';
-  DATES.forEach(function(d, i){
-    var b = document.createElement('button');
-    b.className = 'date-pill' + (i === selectedDateIdx ? ' active' : '');
+  currentShowings.forEach(function(s, i){
+    var b = document.createElement('div');
+    b.className = 'hero-date-card' + (i === selectedShowingIdx ? ' active' : '');
     b.setAttribute('data-cursor', 'DATE');
-    b.setAttribute('aria-label', 'Screening date ' + dateLabel(d));
-    var num = document.createElement('b');
-    num.textContent = String(d.getDate());
-    var mon = document.createElement('span');
-    mon.textContent = MONTHS[d.getMonth()];
-    b.appendChild(num);
-    b.appendChild(mon);
+    b.setAttribute('aria-label', 'Screening date ' + s.fullDateStr);
+    b.innerHTML = '<b>' + s.dayNum + '</b><span>' + s.monthStr + '</span>';
     b.addEventListener('click', function(){
-      if(selectedDateIdx === i){ return; }
-      selectedDateIdx = i;
+      if(selectedShowingIdx === i){ return; }
+      selectedShowingIdx = i;
       picked = [];
       renderDates();
-      if(selectedMovie){ selectMovie(selectedMovie.id, false); }
-      else { refreshSummary(); }
+      updateShowingLabels();
+      rebuildSeatsAnimated();
     });
     box.appendChild(b);
   });
 }
 
-/* Seatmap */
+// Bind date carousel arrows
+var prevBtn = document.getElementById('prevDateBtn');
+var nextBtn = document.getElementById('nextDateBtn');
+if(prevBtn){
+  prevBtn.addEventListener('click', function(){
+    if(selectedShowingIdx > 0){
+      selectedShowingIdx--;
+      picked = [];
+      renderDates();
+      updateShowingLabels();
+      rebuildSeatsAnimated();
+    }
+  });
+}
+if(nextBtn){
+  nextBtn.addEventListener('click', function(){
+    if(selectedShowingIdx < currentShowings.length - 1){
+      selectedShowingIdx++;
+      picked = [];
+      renderDates();
+      updateShowingLabels();
+      rebuildSeatsAnimated();
+    }
+  });
+}
+
+/* Seatmap with live Supabase API status */
 var seatmap = null;
 var tip = null;
+
+function fetchSeatStatus(showingId){
+  if(!showingId || showingId.indexOf('fallback') === 0){
+    return Promise.resolve(new Set());
+  }
+  return fetch('/api/seats/status?showing_id=' + encodeURIComponent(showingId))
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(res){
+      if(res && Array.isArray(res.occupiedSeats)){
+        return new Set(res.occupiedSeats);
+      }
+      return new Set();
+    })
+    .catch(function(){ return new Set(); });
+}
+
+function rebuildSeatsAnimated(){
+  picked = [];
+  var s = currentShowing();
+  if(!s){
+    buildSeatmap();
+    refreshSummary();
+    return;
+  }
+  fetchSeatStatus(s.id).then(function(occupiedSet){
+    occupiedSeatsSet = occupiedSet;
+    buildSeatmap();
+    refreshSummary();
+    if(reduceMotion || !hasGsap){ return; }
+    var rows = document.querySelectorAll('#seatmap .rowline');
+    gsap.fromTo('#seatmap', { opacity: 0.35 }, { opacity: 1, duration: 0.35, ease: 'power2.out', clearProps: 'opacity' });
+    gsap.fromTo(rows, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.35, stagger: 0.04, ease: 'power3.out', clearProps: 'opacity,transform' });
+  });
+}
 
 function buildSeatmap(){
   seatmap.innerHTML = '';
@@ -1385,7 +1994,7 @@ function buildSeatmap(){
     for(var i = 1; i <= SEATS_PER_ROW; i++){
       (function(num){
         var id = row + num;
-        var taken = isOccupied(selectedMovie.id, id, currentDateStr());
+        var taken = occupiedSeatsSet.has(id);
         var btn = document.createElement('button');
         btn.className = 'seat' + (taken ? ' occupied' : '');
         btn.setAttribute('data-id', id);
@@ -1471,103 +2080,125 @@ function refreshSummary(){
   }
   document.getElementById('sumCount').textContent = String(picked.length);
   document.getElementById('sumSeatsList').textContent = picked.length ? picked.slice().sort().join(', ') : 'None yet';
-  if(selectedMovie){ document.getElementById('sumDate').textContent = currentDateLabel(); }
   var btn = document.getElementById('confirmBtn');
-  btn.disabled = !(picked.length && selectedMovie);
+  btn.disabled = !(picked.length && selectedMovie && currentShowing());
 }
 
-function renderReservations(){
-  var box = document.getElementById('resList');
-  var empty = document.getElementById('resEmpty');
-  var list = loadReservations();
-  box.innerHTML = '';
-  empty.hidden = list.length > 0;
-  list.forEach(function(r){
-    var card = document.createElement('article');
-    card.className = 'res-card';
-    var code = document.createElement('div');
-    code.className = 'res-code';
-    code.textContent = r.code;
-    var title = document.createElement('h3');
-    title.textContent = r.film;
-    var dl = document.createElement('dl');
-    var rows = [
-      ['Date', r.date],
-      ['Showtime', r.showtime],
-      ['Hall', r.hall],
-      ['Seats', r.seats.join(', ')]
-    ];
-    rows.forEach(function(pair){
-      var div = document.createElement('div');
-      var dt = document.createElement('dt');
-      dt.textContent = pair[0];
-      var dd = document.createElement('dd');
-      dd.textContent = pair[1];
-      div.appendChild(dt);
-      div.appendChild(dd);
-      dl.appendChild(div);
-    });
-    var cancel = document.createElement('button');
-    cancel.className = 'res-cancel';
-    cancel.textContent = 'Cancel Reservation';
-    cancel.setAttribute('data-cursor', 'CLOSE');
-    cancel.addEventListener('click', function(){
-      var kept = loadReservations().filter(function(x){ return x.code !== r.code; });
-      saveReservations(kept);
-      renderReservations();
-    });
-    card.appendChild(code);
-    card.appendChild(title);
-    card.appendChild(dl);
-    card.appendChild(cancel);
-    box.appendChild(card);
-  });
-}
-
-/* Ticket modal */
+/* Modal Form and Cryptographic Pass */
 var modal = null;
 var modalBound = false;
 var confirmBound = false;
+
 function onConfirm(){
-  if(!selectedMovie || !picked.length){ return; }
+  if(!selectedMovie || !picked.length || !currentShowing()){ return; }
   if(!modal){ refreshScreenRefs(); }
   if(!modal){ return; }
-  var code = 'DD ' + Math.random().toString(36).slice(2, 8).toUpperCase();
-  var seats = picked.slice().sort();
-  document.getElementById('tFilm').textContent = selectedMovie.title;
-  document.getElementById('tDir').textContent = selectedMovie.dir;
-  document.getElementById('tHall').textContent = selectedMovie.hall;
-  document.getElementById('tDate').textContent = currentDateLabel();
-  document.getElementById('tShowtime').textContent = selectedMovie.showtime;
-  document.getElementById('tSeats').textContent = seats.join(', ');
-  document.getElementById('tCode').textContent = code;
-  var stored = loadReservations();
-  stored.unshift({
-    code: code,
-    film: selectedMovie.title,
-    dir: selectedMovie.dir,
-    hall: selectedMovie.hall,
-    date: currentDateLabel(),
-    showtime: selectedMovie.showtime,
-    seats: seats
-  });
-  saveReservations(stored);
-  renderReservations();
-  var bc = document.getElementById('barcode');
-  bc.innerHTML = '';
-  for(var i = 0; i < 52; i++){
-    var b = document.createElement('i');
-    var w = Math.random() < 0.5 ? 1 : (Math.random() < 0.6 ? 2 : 4);
-    b.style.width = w + 'px';
-    b.style.marginRight = (Math.random() * 3 + 1) + 'px';
-    bc.appendChild(b);
-  }
+
+  var s = currentShowing();
+  document.getElementById('formFilm').textContent = selectedMovie.rawTitle || selectedMovie.title;
+  document.getElementById('formShowing').textContent = s.fullDateStr + ' | ' + s.time;
+  document.getElementById('formSeats').textContent = picked.slice().sort().join(', ');
+
+  document.getElementById('bookingFormStep').style.display = 'block';
+  document.getElementById('ticketSuccessStep').style.display = 'none';
+  document.getElementById('bkError').style.display = 'none';
+
   modal.classList.add('open');
-  if(!reduceMotion && hasGsap){
-    gsap.fromTo('#ticket', { y: 70, rotate: -8, opacity: 0, scale: 0.9 },
-      { y: 0, rotate: -1.5, opacity: 1, scale: 1, duration: 0.6, ease: 'power3.out', clearProps: 'opacity,scale' });
-  }
 }
+
+function bindModalOnce(){
+  if(modalBound){ return; }
+  var closeBtn = document.getElementById('modalClose');
+  var form = document.getElementById('attendeeForm');
+  var doneBtn = document.getElementById('donePassBtn');
+  var downloadBtn = document.getElementById('downloadPassBtn');
+
+  if(closeBtn){ closeBtn.addEventListener('click', closeModal); }
+  if(doneBtn){ doneBtn.addEventListener('click', closeModal); }
+  if(modal){
+    modal.addEventListener('click', function(e){ if(e.target === modal){ closeModal(); } });
+  }
+
+  if(downloadBtn){
+    downloadBtn.addEventListener('click', function(){
+      var qrImg = document.getElementById('ticketQrImage');
+      if(qrImg && qrImg.src){
+        var a = document.createElement('a');
+        a.href = qrImg.src;
+        a.download = 'daydreamers-ticket-' + (document.getElementById('tCode').textContent || 'pass') + '.png';
+        a.click();
+      }
+    });
+  }
+
+  if(form){
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      var s = currentShowing();
+      if(!s){ return; }
+
+      var submitBtn = document.getElementById('bkSubmitBtn');
+      var errBox = document.getElementById('bkError');
+      errBox.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Processing reservation...';
+
+      var payload = {
+        showingId: s.id,
+        userName: document.getElementById('bkName').value.trim(),
+        userUsn: document.getElementById('bkUsn').value.trim().toUpperCase(),
+        userEmail: document.getElementById('bkEmail').value.trim(),
+        seats: picked.slice().sort()
+      };
+
+      fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(function(res){
+        return res.json().then(function(data){ return { ok: res.ok, status: res.status, data: data }; });
+      })
+      .then(function(result){
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Confirm & Generate Ticket Pass';
+        if(!result.ok){
+          errBox.textContent = result.data.error || 'Booking failed. Please try again.';
+          errBox.style.display = 'block';
+          return;
+        }
+
+        // Success! Populate ticket step
+        var b = result.data.booking;
+        document.getElementById('tFilm').textContent = b.filmTitle;
+        document.getElementById('tName').textContent = b.userName;
+        document.getElementById('tUsn').textContent = b.userUsn;
+        document.getElementById('tDate').textContent = b.showDate + ' | ' + b.showTime;
+        document.getElementById('tHall').textContent = b.hall;
+        document.getElementById('tSeats').textContent = b.seats.join(', ');
+        document.getElementById('tCode').textContent = b.refCode;
+        document.getElementById('ticketQrImage').src = result.data.qrDataUri;
+
+        document.getElementById('bookingFormStep').style.display = 'none';
+        document.getElementById('ticketSuccessStep').style.display = 'block';
+
+        // Clear picked and refresh seat status
+        picked = [];
+        refreshSummary();
+        rebuildSeatsAnimated();
+      })
+      .catch(function(err){
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Confirm & Generate Ticket Pass';
+        errBox.textContent = 'Network error. Please check your connection: ' + err.message;
+        errBox.style.display = 'block';
+      });
+    });
+  }
+
+  modalBound = true;
+}
+
 function bindConfirmOnce(){
   if(confirmBound){ return; }
   var btn = document.getElementById('confirmBtn');
@@ -1575,15 +2206,10 @@ function bindConfirmOnce(){
   btn.addEventListener('click', onConfirm);
   confirmBound = true;
 }
-function bindModalOnce(){
-  if(modalBound){ return; }
-  var closeBtn = document.getElementById('modalClose');
-  if(!closeBtn || !modal){ return; }
-  closeBtn.addEventListener('click', closeModal);
-  modal.addEventListener('click', function(e){ if(e.target === modal){ closeModal(); } });
-  modalBound = true;
+
+function closeModal(){
+  if(modal){ modal.classList.remove('open'); }
 }
-function closeModal(){ if(modal){ modal.classList.remove('open'); } }
 
 /* Director viewfinder cursor */
 var frame = document.getElementById('cursor-frame');
@@ -1630,8 +2256,8 @@ if(window.matchMedia('(hover:hover) and (min-width:769px)').matches && hasGsap){
     if(!reduceMotion){ gsap.to(frame, { scale: 1, duration: 0.12, ease: 'power2.out' }); }
   });
 } else {
-  frame.style.display = 'none';
-  label.style.display = 'none';
+  if(frame) frame.style.display = 'none';
+  if(label) label.style.display = 'none';
 }
 
 /* Soft reveal */
@@ -1649,17 +2275,14 @@ function observeReveals(){
   Array.prototype.forEach.call(document.querySelectorAll('.reveal'), function(el){ revealObserver.observe(el); });
 }
 
-/* Page lifecycle: Barba calls these on every enter, direct loads call once */
+/* Page lifecycle */
 window.initScreening = function(){
   refreshScreenRefs();
   bindConfirmOnce();
   bindModalOnce();
   fetchMovies().then(function(list){
     MOVIES = list || [];
-    DATES = nextFridays(3);
     renderMovies(MOVIES);
-    renderDates();
-    renderReservations();
     if(MOVIES.length){
       selectMovie(MOVIES[0].id, false);
     } else {
@@ -1680,8 +2303,7 @@ window.destroyScreening = function(){
 };
 initScreening();
 
-/* Home page lifecycle, duplicated for Barba arrivals from screening.
-   All DOM touches happen post arrival when the home container exists. */
+/* Home page lifecycle for transitions */
 var animObserverHome = null;
 function observeHomeReveals(){
   if(animObserverHome){ try{ animObserverHome.disconnect(); }catch(e){} animObserverHome = null; }
