@@ -669,8 +669,18 @@ app.get('/api/admin/bookings', requireAdmin, async (req, res) => {
 // 5. STATIC FILES & CATCH-ALL
 // -------------------------------------------------------------
 const rootDir = path.resolve(__dirname, '..');
-app.use(express.static(rootDir));
-app.use('/booking', express.static(rootDir));
+const staticOptions = {
+    maxAge: '1h',
+    setHeaders: (res, filePath) => {
+        if (/\.(woff2?|ttf|otf|eot|png|jpe?g|gif|svg|webp|hdr|fbx)$/i.test(filePath)) {
+            res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+        } else if (/\.(html|htm)$/i.test(filePath)) {
+            res.setHeader('Cache-Control', 'public, max-age=300');
+        }
+    }
+};
+app.use(express.static(rootDir, staticOptions));
+app.use('/booking', express.static(rootDir, staticOptions));
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(rootDir, 'index.html'));

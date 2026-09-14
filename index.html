@@ -10,12 +10,19 @@
         <title>Daydreamers, Student Film Society</title>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+        <link rel="preconnect" href="https://esm.sh" crossorigin />
+        <link rel="preconnect" href="https://miroleon.github.io" crossorigin />
         <link
             href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700&family=Plus+Jakarta+Sans:wght@200;300;400;700;800&family=Inter:wght@300;400;500;600&family=Bebas+Neue&display=swap"
             rel="stylesheet"
         />
+        <link rel="prefetch" href="screening.html" as="document" />
+        <link rel="prerender" href="screening.html" />
         <link rel="preload" href="fonts/Gilroy-Thin.woff2" as="font" type="font/woff2" crossorigin />
         <link rel="preload" href="fonts/Gilroy-UltraLight.woff2" as="font" type="font/woff2" crossorigin />
+        <link rel="preload" href="textures/menu-glass-normal.jpeg" as="image" />
+        <link rel="modulepreload" href="https://esm.sh/three@0.136.0" />
         <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
         
     </head>
@@ -3882,7 +3889,33 @@ import { OrbitControls } from 'https://esm.sh/three@0.136.0/examples/jsm/control
   window.addEventListener('menuGlass:stop', function(){
     if(apiStop){ apiStop(); }
   });
+
+  // Pre-warm WebGL menu canvas, shaders, and geometry in idle time
+  function warmMenuGlass() {
+    if (!apiStart && !window.matchMedia('(prefers-reduced-motion: reduce)').matches && !window.matchMedia('(max-width: 768px)').matches) {
+      try { init(); } catch(e){}
+    }
+  }
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(warmMenuGlass, { timeout: 2500 });
+  } else {
+    setTimeout(warmMenuGlass, 1000);
+  }
 })();
+
+// Speculatively preload screening HTML and API data into HTTP cache
+window.addEventListener('load', function(){
+  var preload = function(){
+    fetch('screening.html', { priority: 'low' }).catch(function(){});
+    fetch('/api/movies', { priority: 'low' }).catch(function(){});
+    fetch('/api/showings', { priority: 'low' }).catch(function(){});
+  };
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(preload, { timeout: 2000 });
+  } else {
+    setTimeout(preload, 1200);
+  }
+});
 </script>
 
     </body>
