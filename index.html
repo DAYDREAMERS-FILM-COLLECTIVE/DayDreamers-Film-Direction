@@ -3604,8 +3604,6 @@ import { OrbitControls } from 'https://esm.sh/three@0.136.0/examples/jsm/control
   var canvas = document.getElementById('menuGlass');
   if(!canvas){ return; }
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){ return; }
-  if(window.matchMedia('(pointer: coarse)').matches){ return; }
-  if(window.matchMedia('(max-width: 768px)').matches){ return; }
   if(!window.WebGLRenderingContext){ return; }
 
   var renderer = null;
@@ -3653,9 +3651,10 @@ import { OrbitControls } from 'https://esm.sh/three@0.136.0/examples/jsm/control
     var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.set(0, 0, 10);
 
+    var isTouch = window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 768;
     var controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.enabled = true;
+    controls.enabled = !isTouch;
     controls.dampingFactor = 1;
     controls.enablePan = false;
     controls.enableZoom = false;
@@ -3695,7 +3694,8 @@ import { OrbitControls } from 'https://esm.sh/three@0.136.0/examples/jsm/control
         if(child.isMesh){ child.material = hands_mat; }
       });
       object.position.set(0, 0, 0);
-      object.scale.setScalar(0.05);
+      var modelScale = window.innerWidth <= 768 ? 0.042 : 0.05;
+      object.scale.setScalar(modelScale);
       scene.add(object);
     });
 
@@ -3900,7 +3900,7 @@ import { OrbitControls } from 'https://esm.sh/three@0.136.0/examples/jsm/control
 
   // Pre-warm WebGL menu canvas, shaders, and geometry in idle time
   function warmMenuGlass() {
-    if (!apiStart && !window.matchMedia('(prefers-reduced-motion: reduce)').matches && !window.matchMedia('(max-width: 768px)').matches) {
+    if (!apiStart && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       try { init(); } catch(e){}
     }
   }
