@@ -598,7 +598,7 @@ app.post('/api/bookings/verify', requireAdmin, async (req, res) => {
             return res.status(409).json({
                 valid: false,
                 duplicate: true,
-                message: `⚠️ ALREADY CHECKED IN at ${new Date(booking.checked_in_at).toLocaleTimeString()}`,
+                message: `[WARNING] ALREADY CHECKED IN at ${new Date(booking.checked_in_at).toLocaleTimeString()}`,
                 booking: {
                     refCode: booking.ref_code,
                     userName: booking.user_name,
@@ -618,7 +618,7 @@ app.post('/api/bookings/verify', requireAdmin, async (req, res) => {
 
         res.json({
             valid: true,
-            message: `✅ ADMISSION CONFIRMED — Welcome ${booking.user_name}!`,
+            message: `[ADMISSION CONFIRMED] Welcome ${booking.user_name}!`,
             booking: {
                 id: booking.id,
                 refCode: booking.ref_code,
@@ -679,7 +679,7 @@ app.get('/', (req, res) => {
 
 // Start Server
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🎬 Daydreamers Film Club API Server listening on http://0.0.0.0:${PORT}`);
+    console.log(`Daydreamers Film Club API Server listening on http://0.0.0.0:${PORT}`);
     console.log(`   Public Web: http://localhost:${PORT}/booking/screening.html`);
     console.log(`   Admin CMS:  http://localhost:${PORT}/booking/admin.html`);
 });

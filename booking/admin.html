@@ -437,10 +437,10 @@
         <aside class="sidebar">
             <div class="brand">Daydreamers <span>CMS</span></div>
             <nav class="nav-links">
-                <a class="nav-item active" onclick="showSection('movies')">📽️ Film Catalogue</a>
-                <a class="nav-item" onclick="showSection('seats')">🪑 Seat Locker</a>
-                <a class="nav-item" onclick="showSection('bookings')">📋 Attendee Bookings</a>
-                <a class="nav-item" onclick="showSection('scanner')">📷 Door QR Scanner</a>
+                <a class="nav-item active" onclick="showSection('movies')">Film Catalogue</a>
+                <a class="nav-item" onclick="showSection('seats')">Seat Locker</a>
+                <a class="nav-item" onclick="showSection('bookings')">Attendee Bookings</a>
+                <a class="nav-item" onclick="showSection('scanner')">Door QR Scanner</a>
             </nav>
             <a href="screening.html" class="back-link">&larr; Back to Screenings</a>
         </aside>
@@ -986,12 +986,12 @@
                     populateDetails(data.booking);
                 } else {
                     banner.className = 'result-banner error';
-                    banner.innerHTML = '❌ ' + (data.message || data.error || 'Verification Failed');
+                    banner.innerHTML = '[ERROR] ' + (data.message || data.error || 'Verification Failed');
                 }
                 actionBox.style.display = 'block';
             } catch (err) {
                 banner.className = 'result-banner error';
-                banner.innerHTML = '❌ Network Error: ' + err.message;
+                banner.innerHTML = '[ERROR] Network Error: ' + err.message;
                 actionBox.style.display = 'block';
             }
         }

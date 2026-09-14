@@ -77,7 +77,7 @@ export async function sendTicketEmail({ recipientEmail, attendeeName, filmTitle,
         const { data, error } = await resend.emails.send({
             from: senderEmail,
             to: recipientEmail,
-            subject: `🎟️ Your Ticket for ${filmTitle} [${refCode}]`,
+            subject: `Your Ticket for ${filmTitle} [${refCode}]`,
             html: htmlContent,
             attachments
         });
