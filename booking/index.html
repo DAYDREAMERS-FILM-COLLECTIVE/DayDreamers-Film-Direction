@@ -147,7 +147,7 @@
             .site-header {
                 height: 78px;
                 position: fixed;
-                z-index: 100;
+                z-index: 1000;
                 top: 0;
                 left: 0;
                 right: 0;
@@ -252,12 +252,12 @@
                 left: 0;
                 width: 100vw;
                 height: 100vh;
-                background: #161922;
-                z-index: 90;
+                background-color: #3A1F33;
+                z-index: 999;
                 pointer-events: none;
-                visibility: hidden;
-                border-right: 2px solid rgba(255, 255, 255, 0.25);
+                border-right: 2px solid rgba(200, 155, 178, 0.4);
                 box-shadow: 25px 0 60px rgba(0, 0, 0, 0.85);
+                will-change: transform;
             }
             body.menu-open {
                 overflow: hidden;
@@ -3040,9 +3040,9 @@
                 const bTop = document.querySelector('#burgerToggle .bar-top');
                 const bMid = document.querySelector('#burgerToggle .bar-mid');
                 const bBottom = document.querySelector('#burgerToggle .bar-bottom');
-                const SWEEP_IN = 0.3;
+                const SWEEP_IN = 0.55;
                 const HOLD = 0.35;
-                const SWEEP_OUT = 0.3;
+                const SWEEP_OUT = 0.45;
                 let isOpen = false;
                 let isAnimating = false;
                 let pendingHash = null;
@@ -3050,12 +3050,8 @@
                     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
                 const hasGsap = typeof window.gsap !== 'undefined';
 
-                function wallShow() {
-                    if (sweepWall) sweepWall.style.visibility = 'visible';
-                }
-                function wallHide() {
-                    if (sweepWall) sweepWall.style.visibility = 'hidden';
-                }
+                function wallShow() {}
+                function wallHide() {}
                 window.__dbg = [];
                 try {
                     window.__dbgOn = /[?&]dbg\b/.test(location.search);
@@ -3084,14 +3080,12 @@
                         window.sessionStorage.getItem('wallEnter');
                     window.sessionStorage.removeItem('wallEnter');
                 } catch (enterErr) {}
-                if (wallEnter && hasGsap && sweepWall && !reduceMotion) {
+                if (wallEnter && hasGsap && sweepWall) {
                     isAnimating = true;
                     window.gsap.set(sweepWall, { xPercent: 0 });
-                    wallShow();
                     const enterTl = window.gsap.timeline({
                         onComplete: () => {
                             window.gsap.set(sweepWall, { xPercent: -100 });
-                            wallHide();
                             isAnimating = false;
                             if (window.location.hash) {
                                 scrollToHash(window.location.hash);
@@ -3102,7 +3096,7 @@
                     enterTl.to(sweepWall, {
                         xPercent: 100,
                         duration: SWEEP_OUT,
-                        ease: 'power3.inOut',
+                        ease: 'power2.inOut',
                     });
                 } else {
                     if (window.location.hash) {
@@ -3209,8 +3203,8 @@
 
                 function toggleMenu() {
                     if (isAnimating || !menuView) return;
-                    if (reduceMotion || !hasGsap) {
-                        setBurger(!isOpen);
+                    setBurger(!isOpen);
+                    if (!hasGsap || !sweepWall) {
                         swapViews();
                         isOpen = !isOpen;
                         if (!isOpen && pendingHash) {
@@ -3222,20 +3216,18 @@
                     }
                     isAnimating = true;
                     dbg('toggleMenu start open=' + !isOpen);
-                    setBurger(!isOpen);
-                    wallShow();
                     const tl = window.gsap.timeline({ onComplete: finishToggle });
                     tl.fromTo(
                         sweepWall,
                         { xPercent: -100 },
-                        { xPercent: 0, duration: SWEEP_IN, ease: 'power3.inOut' }
+                        { xPercent: 0, duration: SWEEP_IN, ease: 'power2.inOut' }
                     );
                     tl.add(swapViews);
                     tl.to({}, { duration: HOLD });
                     tl.to(sweepWall, {
                         xPercent: 100,
                         duration: SWEEP_OUT,
-                        ease: 'power3.inOut',
+                        ease: 'power2.inOut',
                     });
                 }
 
@@ -3245,14 +3237,13 @@
                         window.location.href = url;
                         return;
                     }
-                    if (reduceMotion || !hasGsap || !sweepWall) {
+                    if (!hasGsap || !sweepWall) {
                         if (newTab) window.open(url, '_blank');
                         else window.location.href = url;
                         return;
                     }
                     isAnimating = true;
                     dbg('leavePage');
-                    wallShow();
                     try {
                         window.sessionStorage.setItem('wallEnter', '1');
                     } catch (navErr) {}
@@ -3260,14 +3251,13 @@
                     tl.fromTo(
                         sweepWall,
                         { xPercent: -100 },
-                        { xPercent: 0, duration: SWEEP_IN, ease: 'power3.inOut' }
+                        { xPercent: 0, duration: SWEEP_IN, ease: 'power2.inOut' }
                     );
                     tl.to({}, { duration: HOLD });
                     tl.add(() => {
                         if (newTab) {
                             window.open(url, '_blank');
                             window.gsap.set(sweepWall, { xPercent: -100 });
-                            wallHide();
                             isAnimating = false;
                         } else {
                             window.location.href = url;
@@ -3323,33 +3313,26 @@
                 window.addEventListener('pageshow', (e) => {
                     if (!e.persisted) return;
                     isAnimating = false;
-                    if (!hasGsap || !sweepWall || reduceMotion) {
-                        if (hasGsap && sweepWall) {
-                            window.gsap.set(sweepWall, { xPercent: -100 });
-                        } else if (sweepWall) {
-                            sweepWall.style.transform = 'translateX(-100%)';
-                        }
+                    if (!hasGsap || !sweepWall) {
                         return;
                     }
                     isAnimating = true;
-                    wallShow();
                     const reveal = window.gsap.timeline({
                         onComplete: () => {
                             window.gsap.set(sweepWall, { xPercent: -100 });
-                            wallHide();
                             isAnimating = false;
                         },
                     });
                     reveal.fromTo(
                         sweepWall,
                         { xPercent: -100 },
-                        { xPercent: 0, duration: SWEEP_IN, ease: 'power3.inOut' }
+                        { xPercent: 0, duration: SWEEP_IN, ease: 'power2.inOut' }
                     );
                     reveal.to({}, { duration: HOLD });
                     reveal.to(sweepWall, {
                         xPercent: 100,
                         duration: SWEEP_OUT,
-                        ease: 'power3.inOut',
+                        ease: 'power2.inOut',
                     });
                 });
                 const isModifiedClick = (e) =>

@@ -103,22 +103,34 @@ h1,h2,h3,.serif{font-family:'Playfair Display',serif}
   100%{transform:translate(0,0)}
 }
 
-/* sweeping wall, animation only, do not restyle behavior */
+/* ------------------------------
+   THE SWEEPING VERTICAL WALL (DOGSTUDIO HORIZONTAL SWEEP)
+------------------------------ */
 .sweep-wall{
-  position:fixed;top:0;left:0;width:100vw;height:100vh;
-  background-color:var(--panel);
-  z-index:70;pointer-events:none;
-  visibility:hidden;
-  border-right:2px solid rgba(200,155,178,.35);
-  box-shadow:25px 0 60px rgba(16,7,14,.95);
+  position:fixed;
+  top:0;
+  left:0;
+  width:100vw;
+  height:100vh;
+  background-color:#3A1F33;
+  z-index:999;
+  pointer-events:none;
+  border-right:2px solid rgba(200,155,178,0.4);
+  box-shadow:25px 0 60px rgba(0,0,0,0.85);
+  will-change:transform;
 }
 
-/* header, brand left, burger right, no link row */
+/* header, brand left, burger right */
 .header{
-  position:fixed;top:0;left:0;width:100%;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
   padding:1.4rem clamp(1.25rem,4vw,3rem);
-  display:flex;justify-content:space-between;align-items:center;
-  z-index:100;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  z-index:1000;
   background:transparent;
   border-bottom:none;
 }
@@ -1708,28 +1720,33 @@ if('scrollRestoration' in history){
   history.scrollRestoration = 'manual';
 }
 
+/* Start with wall off-screen to the left (Dogstudio standard) */
+if(hasGsap && sweepWall){
+  gsap.set(sweepWall, { xPercent: -100 });
+}
+
 /* Native Dogstudio transition on load */
 (function checkArrivalSweep(){
-  if(window.sessionStorage.getItem('wallEnter') === '1'){
-    window.sessionStorage.removeItem('wallEnter');
-    if(hasGsap && !reduceMotion && sweepWall){
-      gsap.set(sweepWall, { yPercent: 0 });
-      gsap.to(sweepWall, {
-        yPercent: 100,
-        duration: SWEEP_OUT,
-        ease: 'power2.inOut',
-        delay: 0.1,
-        onComplete: function(){
-          gsap.set(sweepWall, { yPercent: -100 });
-          initLandingScroll();
-        }
-      });
-    } else {
-      setTimeout(initLandingScroll, 60);
+  try {
+    if(window.sessionStorage.getItem('wallEnter') === '1'){
+      window.sessionStorage.removeItem('wallEnter');
+      if(hasGsap && sweepWall){
+        gsap.set(sweepWall, { xPercent: 0 });
+        gsap.to(sweepWall, {
+          xPercent: 100,
+          duration: 0.45,
+          ease: 'power2.inOut',
+          delay: 0.1,
+          onComplete: function(){
+            gsap.set(sweepWall, { xPercent: -100 });
+            initLandingScroll();
+          }
+        });
+        return;
+      }
     }
-  } else {
-    setTimeout(initLandingScroll, 60);
-  }
+  } catch(e){}
+  setTimeout(initLandingScroll, 60);
 })();
 
 function setBurger(open){
@@ -1759,7 +1776,7 @@ function swapViews(){
 }
 
 function animateMenuText(entering){
-  if(reduceMotion || !hasGsap) return;
+  if(!hasGsap) return;
   var links = menuView.querySelectorAll('.menu-item');
   var meta = menuView.querySelectorAll('.nav-meta, .menu-action, .menu-socials');
   if(entering){
@@ -1777,52 +1794,60 @@ function animateMenuText(entering){
   }
 }
 
+/* Continuous Dogstudio Wall Transition on burger menu click (works on all devices / phones) */
 function toggleMenu(){
-  if(isAnimating) return;
+  if(isAnimating) return; // Strict lock: will not close before wall finishes
   isAnimating = true;
+
+  // 1. Morph burger icon
   setBurger(!isOpen);
-  if(reduceMotion || !hasGsap){
+
+  if(!hasGsap || !sweepWall){
     swapViews();
     isOpen = !isOpen;
     isAnimating = false;
     finishToggle();
     return;
   }
-  if(!isOpen){
-    var openTl = gsap.timeline({
-      onComplete: function(){
-        isAnimating = false;
-        finishToggle();
-      }
-    });
-    openTl
-      .set(sweepWall, { yPercent: -100 })
-      .to(sweepWall, { yPercent: 0, duration: SWEEP_IN, ease: 'power3.inOut' })
-      .add(function(){
-        swapViews();
-        isOpen = true;
+
+  // 2. Continuous Wall Transition with Hold at the Right Wall
+  var tl = gsap.timeline({
+    onComplete: function(){
+      // Reset wall back to the left off-screen for the next transition
+      gsap.set(sweepWall, { xPercent: -100 });
+      isOpen = !isOpen;
+      isAnimating = false;
+      finishToggle();
+    }
+  });
+
+  tl
+    // STEP 1: Wall sweeps in from the left until it reaches the right corner (0% = covers viewport)
+    .fromTo(
+      sweepWall,
+      { xPercent: -100 },
+      { xPercent: 0, duration: 0.55, ease: 'power2.inOut' }
+    )
+
+    // STEP 2: Swap screens behind the wall while screen is 100% blocked
+    .add(function(){
+      swapViews();
+      if(!isOpen){
         animateMenuText(true);
-      })
-      .to(sweepWall, { yPercent: 100, duration: SWEEP_OUT, ease: 'power2.inOut', delay: HOLD })
-      .set(sweepWall, { yPercent: -100 });
-  } else {
-    animateMenuText(false);
-    var closeTl = gsap.timeline({
-      onComplete: function(){
-        isAnimating = false;
-        finishToggle();
+      } else {
+        animateMenuText(false);
       }
+    })
+
+    // STEP 3: Hold firmly at the right wall
+    .to({}, { duration: 0.35 })
+
+    // STEP 4: Only after reaching the right wall and waiting, it sweeps off to the right (100%)
+    .to(sweepWall, {
+      xPercent: 100,
+      duration: 0.45,
+      ease: 'power2.inOut'
     });
-    closeTl
-      .set(sweepWall, { yPercent: -100 })
-      .to(sweepWall, { yPercent: 0, duration: SWEEP_IN, ease: 'power3.inOut', delay: 0.15 })
-      .add(function(){
-        swapViews();
-        isOpen = false;
-      })
-      .to(sweepWall, { yPercent: 100, duration: SWEEP_OUT, ease: 'power2.inOut', delay: HOLD })
-      .set(sweepWall, { yPercent: -100 });
-  }
 }
 
 function finishToggle(){
@@ -1857,19 +1882,19 @@ function isModifiedClick(e){
 
 function leavePage(url, newTab){
   if(newTab){ window.open(url, '_blank', 'noopener'); return; }
-  if(reduceMotion || !hasGsap){
+  if(!hasGsap || !sweepWall){
     window.location.href = url;
     return;
   }
   isAnimating = true;
-  window.sessionStorage.setItem('wallEnter', '1');
+  try { window.sessionStorage.setItem('wallEnter', '1'); } catch(e){}
   gsap.timeline({
     onComplete: function(){
       window.location.href = url;
     }
   })
-  .set(sweepWall, { yPercent: -100 })
-  .to(sweepWall, { yPercent: 0, duration: SWEEP_IN, ease: 'power3.inOut' });
+  .set(sweepWall, { xPercent: -100 })
+  .to(sweepWall, { xPercent: 0, duration: 0.55, ease: 'power2.inOut' });
 }
 
 function handleNavClick(e){
