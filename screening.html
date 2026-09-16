@@ -125,6 +125,7 @@ h1,h2,h3,.serif{font-family:'Playfair Display',serif}
   border-right:2px solid rgba(200,155,178,0.4);
   box-shadow:25px 0 60px rgba(0,0,0,0.85);
   will-change:transform;
+  transform:translateX(-100%);
 }
 
 /* header, brand left, burger right */
@@ -515,6 +516,24 @@ section.block{padding:40px clamp(20px,6vw,80px);max-width:1300px;margin:0 auto}
 .dot.av{background:#2a1426}.dot.sel{background:var(--gold);box-shadow:0 0 8px var(--gold)}.dot.occ{background:#150913;border-color:#2d1525}
 
 /* Lightweight 2D CSS Seat Grid Fallback (GPU Crash & Wayland Compositor Safeguard) */
+.seatmap-2d-mode .sweep-wall {
+  display: none !important;
+  transform: translateX(-100%) !important;
+}
+.seatmap-2d-mode,
+.seatmap-2d-mode body,
+.seatmap-2d-mode a,
+.seatmap-2d-mode button,
+.seatmap-2d-mode .seat,
+.seatmap-2d-mode .book-bar {
+  cursor: auto !important;
+}
+.seatmap-2d-mode a,
+.seatmap-2d-mode button,
+.seatmap-2d-mode .seat:not(.occupied),
+.seatmap-2d-mode [data-cursor] {
+  cursor: pointer !important;
+}
 .seatmap-2d-mode .screen-wrap,
 .seatmap-2d-mode .seatmap-persp {
   perspective: none !important;
@@ -1542,7 +1561,11 @@ function enable2DFallback(){
   if(fb) fb.style.opacity = '1';
   var menuGlass = document.getElementById('menuGlass');
   if(menuGlass) menuGlass.style.display = 'none';
-  if(typeof arcSeats === 'function'){
+  var wall = document.getElementById('sweepWall');
+  if(wall){
+    wall.style.display = 'none';
+  }
+  if(typeof arcSeats === 'function' && typeof seatmap !== 'undefined' && seatmap){
     arcSeats();
   }
 }
@@ -1721,7 +1744,7 @@ var hasGsap = typeof window.gsap !== 'undefined';
 var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function getScrollTop(){
-  return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+  return window.pageYOffset || (document.documentElement && document.documentElement.scrollTop) || (document.body && document.body.scrollTop) || 0;
 }
 
 function setScrollTop(y){
@@ -1785,12 +1808,21 @@ if('scrollRestoration' in history){
 }
 
 /* Start with wall off-screen to the left (Dogstudio standard) */
-if(hasGsap && sweepWall){
-  gsap.set(sweepWall, { xPercent: -100 });
+if(sweepWall){
+  if(window.is2DFallbackActive || !hasGsap){
+    sweepWall.style.display = 'none';
+  } else {
+    gsap.set(sweepWall, { xPercent: -100 });
+  }
 }
 
 /* Native Dogstudio transition on load */
 (function checkArrivalSweep(){
+  if(window.is2DFallbackActive){
+    if(sweepWall) sweepWall.style.display = 'none';
+    initLandingScroll();
+    return;
+  }
   try {
     if(window.sessionStorage.getItem('wallEnter') === '1'){
       window.sessionStorage.removeItem('wallEnter');
@@ -2274,6 +2306,7 @@ function buildSeatmap(){
 }
 
 function arcSeats(){
+  if(typeof seatmap === 'undefined' || !seatmap) return;
   var lines = seatmap.querySelectorAll('.rowline');
   var is2D = window.is2DFallbackActive || document.documentElement.classList.contains('seatmap-2d-mode');
   Array.prototype.forEach.call(lines, function(line){
@@ -2693,6 +2726,7 @@ if(window.matchMedia('(hover:hover) and (min-width:769px)').matches && hasGsap){
 var revealObserver = null;
 function observeReveals(){
   if(revealObserver){ try{ revealObserver.disconnect(); }catch(e){} }
+  if(!window.IntersectionObserver) return;
   revealObserver = new IntersectionObserver(function(entries){
     entries.forEach(function(en){
       if(en.isIntersecting){
@@ -2705,7 +2739,7 @@ function observeReveals(){
 }
 
 /* Page lifecycle */
-window.initScreening = function(){
+function initScreening(){
   refreshScreenRefs();
   setupBookingModes();
   bindConfirmOnce();
@@ -2722,15 +2756,19 @@ window.initScreening = function(){
   });
   observeReveals();
   if(window.__voxelVisible){ try{ window.__voxelVisible(true); }catch(e){} }
-};
-window.destroyScreening = function(){
+}
+window.initScreening = initScreening;
+
+function destroyScreening(){
   if(revealObserver){ try{ revealObserver.disconnect(); }catch(e){} revealObserver = null; }
   picked = [];
   confirmBound = false;
   modalBound = false;
   if(modal){ modal.classList.remove('open'); }
   if(window.__voxelVisible){ try{ window.__voxelVisible(false); }catch(e){} }
-};
+}
+window.destroyScreening = destroyScreening;
+
 initScreening();
 
 /* Home page lifecycle for transitions */
@@ -2790,6 +2828,9 @@ window.destroyHome = function(){
 import * as THREE from 'https://esm.sh/three@0.160.0';
 
 (function(){
+  if(!window.__voxelVisible){
+    window.__voxelVisible = function(on){};
+  }
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){ return; }
   if(window.matchMedia('(pointer: coarse)').matches){ return; }
   if(window.matchMedia('(max-width: 768px)').matches){ return; }
@@ -3286,10 +3327,12 @@ import { OrbitControls } from 'https://esm.sh/three@0.136.0/examples/jsm/control
     });
 
     function onWindowResize(){
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      composer.setSize(window.innerWidth, window.innerHeight);
+      if(camera){
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+      }
+      if(renderer){ renderer.setSize(window.innerWidth, window.innerHeight); }
+      if(composer){ composer.setSize(window.innerWidth, window.innerHeight); }
     }
     window.addEventListener('resize', onWindowResize);
 
