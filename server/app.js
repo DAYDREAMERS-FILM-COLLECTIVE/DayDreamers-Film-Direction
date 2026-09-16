@@ -275,9 +275,12 @@ function generateRefCode() {
 const RVU_EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@(blr\.)?rvu\.edu\.in$/i;
 
 app.post('/api/bookings', async (req, res) => {
-    const client = await pool.connect();
+    let client;
     try {
-        const { showingId, bookingMode } = req.body;
+        client = await pool.connect();
+
+        const showingId = req.body.showingId || req.body.showing_id;
+        const bookingMode = req.body.bookingMode || 'individual';
 
         // Normalise attendees array from either group payload or single payload
         let attendees = [];
@@ -528,11 +531,11 @@ app.post('/api/bookings', async (req, res) => {
         });
 
     } catch (err) {
-        await client.query('ROLLBACK');
+        if (client) await client.query('ROLLBACK');
         console.error('Error processing booking:', err);
         res.status(500).json({ error: 'Failed to complete booking: ' + err.message });
     } finally {
-        client.release();
+        if (client) client.release();
     }
 });
 
