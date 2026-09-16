@@ -514,6 +514,45 @@ section.block{padding:40px clamp(20px,6vw,80px);max-width:1300px;margin:0 auto}
 .dot{width:15px;height:15px;border-radius:0;border:1px solid rgba(109,59,86,.5)}
 .dot.av{background:#2a1426}.dot.sel{background:var(--gold);box-shadow:0 0 8px var(--gold)}.dot.occ{background:#150913;border-color:#2d1525}
 
+/* Lightweight 2D CSS Seat Grid Fallback (GPU Crash & Wayland Compositor Safeguard) */
+.seatmap-2d-mode .screen-wrap,
+.seatmap-2d-mode .seatmap-persp {
+  perspective: none !important;
+}
+.seatmap-2d-mode .screen {
+  transform: none !important;
+  box-shadow: 0 0 20px rgba(200,155,178,.15) !important;
+}
+.seatmap-2d-mode .seatmap {
+  transform: none !important;
+  transition: none !important;
+}
+.seatmap-2d-mode .seat {
+  transform: none !important;
+  filter: none !important;
+  transition: opacity .15s ease !important;
+}
+.seatmap-2d-mode .seat:not(.occupied):hover {
+  transform: none !important;
+  --ty: 0px !important;
+  --s: 1 !important;
+}
+.seatmap-2d-mode .seat.selected {
+  transform: none !important;
+  filter: none !important;
+  box-shadow: 0 0 8px var(--gold);
+}
+.seatmap-2d-mode #voxelStage {
+  display: none !important;
+}
+.seatmap-2d-mode #voxelFallback {
+  opacity: 1 !important;
+  display: block !important;
+}
+.seatmap-2d-mode #menuGlass {
+  display: none !important;
+}
+
 /* summary */
 .summary{
   position:sticky;top:96px;background:var(--panel);
@@ -1474,6 +1513,45 @@ body.c-seat #cursor-frame{width:30px;height:30px}
 (function(){
 'use strict';
 
+function isWebGLAvailable(){
+  if(window.__DISABLE_WEBGL) return false;
+  try {
+    var params = new URLSearchParams(window.location.search);
+    if(params.get('nowebgl') === '1' || params.get('fallback') === '2d') return false;
+  } catch(e){}
+  try {
+    var canvas = document.createElement('canvas');
+    var gl = canvas.getContext('webgl', { powerPreference: 'low-power' }) || canvas.getContext('experimental-webgl');
+    return !!(window.WebGLRenderingContext && gl);
+  } catch(e){
+    return false;
+  }
+}
+window.isWebGLAvailable = isWebGLAvailable;
+
+var is2DFallbackActive = !isWebGLAvailable();
+window.is2DFallbackActive = is2DFallbackActive;
+
+function enable2DFallback(){
+  window.is2DFallbackActive = true;
+  is2DFallbackActive = true;
+  document.documentElement.classList.add('seatmap-2d-mode');
+  var stage = document.getElementById('voxelStage');
+  var fb = document.getElementById('voxelFallback');
+  if(stage) stage.style.display = 'none';
+  if(fb) fb.style.opacity = '1';
+  var menuGlass = document.getElementById('menuGlass');
+  if(menuGlass) menuGlass.style.display = 'none';
+  if(typeof arcSeats === 'function'){
+    arcSeats();
+  }
+}
+window.enable2DFallback = enable2DFallback;
+
+if(is2DFallbackActive){
+  enable2DFallback();
+}
+
 var LOCAL_MOVIES = [
   {
     id: '3d0536d8-c83d-4677-99c1-aa42c77805a2',
@@ -1648,54 +1726,33 @@ function getScrollTop(){
 
 function setScrollTop(y){
   window.scrollTo(0, y);
-  if(document.documentElement && document.documentElement.scrollTop !== undefined){
-    document.documentElement.scrollTop = y;
-  }
-  if(document.body && document.body.scrollTop !== undefined){
-    document.body.scrollTop = y;
-  }
 }
 
-/* Slow smooth scroll to #booking to showcase 3D voxel animation (Requirement 2) */
-function slowScrollToBooking(duration){
-  var d = typeof duration === 'number' ? duration : 2200;
+/* Sanitized lightweight smooth scroll to #booking */
+var isScrollingToBooking = false;
+window.isScrollingToBooking = false;
+var scrollFinishTimer = null;
+
+function slowScrollToBooking(){
   var target = document.getElementById('booking');
   if(!target) return;
-  var startY = getScrollTop();
-  var targetY = target.getBoundingClientRect().top + startY - 30;
-  var diff = targetY - startY;
-  if(Math.abs(diff) < 10) return;
-
-  if(window.gsap){
-    var obj = { y: startY };
-    gsap.to(obj, {
-      y: targetY,
-      duration: d / 1000,
-      ease: 'power2.inOut',
-      onUpdate: function(){
-        setScrollTop(obj.y);
-      }
-    });
-  } else {
-    var start = null;
-    function anim(ts){
-      if(!start) start = ts;
-      var elapsed = ts - start;
-      var progress = Math.min(elapsed / d, 1);
-      var ease = progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-      setScrollTop(startY + diff * ease);
-      if(progress < 1){
-        requestAnimationFrame(anim);
-      }
+  window.isScrollingToBooking = true;
+  isScrollingToBooking = true;
+  clearTimeout(scrollFinishTimer);
+  target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
+  scrollFinishTimer = setTimeout(function(){
+    window.isScrollingToBooking = false;
+    isScrollingToBooking = false;
+    if(typeof window.__checkVoxelVisibility === 'function'){
+      window.__checkVoxelVisibility();
     }
-    requestAnimationFrame(anim);
-  }
+  }, 700);
 }
 
 function scrollToHash(hash){
   if(!hash){ return; }
   if(hash === '#booking'){
-    slowScrollToBooking(2200);
+    slowScrollToBooking();
     return;
   }
   try {
@@ -1711,12 +1768,12 @@ function initLandingScroll(){
   if(!window.location.hash || window.location.hash === '#movies'){
     var moviesEl = document.getElementById('movies');
     if(moviesEl){
-      var moviesTop = moviesEl.getBoundingClientRect().top + getScrollTop();
-      setScrollTop(moviesTop);
-      try { moviesEl.scrollIntoView({ behavior: 'auto' }); } catch(e){}
+      try { moviesEl.scrollIntoView({ behavior: 'auto' }); } catch(e){
+        setScrollTop(moviesEl.getBoundingClientRect().top + getScrollTop());
+      }
     }
   } else if(window.location.hash === '#booking'){
-    setTimeout(function(){ slowScrollToBooking(2200); }, 250);
+    setTimeout(function(){ slowScrollToBooking(); }, 150);
   } else {
     scrollToHash(window.location.hash);
   }
@@ -1863,7 +1920,7 @@ function finishToggle(){
     if(target){
       try { history.pushState(null, '', pendingHash); } catch(e){}
       if(pendingHash === '#booking'){
-        slowScrollToBooking(2200);
+        slowScrollToBooking();
       } else {
         target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
       }
@@ -1921,7 +1978,7 @@ function handleNavClick(e){
       toggleMenu();
     } else {
       if(parts.hash === '#booking'){
-        slowScrollToBooking(2200);
+        slowScrollToBooking();
       } else {
         var target = document.querySelector(parts.hash);
         if(target){ target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' }); }
@@ -2056,7 +2113,7 @@ function selectMovie(id, scroll){
     updateShowingLabels();
     rebuildSeatsAnimated();
     if(scroll){
-      slowScrollToBooking(2200);
+      slowScrollToBooking();
     }
   });
 }
@@ -2151,7 +2208,7 @@ function rebuildSeatsAnimated(){
     occupiedSeatsSet = occupiedSet;
     buildSeatmap();
     refreshSummary();
-    if(reduceMotion || !hasGsap){ return; }
+    if(reduceMotion || !hasGsap || window.is2DFallbackActive){ return; }
     var rows = document.querySelectorAll('#seatmap .rowline');
     gsap.fromTo('#seatmap', { opacity: 0.35 }, { opacity: 1, duration: 0.35, ease: 'power2.out', clearProps: 'opacity' });
     gsap.fromTo(rows, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.35, stagger: 0.04, ease: 'power3.out', clearProps: 'opacity,transform' });
@@ -2218,12 +2275,18 @@ function buildSeatmap(){
 
 function arcSeats(){
   var lines = seatmap.querySelectorAll('.rowline');
+  var is2D = window.is2DFallbackActive || document.documentElement.classList.contains('seatmap-2d-mode');
   Array.prototype.forEach.call(lines, function(line){
     var seats = line.querySelectorAll('.seat');
     Array.prototype.forEach.call(seats, function(s, i){
-      var off = i - (SEATS_PER_ROW - 1) / 2;
-      s.style.setProperty('--tz', (-Math.abs(off) * 3.2) + 'px');
-      s.style.setProperty('--ry', (off * 1.6) + 'deg');
+      if(is2D){
+        s.style.removeProperty('--tz');
+        s.style.removeProperty('--ry');
+      } else {
+        var off = i - (SEATS_PER_ROW - 1) / 2;
+        s.style.setProperty('--tz', (-Math.abs(off) * 3.2) + 'px');
+        s.style.setProperty('--ry', (off * 1.6) + 'deg');
+      }
     });
   });
 }
@@ -2281,11 +2344,11 @@ function setupBookingModes(){
     };
   }
 
-  // Intercept any Reserve Seats link with href="#booking" for slow smooth scrolling
+  // Intercept any Reserve Seats link with href="#booking" for smooth scrolling
   Array.prototype.forEach.call(document.querySelectorAll('a[href="#booking"]'), function(btn){
     btn.onclick = function(e){
       e.preventDefault();
-      slowScrollToBooking(2200);
+      slowScrollToBooking();
     };
   });
 }
@@ -2526,7 +2589,14 @@ function bindModalOnce(){
         body: JSON.stringify(payload)
       })
       .then(function(res){
-        return res.json().then(function(data){ return { ok: res.ok, status: res.status, data: data }; });
+        return res.text().then(function(text) {
+          try {
+            var data = JSON.parse(text);
+            return { ok: res.ok, status: res.status, data: data };
+          } catch(e) {
+            return { ok: false, status: res.status, data: { error: 'Server error: ' + text.substring(0, 100) } };
+          }
+        });
       })
       .then(function(result){
         submitBtn.disabled = false;
@@ -2549,7 +2619,7 @@ function bindModalOnce(){
       .catch(function(err){
         submitBtn.disabled = false;
         submitBtn.textContent = 'Confirm & Generate Ticket Pass';
-        errBox.textContent = 'Network error. Please check your connection: ' + err.message;
+        errBox.textContent = 'Network or Request error: ' + err.message;
         errBox.style.display = 'block';
       });
     });
@@ -2724,6 +2794,7 @@ import * as THREE from 'https://esm.sh/three@0.160.0';
   if(window.matchMedia('(pointer: coarse)').matches){ return; }
   if(window.matchMedia('(max-width: 768px)').matches){ return; }
   if(!window.WebGLRenderingContext){ return; }
+  if(window.is2DFallbackActive || (typeof window.isWebGLAvailable === 'function' && !window.isWebGLAvailable())){ return; }
 
   var stage = document.getElementById('voxelStage');
   var fallbackImg = document.getElementById('voxelFallback');
@@ -2808,11 +2879,11 @@ import * as THREE from 'https://esm.sh/three@0.160.0';
     booted = true;
 
     var aspect = (posterImg.naturalWidth || posterImg.width) / (posterImg.naturalHeight || posterImg.height);
-    var nRow = 220;
+    var nRow = 130;
     var nCol = Math.round(nRow * aspect);
     var total = nRow * nCol;
-    if(total > 65000){
-      var k = Math.sqrt(65000 / total);
+    if(total > 20000){
+      var k = Math.sqrt(20000 / total);
       nRow = Math.round(nRow * k);
       nCol = Math.round(nCol * k);
     }
@@ -2820,12 +2891,27 @@ import * as THREE from 'https://esm.sh/three@0.160.0';
     var instanceSize = 1;
 
     try {
-      renderer = new THREE.WebGLRenderer({ canvas: stage, alpha: true, antialias: false });
+      renderer = new THREE.WebGLRenderer({ canvas: stage, alpha: true, antialias: false, powerPreference: 'low-power' });
     } catch(err){
       booted = false;
+      if(typeof window.enable2DFallback === 'function'){ window.enable2DFallback(); }
       return;
     }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1));
+    renderer.shadowMap.enabled = false;
+
+    // Gracefully handle GPU driver reset / context loss on Wayland/Hyprland
+    stage.addEventListener('webglcontextlost', function(e){
+      e.preventDefault();
+      running = false;
+      booted = false;
+      setStageVisible(false);
+      console.warn('voxelStage: WebGL context lost. Safely halting rendering and enabling 2D fallback.');
+      if(typeof window.enable2DFallback === 'function'){
+        window.enable2DFallback();
+      }
+    }, false);
+
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, 2, 0.5, 1000);
     camera.position.set(0, 0, initCameraZ);
@@ -2871,6 +2957,11 @@ import * as THREE from 'https://esm.sh/three@0.160.0';
     }
     if(mesh.instanceColor){ mesh.instanceColor.needsUpdate = true; }
 
+    function renderFrame(){
+      if(!running || !renderer || !scene || !camera || window.isScrollingToBooking){ return; }
+      renderer.render(scene, camera);
+    }
+
     function sizeStage(){
       var parent = stage.parentElement;
       var w = parent ? parent.clientWidth : (stage.clientWidth || window.innerWidth);
@@ -2878,31 +2969,34 @@ import * as THREE from 'https://esm.sh/three@0.160.0';
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
+      renderFrame();
     }
     sizeStage();
     window.addEventListener('resize', sizeStage);
 
     var ticking = false;
+    var lastP = -1;
     function applyScroll(){
       ticking = false;
+      if(!running || !renderer || !scene || !camera || window.isScrollingToBooking){ return; }
       var s = document.getElementById('showcase');
       if(!s){ return; }
       var r = s.getBoundingClientRect();
+      if(r.bottom <= 0 || r.top >= window.innerHeight){ return; }
       var totalH = r.height - window.innerHeight;
       var p = totalH > 0 ? (0 - r.top) / totalH : 0;
       if(p < 0){ p = 0; }
       if(p > 1){ p = 1; }
+      if(Math.abs(p - lastP) < 0.001){ return; }
+      lastP = p;
       camera.position.z = initCameraZ + (targetCameraZ - initCameraZ) * p;
+      renderFrame();
     }
     window.addEventListener('scroll', function(){
       if(!ticking){ ticking = true; requestAnimationFrame(applyScroll); }
     }, { passive: true });
     applyScroll();
 
-    renderer.setAnimationLoop(function(){
-      if(!running){ return; }
-      renderer.render(scene, camera);
-    });
     watchSection();
     setStageVisible(true);
   }
@@ -2922,6 +3016,7 @@ import * as THREE from 'https://esm.sh/three@0.160.0';
         var vis = entries[0].isIntersecting;
         running = vis;
         setStageVisible(vis);
+        if(vis){ renderFrame(); }
       }, { threshold: 0 });
       voxelObserver.observe(s);
     }
@@ -2929,7 +3024,9 @@ import * as THREE from 'https://esm.sh/three@0.160.0';
     var visNow = r.bottom > 0 && r.top < window.innerHeight;
     running = visNow;
     setStageVisible(visNow);
+    if(visNow){ renderFrame(); }
   }
+  window.__checkVoxelVisibility = watchSection;
 
   window.__voxelVisible = function(on){
     if(on){ maybeBoot(); watchSection(); }
@@ -2954,6 +3051,7 @@ import { OrbitControls } from 'https://esm.sh/three@0.136.0/examples/jsm/control
   if(!canvas){ return; }
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){ return; }
   if(!window.WebGLRenderingContext){ return; }
+  if(window.is2DFallbackActive || (typeof window.isWebGLAvailable === 'function' && !window.isWebGLAvailable())){ return; }
 
   var renderer = null;
   var running = false;
@@ -2987,14 +3085,23 @@ import { OrbitControls } from 'https://esm.sh/three@0.136.0/examples/jsm/control
 
   function init(){
     try {
-      renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+      renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, powerPreference: 'low-power' });
     } catch(err){
       renderer = null;
       return;
     }
     renderer.setClearColor(0x11151c);
-    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1));
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = false;
+
+    // Gracefully handle GPU driver reset / context loss on Wayland/Hyprland
+    canvas.addEventListener('webglcontextlost', function(e){
+      e.preventDefault();
+      running = false;
+      if(apiStop) apiStop();
+      console.warn('menuGlass: WebGL context lost. Halting rendering safely.');
+    }, false);
 
     var scene = new THREE.Scene();
     var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -3049,12 +3156,7 @@ import { OrbitControls } from 'https://esm.sh/three@0.136.0/examples/jsm/control
     });
 
     var renderScene = new RenderPass(scene, camera);
-    var afterimagePass = new AfterimagePass();
-    afterimagePass.uniforms['damp'].value = 0.94;
-    var bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-    bloomPass.threshold = 0.1;
-    bloomPass.strength = 1.75;
-    bloomPass.radius = 1;
+    // Expensive AfterimagePass and UnrealBloomPass disabled to prevent GPU VRAM bloat and compositor crashes
 
     var displacementShader = {
       uniforms: {
@@ -3101,8 +3203,6 @@ import { OrbitControls } from 'https://esm.sh/three@0.136.0/examples/jsm/control
 
     var composer = new EffectComposer(renderer);
     composer.addPass(renderScene);
-    composer.addPass(afterimagePass);
-    composer.addPass(bloomPass);
     composer.addPass(displacementPass);
     var gradePass = new ShaderPass({
       uniforms: {
@@ -3249,6 +3349,9 @@ import { OrbitControls } from 'https://esm.sh/three@0.136.0/examples/jsm/control
 
   // Pre-warm WebGL menu canvas, shaders, and geometry in idle time
   function warmMenuGlass() {
+    if (window.is2DFallbackActive || (typeof window.isWebGLAvailable === 'function' && !window.isWebGLAvailable())) {
+      return;
+    }
     if (!apiStart && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       try { init(); } catch(e){}
     }
