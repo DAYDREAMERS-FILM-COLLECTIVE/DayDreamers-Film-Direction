@@ -12,6 +12,8 @@ import {
 } from './state.js';
 import { fetchSeatStatus } from './api.js';
 
+let seatmapWindowEventsBound = false;
+
 export const ROWS = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 export const SEATS_PER_ROW = 10;
 
@@ -278,30 +280,33 @@ export function initSeatmap() {
   }
 
   // 2. Listen to state changes
-  window.addEventListener('movie:selected', () => {
-    rebuildSeatsAnimated();
-  });
+  if (!seatmapWindowEventsBound) {
+    window.addEventListener('movie:selected', () => {
+      rebuildSeatsAnimated();
+    });
 
-  window.addEventListener('showing:changed', () => {
-    rebuildSeatsAnimated();
-  });
+    window.addEventListener('showing:changed', () => {
+      rebuildSeatsAnimated();
+    });
 
-  window.addEventListener('seats:updated', () => {
-    refreshSummary();
-  });
+    window.addEventListener('seats:updated', () => {
+      refreshSummary();
+    });
 
-  window.addEventListener('mode:changed', () => {
-    buildSeatmap();
-    refreshSummary();
-  });
+    window.addEventListener('mode:changed', () => {
+      buildSeatmap();
+      refreshSummary();
+    });
 
-  window.addEventListener('fallback:toggled', (e) => {
-    if (e.detail?.is2DFallback) {
-      enable2DFallback();
-    } else {
-      arcSeats();
-    }
-  });
+    window.addEventListener('fallback:toggled', (e) => {
+      if (e.detail?.is2DFallback) {
+        enable2DFallback();
+      } else {
+        arcSeats();
+      }
+    });
+    seatmapWindowEventsBound = true;
+  }
 
   // Delegate seat clicks
   const seatmap = document.getElementById('seatmap');

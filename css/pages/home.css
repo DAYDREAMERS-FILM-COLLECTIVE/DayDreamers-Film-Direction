@@ -40,7 +40,7 @@
             .site-header {
                 height: 78px;
                 position: fixed;
-                z-index: 1000;
+                z-index: 1001;
                 top: 0;
                 left: 0;
                 right: 0;
@@ -83,33 +83,10 @@
                 border-radius: 50%;
                 display: inline-block;
             }
-            .burger-toggle {
-                position: fixed;
-                top: 2rem;
-                right: 2.5rem;
-                z-index: 1000;
-                background: transparent !important;
-                border: none;
-                cursor: pointer;
-                display: flex !important;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                width: 44px;
-                height: 44px;
-            }
+            /* Burger toggle is managed exclusively by css/burger-menu/burger-menu.css */
             .burger-toggle:focus-visible {
                 outline: 2px solid #fff;
                 outline-offset: 4px;
-            }
-            .burger-toggle span,
-            .burger-icon .bar {
-                width: 24px;
-                height: 2px;
-                background: #ffffff !important;
-                display: block;
-                margin: 3px 0;
-                border-radius: 1px;
             }
             .sweep-wall {
                 position: fixed;
