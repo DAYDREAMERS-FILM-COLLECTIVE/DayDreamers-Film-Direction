@@ -1,134 +1,180 @@
 /* ==========================================================================
-   Director Viewfinder Custom Cursor
+   Star Sprinkle Custom Cursor & Dynamic Particle System
    ========================================================================== */
 
-#cursor-frame,
-#cursor-label {
+#star-cursor {
   position: fixed;
-  top: 0;
-  left: 0;
+  left: -100px;
+  top: -100px;
   pointer-events: none;
-  z-index: 3000;
-}
-
-#cursor-frame {
-  width: 38px;
-  height: 38px;
-}
-
-#cursor-frame .c {
-  position: absolute;
-  width: 11px;
-  height: 11px;
-  border: 0 solid rgba(243, 234, 216, 0.95);
-  transition: all 0.12s;
-}
-
-#cursor-frame .tl {
-  top: 0;
-  left: 0;
-  border-top-width: 1.6px;
-  border-left-width: 1.6px;
-}
-
-#cursor-frame .tr {
-  top: 0;
-  right: 0;
-  border-top-width: 1.6px;
-  border-right-width: 1.6px;
-}
-
-#cursor-frame .bl {
-  bottom: 0;
-  left: 0;
-  border-bottom-width: 1.6px;
-  border-left-width: 1.6px;
-}
-
-#cursor-frame .br {
-  bottom: 0;
-  right: 0;
-  border-bottom-width: 1.6px;
-  border-right-width: 1.6px;
-}
-
-#cursor-dot {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--gold, #C89BB2);
-  box-shadow: 0 0 10px var(--gold, #C89BB2);
+  z-index: 100001;
+  font-size: 26px;
+  line-height: 1;
   transform: translate(-50%, -50%);
-}
-
-#cursor-cross-v {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 1px;
-  height: 7px;
-  background: rgba(243, 234, 216, 0.5);
-  transform: translate(-50%, -50%);
-}
-
-#cursor-cross-h {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 7px;
-  height: 1px;
-  background: rgba(243, 234, 216, 0.5);
-  transform: translate(-50%, -50%);
-}
-
-#cursor-label {
-  font-size: 10px;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
+  transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.2s ease, opacity 0.2s ease;
+  filter: drop-shadow(0 0 6px rgba(200, 155, 178, 0.7)) drop-shadow(0 0 12px rgba(255, 215, 0, 0.5));
+  user-select: none;
+  will-change: transform, left, top;
   color: var(--gold, #C89BB2);
-  font-weight: 600;
-  opacity: 0;
-  transition: opacity 0.12s;
-  white-space: nowrap;
 }
 
-body.c-hover #cursor-frame {
-  width: 58px;
-  height: 58px;
+/* Interactive Hover State (Links, Buttons, Date Cards, Seats) */
+body.c-hover #star-cursor,
+#star-cursor.c-hover {
+  transform: translate(-50%, -50%) scale(1.45) rotate(15deg);
+  filter: drop-shadow(0 0 10px rgba(200, 155, 178, 0.95)) drop-shadow(0 0 22px rgba(255, 215, 0, 0.85));
+  color: #ffffff;
 }
 
-body.c-hover #cursor-frame .c {
-  border-color: var(--gold, #C89BB2);
-  width: 15px;
-  height: 15px;
+/* Seat Specific Hover */
+body.c-seat #star-cursor,
+#star-cursor.c-seat {
+  transform: translate(-50%, -50%) scale(1.35) rotate(-15deg);
+  filter: drop-shadow(0 0 12px rgba(200, 155, 178, 1)) drop-shadow(0 0 24px rgba(200, 70, 104, 0.8));
+  color: var(--gold, #C89BB2);
 }
 
-body.c-label #cursor-label {
-  opacity: 1;
+/* Click Burst / Active State */
+#star-cursor.active {
+  transform: translate(-50%, -50%) scale(0.85);
 }
 
-body.c-seat #cursor-frame {
-  width: 30px;
-  height: 30px;
+/* Sparkling Particle Trail & Radial Bursts */
+.star-particle,
+.sprinkle {
+  position: fixed;
+  pointer-events: none;
+  z-index: 100000;
+  font-size: 10px;
+  line-height: 1;
+  transform: translate(-50%, -50%);
+  opacity: 0.95;
+  user-select: none;
+  will-change: transform, opacity;
+  animation: starParticleFade 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
-@media (hover: none), (max-width: 768px) {
+@keyframes starParticleFade {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 50px))) scale(0.25) rotate(var(--rot, 180deg));
+  }
+}
+
+/* Desktop Viewport Custom Cursor Enforcement */
+html,
+body {
+  cursor: none;
+}
+
+a,
+button,
+input,
+select,
+textarea,
+[role="button"],
+.seat,
+.book-bar,
+.film-card,
+.text-link,
+.round-link,
+.movie,
+.date-card,
+.showcase-cta,
+.menu-action {
+  cursor: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html,
+  body {
+    cursor: none !important;
+  }
+
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  [role="button"],
+  .seat,
+  .book-bar,
+  .film-card,
+  .text-link,
+  .round-link,
+  .movie,
+  .date-card,
+  .showcase-cta,
+  .menu-action {
+    cursor: none !important;
+  }
+}
+
+/* Touch Device Fallbacks */
+@media (hover: none), (pointer: coarse), (max-width: 768px) {
+  html,
+  body,
+  * {
+    cursor: auto !important;
+  }
+
+  a,
+  button,
+  [role="button"],
+  .seat {
+    cursor: pointer !important;
+  }
+
+  #star-cursor,
+  .star-particle,
+  .sprinkle,
   #cursor-frame,
-  #cursor-label,
-  #tip {
+  #cursor-label {
     display: none !important;
   }
 }
 
-@media (hover: hover) and (min-width: 769px) {
-  body:not(.seatmap-2d-mode),
-  body:not(.seatmap-2d-mode) a,
-  body:not(.seatmap-2d-mode) button,
-  body:not(.seatmap-2d-mode) .seat,
-  body:not(.seatmap-2d-mode) .book-bar {
-    cursor: none;
-  }
+/* Suppress Lingering Viewfinder Styles */
+#cursor-frame,
+.cursor-frame,
+#cursor-label,
+.cursor-label {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Modal & Form Native Cursor Restoration */
+body.modal-open #star-cursor,
+body.modal-open .star-particle,
+body.modal-open .sprinkle,
+body.modal-open #cursor-frame,
+body.modal-open #cursor-label {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+body.modal-open,
+body.modal-open * {
+  cursor: auto !important;
+}
+
+body.modal-open input,
+body.modal-open input[type="text"],
+body.modal-open input[type="email"],
+body.modal-open textarea {
+  cursor: text !important;
+}
+
+body.modal-open button,
+body.modal-open .modal button,
+body.modal-open .btn,
+body.modal-open .t-close,
+body.modal-open [data-action="close-modal"] {
+  cursor: pointer !important;
 }

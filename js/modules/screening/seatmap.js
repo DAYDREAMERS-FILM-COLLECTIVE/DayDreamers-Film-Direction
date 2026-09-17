@@ -39,8 +39,6 @@ export function enable2DFallback() {
   if (stage) stage.style.display = 'none';
   if (fb) fb.style.opacity = '1';
 
-  const menuGlass = document.getElementById('menuGlass');
-  if (menuGlass) menuGlass.style.display = 'none';
 
   const wall = document.getElementById('sweepWall');
   if (wall) wall.style.display = 'none';

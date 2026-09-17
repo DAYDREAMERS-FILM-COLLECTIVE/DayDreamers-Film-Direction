@@ -84,60 +84,32 @@
                 display: inline-block;
             }
             .burger-toggle {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: none;
-                border: 0;
-                padding: 12px;
-                position: relative;
+                position: fixed;
+                top: 2rem;
+                right: 2.5rem;
+                z-index: 1000;
+                background: transparent !important;
+                border: none;
                 cursor: pointer;
-            }
-            .burger-toggle::after {
-                content: 'Toggle Button';
-                position: absolute;
-                top: 100%;
-                right: 0;
-                font: 500 10px var(--mono);
-                letter-spacing: 0.25em;
-                text-transform: uppercase;
-                color: #fff;
-                white-space: nowrap;
-                border: 1px solid rgba(255, 255, 255, 0.35);
-                padding: 6px 12px;
-                background: rgba(17, 16, 15, 0.9);
-                opacity: 0;
-                transform: translateY(4px);
-                transition:
-                    opacity 0.25s,
-                    transform 0.25s;
-                pointer-events: none;
-            }
-            .burger-toggle:hover::after,
-            .burger-toggle:focus-visible::after {
-                opacity: 1;
-                transform: translateY(8px);
-            }
-            .burger-toggle.menu-active::after {
-                content: 'Close';
+                display: flex !important;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                width: 44px;
+                height: 44px;
             }
             .burger-toggle:focus-visible {
                 outline: 2px solid #fff;
                 outline-offset: 4px;
             }
-            .burger-icon {
-                width: 30px;
-                height: 18px;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-            }
+            .burger-toggle span,
             .burger-icon .bar {
+                width: 24px;
+                height: 2px;
+                background: #ffffff !important;
                 display: block;
-                width: 100%;
-                height: 1.6px;
-                background: #fff;
-                transform-origin: center;
+                margin: 3px 0;
+                border-radius: 1px;
             }
             .sweep-wall {
                 position: fixed;
@@ -273,13 +245,6 @@
                 z-index: 1;
                 pointer-events: none;
                 visibility: hidden;
-            }
-            #menuGlass {
-                position: absolute;
-                inset: 0;
-                width: 100%;
-                height: 100%;
-                pointer-events: auto;
             }
             .menu-main {
                 position: relative;

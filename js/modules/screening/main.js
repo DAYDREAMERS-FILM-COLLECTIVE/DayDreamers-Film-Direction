@@ -17,33 +17,63 @@ import {
 import { fetchMovies, fetchShowings } from './api.js';
 import { initSeatmap, enable2DFallback, rebuildSeatsAnimated } from './seatmap.js';
 import { initBookingModal, openBookingModal } from './booking-modal.js';
-import { initVoxelShowcase, setVoxelVisible, destroyVoxelShowcase } from '../three/voxel-showcase.js';
-import { initMenuGlass } from '../three/menu-glass.js';
+import { initScrubShowcase } from './scrub-showcase.js';
 
 let revealObserver = null;
-let scrollFinishTimer = null;
+if (typeof window !== 'undefined' && window.location.hash !== '#booking') {
+  window.scrollTo(0, 0);
+}
 
 export function slowScrollToBooking() {
-  const target = document.getElementById('booking');
-  if (!target) return;
+  const bookingEl = document.getElementById('booking');
+  const showcaseEl = document.getElementById('showcase');
+  if (!bookingEl) return;
 
-  window.isScrollingToBooking = true;
-  clearTimeout(scrollFinishTimer);
+  const startY = window.scrollY;
+  const bookingY = bookingEl.getBoundingClientRect().top + window.scrollY;
+  const showcaseY = showcaseEl ? (showcaseEl.getBoundingClientRect().top + window.scrollY) : (startY + (bookingY - startY) * 0.3);
+  const showcaseEndY = showcaseEl ? (showcaseY + showcaseEl.offsetHeight - window.innerHeight) : (startY + (bookingY - startY) * 0.7);
 
-  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
+  const duration = 2400; // 2.4s total
+  const startTime = performance.now();
 
-  scrollFinishTimer = setTimeout(() => {
-    window.isScrollingToBooking = false;
-    if (typeof window.__checkVoxelVisibility === 'function') {
-      window.__checkVoxelVisibility();
+  function step(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+
+    let currentY;
+    if (progress < 0.25) {
+      // Phase 1 (0.0s - 0.6s): Quick ease from hero to showcase
+      const p1 = progress / 0.25;
+      const ease1 = p1 * p1 * (3 - 2 * p1);
+      currentY = startY + (showcaseY - startY) * ease1;
+    } else if (progress < 0.75) {
+      // Phase 2 (0.6s - 1.8s): Steady glide through showcase to watch 3D room assemble
+      const p2 = (progress - 0.25) / 0.50;
+      currentY = showcaseY + (showcaseEndY - showcaseY) * p2;
+    } else {
+      // Phase 3 (1.8s - 2.4s): Smooth ease directly into booking panel
+      const p3 = (progress - 0.75) / 0.25;
+      const ease3 = p3 * p3 * (3 - 2 * p3);
+      currentY = showcaseEndY + (bookingY - showcaseEndY) * ease3;
     }
-  }, 700);
+
+    window.scrollTo(0, currentY);
+
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    } else {
+      if (typeof window.__checkScrubVisibility === 'function') {
+        window.__checkScrubVisibility();
+      }
+    }
+  }
+
+  requestAnimationFrame(step);
 }
 
 if (typeof window !== 'undefined') {
   window.slowScrollToBooking = slowScrollToBooking;
-  window.isScrollingToBooking = false;
 }
 
 export function scrollToHash(hash) {
@@ -62,20 +92,10 @@ export function scrollToHash(hash) {
 }
 
 export function initLandingScroll() {
-  if (!window.location.hash || window.location.hash === '#movies') {
-    const moviesEl = document.getElementById('movies');
-    if (moviesEl) {
-      try {
-        moviesEl.scrollIntoView({ behavior: 'auto' });
-      } catch (e) {
-        const top = moviesEl.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop || 0);
-        window.scrollTo(0, top);
-      }
-    }
-  } else if (window.location.hash === '#booking') {
-    setTimeout(slowScrollToBooking, 150);
+  if (window.location.hash === '#booking') {
+    slowScrollToBooking();
   } else {
-    scrollToHash(window.location.hash);
+    window.scrollTo(0, 0);
   }
 }
 
@@ -299,12 +319,23 @@ function setupBookingModes() {
     });
   }
 
-  // Intercept any link to #booking
-  document.querySelectorAll('a[href="#booking"]').forEach(btn => {
+  // Intercept any click for all "Reserve Seats" buttons
+  const reserveSelector = '[data-action="reserve-seats"], .reserve-seats-btn, #heroReserveBtn, a[href="#booking"]';
+  document.querySelectorAll(reserveSelector).forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
+      e.stopPropagation();
       slowScrollToBooking();
     });
+  });
+
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest(reserveSelector);
+    if (btn) {
+      e.preventDefault();
+      e.stopPropagation();
+      slowScrollToBooking();
+    }
   });
 }
 
@@ -327,12 +358,14 @@ function observeReveals() {
 }
 
 export async function initScreening() {
+  if (window.location.hash !== '#booking') {
+    window.scrollTo(0, 0);
+  }
   setupBookingModes();
   bindDateArrows();
   initSeatmap();
   initBookingModal();
-  initVoxelShowcase();
-  initMenuGlass();
+  initScrubShowcase();
 
   const movies = await fetchMovies();
   setMovies(movies);
@@ -343,8 +376,7 @@ export async function initScreening() {
   }
 
   observeReveals();
-  setVoxelVisible(true);
-  setTimeout(initLandingScroll, 80);
+  initLandingScroll();
 }
 
 export function destroyScreening() {
@@ -352,7 +384,6 @@ export function destroyScreening() {
     try { revealObserver.disconnect(); } catch (e) {}
     revealObserver = null;
   }
-  destroyVoxelShowcase();
 }
 
 if (typeof window !== 'undefined') {

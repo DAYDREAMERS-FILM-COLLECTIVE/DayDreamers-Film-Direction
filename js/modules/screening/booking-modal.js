@@ -9,10 +9,16 @@ import { rebuildSeatsAnimated } from './seatmap.js';
 
 const RVU_EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@(blr\.)?rvu\.edu\.in$/i;
 
+let isSubmitting = false;
+
+function getModal() {
+  return document.getElementById('attendeeModal') || document.getElementById('modal');
+}
+
 export function openBookingModal() {
   const state = getState();
   const active = getActiveShowing();
-  const modal = document.getElementById('modal');
+  const modal = getModal();
 
   if (!state.selectedMovie || !state.pickedSeats.length || !active || !modal) {
     return;
@@ -74,15 +80,28 @@ export function openBookingModal() {
   const errBox = document.getElementById('bkError');
 
   if (formStep) formStep.style.display = 'block';
+  if (form) form.style.display = 'block';
   if (successStep) successStep.style.display = 'none';
-  if (errBox) errBox.style.display = 'none';
+  if (errBox) {
+    errBox.innerHTML = '';
+    errBox.style.display = 'none';
+  }
 
   modal.classList.add('open');
+  document.body.classList.add('modal-open');
 }
 
 export function closeBookingModal() {
-  const modal = document.getElementById('modal');
+  if (isSubmitting) return; // Disallow closing modal while submission is in-flight
+  const modal = getModal();
   if (modal) modal.classList.remove('open');
+  document.body.classList.remove('modal-open');
+  const formStep = document.getElementById('bookingFormStep');
+  const form = document.getElementById('attendeeForm');
+  const successStep = document.getElementById('ticketSuccessStep');
+  if (formStep) formStep.style.display = 'block';
+  if (form) form.style.display = 'block';
+  if (successStep) successStep.style.display = 'none';
 }
 
 export function renderTicketSuccess(bookings) {
@@ -121,32 +140,62 @@ export function renderTicketSuccess(bookings) {
   });
 
   const formStep = document.getElementById('bookingFormStep');
+  const form = document.getElementById('attendeeForm');
   const successStep = document.getElementById('ticketSuccessStep');
   if (formStep) formStep.style.display = 'none';
+  if (form) form.style.display = 'none';
   if (successStep) successStep.style.display = 'block';
+
+  // Explicitly ensure modal stays open and focused on the confirmation step
+  const modal = getModal();
+  if (modal) {
+    modal.classList.add('open');
+    document.body.classList.add('modal-open');
+  }
 }
 
 export async function handleBookingSubmit(e) {
-  if (e) e.preventDefault();
+  if (e) {
+    e.preventDefault();
+    if (e.stopPropagation) e.stopPropagation();
+    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+  }
 
+  if (isSubmitting) return;
+
+  const modal = getModal();
   const state = getState();
   const active = getActiveShowing();
   const form = document.getElementById('attendeeForm');
+  const formStep = document.getElementById('bookingFormStep');
   const showingId = (active && active.id) ? active.id : (form ? form.getAttribute('data-showing-id') : '');
   const submitBtn = document.getElementById('bkSubmitBtn');
   const errBox = document.getElementById('bkError');
 
-  if (errBox) errBox.style.display = 'none';
+  if (errBox) {
+    errBox.innerHTML = '';
+    errBox.style.display = 'none';
+  }
+
+  if (modal) modal.classList.add('open');
 
   if (!showingId) {
     if (errBox) {
-      errBox.textContent = 'Screening showing information could not be resolved. Please re-select your movie or showing time.';
+      errBox.innerHTML = '<strong>Selection Error:</strong> Screening details could not be resolved. Please re-select your movie or showing time.';
       errBox.style.display = 'block';
     }
     return;
   }
 
   const sortedSeats = [...state.pickedSeats].sort();
+  if (!sortedSeats.length) {
+    if (errBox) {
+      errBox.innerHTML = '<strong>Selection Error:</strong> No seats selected. Please choose your seat on the seat map before submitting.';
+      errBox.style.display = 'block';
+    }
+    return;
+  }
+
   const attendees = [];
   const seenUsns = new Set();
   const seenEmails = new Set();
@@ -163,7 +212,7 @@ export async function handleBookingSubmit(e) {
 
     if (!name || !usn || !email) {
       if (errBox) {
-        errBox.textContent = `Please fill out all required fields for Attendee #${i + 1} (Seat ${seat}).`;
+        errBox.innerHTML = `<strong>Incomplete Information:</strong> Please fill out all required fields for Attendee #${i + 1} (Seat ${seat}).`;
         errBox.style.display = 'block';
       }
       return;
@@ -171,7 +220,7 @@ export async function handleBookingSubmit(e) {
 
     if (!RVU_EMAIL_REGEX.test(email)) {
       if (errBox) {
-        errBox.textContent = `Invalid email for Attendee #${i + 1} (${email}). Must be an official @rvu.edu.in or @blr.rvu.edu.in address.`;
+        errBox.innerHTML = `<strong>Invalid Email:</strong> Invalid email for Attendee #${i + 1} (${email}). Must be an official @rvu.edu.in or @blr.rvu.edu.in address.`;
         errBox.style.display = 'block';
       }
       return;
@@ -179,7 +228,7 @@ export async function handleBookingSubmit(e) {
 
     if (seenUsns.has(usn)) {
       if (errBox) {
-        errBox.textContent = `Duplicate USN "${usn}" detected in your group! Every attendee must have a unique student USN.`;
+        errBox.innerHTML = `<strong>Duplicate USN:</strong> Duplicate USN "${usn}" detected in your group. Every attendee must have a unique student USN.`;
         errBox.style.display = 'block';
       }
       return;
@@ -188,7 +237,7 @@ export async function handleBookingSubmit(e) {
 
     if (seenEmails.has(email)) {
       if (errBox) {
-        errBox.textContent = `Duplicate email "${email}" detected in your group! Each attendee must have a distinct email.`;
+        errBox.innerHTML = `<strong>Duplicate Email:</strong> Duplicate email "${email}" detected in your group. Each attendee must have a distinct RVU email address.`;
         errBox.style.display = 'block';
       }
       return;
@@ -197,6 +246,8 @@ export async function handleBookingSubmit(e) {
 
     attendees.push({ name, usn, email, seat });
   }
+
+  isSubmitting = true;
 
   if (submitBtn) {
     submitBtn.disabled = true;
@@ -210,28 +261,52 @@ export async function handleBookingSubmit(e) {
     attendees
   };
 
-  const result = await submitBooking(payload);
+  try {
+    const result = await submitBooking(payload);
 
-  if (submitBtn) {
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Confirm & Generate Ticket Pass';
-  }
+    if (!result.ok) {
+      // Explicit error banner displayed inside the modal
+      if (errBox) {
+        const errorMsg = result.data?.error || result.data?.message || `HTTP ${result.status}: Server was unable to complete your reservation.`;
+        errBox.innerHTML = `<strong>Reservation Error:</strong> ${errorMsg}`;
+        errBox.style.display = 'block';
+        errBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      if (modal) modal.classList.add('open');
+      return;
+    }
 
-  if (!result.ok) {
+    // Success!
+    const bookings = result.data.bookings || (result.data.booking ? [result.data.booking] : []);
+
+    // Hide attendee form step
+    if (form) form.style.display = 'none';
+    if (formStep) formStep.style.display = 'none';
+
+    // Render confirmed passes with download buttons
+    renderTicketSuccess(bookings);
+
+    // Clear selections and refresh live seat status without dismissing the modal
+    clearPickedSeats();
+    rebuildSeatsAnimated();
+
+    // Ensure modal remains open on success
+    if (modal) modal.classList.add('open');
+
+  } catch (err) {
+    console.error('Booking submit error:', err);
     if (errBox) {
-      errBox.textContent = result.data?.error || 'Booking failed. Please try again.';
+      errBox.innerHTML = `<strong>Connection Error:</strong> ${err.message || 'Unable to connect to the booking server. Please try again.'}`;
       errBox.style.display = 'block';
     }
-    return;
+    if (modal) modal.classList.add('open');
+  } finally {
+    isSubmitting = false;
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Confirm & Generate Ticket Pass';
+    }
   }
-
-  // Success!
-  const bookings = result.data.bookings || [result.data.booking];
-  renderTicketSuccess(bookings);
-
-  // Clear selections and refresh live seat status
-  clearPickedSeats();
-  rebuildSeatsAnimated();
 }
 
 export function initBookingModal() {
@@ -240,20 +315,36 @@ export function initBookingModal() {
     form.addEventListener('submit', handleBookingSubmit);
   }
 
-  const closeBtn = document.getElementById('modalClose');
-  if (closeBtn) {
-    closeBtn.addEventListener('click', closeBookingModal);
-  }
+  // Document-level event delegation for closing modal
+  document.addEventListener('click', (e) => {
+    const closeBtn = e.target.closest('#modalClose, .modal-close, [data-action="close-modal"]');
+    if (closeBtn) {
+      e.preventDefault();
+      closeBookingModal();
+    }
+  });
 
   const doneBtn = document.getElementById('donePassBtn');
   if (doneBtn) {
     doneBtn.addEventListener('click', closeBookingModal);
   }
 
-  const modal = document.getElementById('modal');
+  const modal = getModal();
   if (modal) {
     modal.addEventListener('click', (e) => {
-      if (e.target === modal) closeBookingModal();
+      // 1. Prevent dismissal while submit is in-flight
+      if (isSubmitting) return;
+
+      // 2. Prevent dismissal if ticketSuccessStep is displayed
+      const successStep = document.getElementById('ticketSuccessStep');
+      if (successStep && successStep.style.display === 'block') {
+        return;
+      }
+
+      // 3. Only close if backdrop itself was clicked
+      if (e.target === modal) {
+        closeBookingModal();
+      }
     });
   }
 
@@ -261,4 +352,17 @@ export function initBookingModal() {
   if (confirmBtn) {
     confirmBtn.addEventListener('click', openBookingModal);
   }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const modal = getModal();
+      if (modal && modal.classList.contains('open')) {
+        const successStep = document.getElementById('ticketSuccessStep');
+        if (successStep && successStep.style.display === 'block') {
+          return;
+        }
+        closeBookingModal();
+      }
+    }
+  });
 }

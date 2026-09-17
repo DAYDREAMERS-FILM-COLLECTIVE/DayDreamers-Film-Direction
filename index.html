@@ -39,69 +39,56 @@
         <link rel="stylesheet" href="/css/components/footer.css" />
         <link rel="stylesheet" href="/css/pages/home.css" />
         <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-        
+        <script>try{if(sessionStorage.getItem('wallEnter')==='1')document.documentElement.classList.add('wall-entering');}catch(e){}</script>
     </head>
     <body>
         <div class="noise"></div>
-        <div id="star-cursor">&#10022;</div>
+        <div id="star-cursor" class="star-cursor">&#10022;</div>
 
         <header class="site-header">
             <a class="brand" href="#home" aria-label="Daydreamers home"
                 ><span>DAYDREAMERS</span><i></i> STUDENT FILM SOCIETY</a
             >
-            <button
-                class="burger-toggle"
-                id="burgerToggle"
-                aria-label="Toggle Button"
-                aria-expanded="false"
-                aria-controls="menuView"
-            >
-                <span class="burger-icon" aria-hidden="true">
-                    <span class="bar bar-top"></span>
-                    <span class="bar bar-mid"></span>
-                    <span class="bar bar-bottom"></span>
-                </span>
-            </button>
+            <button id="burgerToggle" class="burger-toggle" aria-label="Menu" data-cursor="MENU"><span></span><span></span></button>
         </header>
 
         <div class="sweep-wall" id="sweepWall" aria-hidden="true"></div>
 
-        <nav class="menu-view" id="menuView" aria-label="Site menu">
+        <nav class="menu-view nav-overlay" id="menuView" aria-label="Site menu">
             <div class="menu-ambient" aria-hidden="true">
-                <canvas id="menuGlass"></canvas>
                 <div class="glow-purple"></div>
                 <div class="glow-cyan"></div>
                 <div class="glow-top"></div>
                 <div class="grain"></div>
             </div>
-            <div class="menu-main">
+            <div class="menu-main nav-content">
                 <ul class="menu-list">
                     <li>
-                        <a href="index.html#home" class="menu-item" data-nav
+                        <a href="index.html#home" class="menu-item" data-nav data-cursor="GO"
                             ><span class="item-number">01</span
                             ><span class="item-label">Home</span></a
                         >
                     </li>
                     <li>
-                        <a href="screening.html#movies" class="menu-item" data-nav
+                        <a href="screening.html" class="menu-item" data-nav data-cursor="GO"
                             ><span class="item-number">02</span
                             ><span class="item-label">Screening</span></a
                         >
                     </li>
                     <li>
-                        <a href="index.html#gallery" class="menu-item" data-nav
+                        <a href="index.html#gallery" class="menu-item" data-nav data-cursor="GO"
                             ><span class="item-number">03</span
                             ><span class="item-label">Past Events</span></a
                         >
                     </li>
                     <li>
-                        <a href="index.html#about" class="menu-item" data-nav
+                        <a href="index.html#about" class="menu-item" data-nav data-cursor="GO"
                             ><span class="item-number">04</span
                             ><span class="item-label">About Us</span></a
                         >
                     </li>
                     <li>
-                        <a href="index.html#join" class="menu-item" data-nav
+                        <a href="index.html#join" class="menu-item" data-nav data-cursor="GO"
                             ><span class="item-number">05</span
                             ><span class="item-label">Join Us</span></a
                         >
@@ -110,17 +97,17 @@
             </div>
             <div class="menu-foot">
                 <div class="menu-foot-left">
-                    <div class="menu-venue">
+                    <div class="nav-meta">
                         Daydreamers<br />D Block, 3rd Floor and D Block, 4th Floor<br />Showtimes at
                         21:00
                     </div>
-                    <a class="menu-action" href="screening.html#booking" data-nav
+                    <a class="menu-action" href="screening.html#booking" data-nav data-cursor="GO"
                         ><span>&gt;</span> Reserve Seats</a
                     >
                 </div>
                 <ul class="menu-socials">
-                    <li><a href="mailto:hello@daydreamers.club" data-nav>Email</a></li>
-                    <li><a href="admin.html" data-nav>Admin</a></li>
+                    <li><a href="mailto:hello@daydreamers.club" data-nav data-cursor="OPEN">Email</a></li>
+                    <li><a href="admin.html" data-nav data-cursor="OPEN">Admin</a></li>
                 </ul>
             </div>
         </nav>
@@ -175,7 +162,7 @@
                 <a
                     class="round-link anim-fade anim-fade-delay-2"
                     id="screeningCircle"
-                    href="screening.html#movies"
+                    href="screening.html"
                     aria-label="See what is now screening"
                     >NOW<br />SCREENING<br />&#8599;</a
                 >
@@ -649,7 +636,7 @@
                 <div class="contact-details anim-fade anim-fade-delay-2">
                     <p>D BLOCK, 3RD FLOOR AND D BLOCK, 4TH FLOOR<br />SHOWTIMES: 21:00</p>
                     <a href="mailto:hello@daydreamers.club">HELLO@DAYDREAMERS.CLUB &#8599;</a>
-                    <a href="screening.html#movies">SCREENING / NOW SHOWING &#8599;</a>
+                    <a href="screening.html">SCREENING / NOW SHOWING &#8599;</a>
                 </div>
                 <img loading="lazy" decoding="async"
                     class="contact-img anim-img"
@@ -695,7 +682,7 @@
             <a class="brand" href="#home"><span>DAYDREAMERS</span><i></i> SOCIETY</a>
             <p>THE DAYDREAMERS SOCIETY<br />SCREENED BY MEMBERS, FOR MEMBERS</p>
             <div>
-                <a href="screening.html#movies">SCREENING</a
+                <a href="screening.html">SCREENING</a
                 ><a href="mailto:hello@daydreamers.club">EMAIL</a>
             </div>
             <small>&copy; 2024 DAYDREAMERS. MADE WITH TOO MUCH COFFEE.</small>

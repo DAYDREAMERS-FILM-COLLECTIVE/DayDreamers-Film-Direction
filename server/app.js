@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import QRCode from 'qrcode';
 import { query, pool } from './db.js';
@@ -12,7 +13,7 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 8000;
-const ADMIN_KEY = process.env.ADMIN_ACCESS_KEY || 'fps-door-admin-alpha-2026';
+const ADMIN_KEY = process.env.ADMIN_ACCESS_KEY || process.env.ADMIN_KEY || 'fps-door-admin-alpha-2026';
 
 // Middleware
 app.use(cors());
@@ -22,8 +23,8 @@ app.use((req, res, next) => {
     }
     next();
 });
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Admin auth check helper
 function requireAdmin(req, res, next) {
@@ -288,7 +289,7 @@ app.post('/api/bookings', async (req, res) => {
     try {
         client = await pool.connect();
 
-        const showingId = req.body.showingId || req.body.showing_id;
+        const showingId = (req.body.showingId || req.body.showing_id || '').toString().trim();
         const bookingMode = req.body.bookingMode || 'individual';
 
         // Normalise attendees array from either group payload or single payload

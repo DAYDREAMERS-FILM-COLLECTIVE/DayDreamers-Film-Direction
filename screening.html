@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+<script>history.scrollRestoration = 'manual'; window.scrollTo(0, 0);</script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Daydreamers Box Office, Select Film and Reserve Seats</title>
@@ -33,17 +34,13 @@
 <link rel="stylesheet" href="/css/components/footer.css" />
 <link rel="stylesheet" href="/css/pages/screening.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-
+<script>try{if(sessionStorage.getItem('wallEnter')==='1')document.documentElement.classList.add('wall-entering');}catch(e){}</script>
 </head>
 <body>
 <div id="grain"></div>
 <div id="backdrop" aria-hidden="true"><div class="drift"></div><div class="flare"></div></div>
 <div id="vignette"></div>
-<div id="cursor-frame" aria-hidden="true">
-  <span class="c tl"></span><span class="c tr"></span><span class="c bl"></span><span class="c br"></span>
-  <span id="cursor-cross-v"></span><span id="cursor-cross-h"></span><span id="cursor-dot"></span>
-</div>
-<div id="cursor-label" aria-hidden="true"></div>
+<div id="star-cursor" class="star-cursor" aria-hidden="true">&#10022;</div>
 <div id="tip" aria-hidden="true"><b></b><i></i></div>
 
 <div class="sweep-wall" id="sweepWall"></div>
@@ -55,7 +52,7 @@
       <path d="M24.5 4.5c.5 2.3 1.2 3 3.5 3.5-2.3.5-3 1.2-3.5 3.5-.5-2.3-1.2-3-3.5-3.5 2.3-.5 3-1.2 3.5-3.5Z" fill="var(--gold)"/>
     </svg><span>DAYDREAMERS</span>
   </a>
-  <button class="burger-toggle" id="burgerToggle" aria-label="Toggle Button" aria-expanded="false" aria-controls="menuView" data-cursor="TOGGLE BUTTON">
+  <button class="burger-toggle" id="burgerToggle" aria-label="Menu" aria-expanded="false" aria-controls="menuView" data-cursor="MENU">
     <span class="burger-icon" aria-hidden="true">
       <span class="bar bar-top"></span>
       <span class="bar bar-mid"></span>
@@ -85,7 +82,7 @@
         <div class="hero-meta" id="detMeta">SCI-FI &nbsp;|&nbsp; 2H 14M &nbsp;|&nbsp; 2024 &nbsp;|&nbsp; A</div>
         <p class="hero-blurb" id="detBlurb">A signal lost between stations. A driver follows it past the edge of the mapped city.</p>
         <div class="hero-actions">
-          <a class="btn-solid" href="#booking" data-cursor="SELECT">Reserve Seats</a>
+          <a class="btn-solid reserve-seats-btn" id="heroReserveBtn" href="#booking" data-action="reserve-seats" data-cursor="SELECT">Reserve Seats</a>
           <a class="btn-line" href="#venue" data-cursor="GO">View Venue</a>
         </div>
       </div>
@@ -120,14 +117,14 @@
 
   <section id="showcase" aria-label="Featured presentation">
     <div class="showcase-sticky">
-      <img id="voxelFallback" src="https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1600&q=80" alt="Projector light over rows of cinema seats" />
-      <canvas id="voxelStage" aria-hidden="true"></canvas>
+      <img id="showcasePoster" class="showcase-poster" src="/assets/showcase-poster.jpg" alt="Featured presentation poster" />
+      <canvas id="scrubCanvas" aria-hidden="true"></canvas>
       <div class="showcase-shade"></div>
-      <div class="showcase-copy">
+      <div class="showcase-copy showcase-content featured-presentation">
         <div class="film">Featured Presentation</div>
         <h2>Cinema, <span>One Cube at a Time</span></h2>
         <p>Scroll on and watch scattered light resolve into a single frame.</p>
-        <a class="showcase-cta" href="#booking">Reserve Seats</a>
+        <a class="showcase-cta reserve-seats-btn" href="#booking" data-action="reserve-seats">Reserve Seats</a>
       </div>
     </div>
   </section>
@@ -198,18 +195,17 @@
   </section>
 </main>
 
-<nav class="menu-view" id="menuView" aria-label="Site menu">
+<nav class="menu-view nav-overlay" id="menuView" aria-label="Site menu">
   <div class="menu-ambient" aria-hidden="true">
-    <canvas id="menuGlass"></canvas>
     <div class="glow-indigo"></div>
     <div class="glow-cyan"></div>
     <div class="glow-top"></div>
     <div class="grain"></div>
   </div>
-  <div class="menu-main">
+  <div class="menu-main nav-content">
     <ul class="menu-list">
       <li><a href="index.html#home" class="menu-item" data-nav data-cursor="GO"><span class="item-number">01</span><span class="item-label">Home</span></a></li>
-      <li><a href="screening.html#movies" class="menu-item" data-nav data-cursor="GO"><span class="item-number">02</span><span class="item-label">Screening</span></a></li>
+      <li><a href="screening.html" class="menu-item" data-nav data-cursor="GO"><span class="item-number">02</span><span class="item-label">Screening</span></a></li>
       <li><a href="index.html#gallery" class="menu-item" data-nav data-cursor="GO"><span class="item-number">03</span><span class="item-label">Past Events</span></a></li>
       <li><a href="index.html#about" class="menu-item" data-nav data-cursor="GO"><span class="item-number">04</span><span class="item-label">About Us</span></a></li>
       <li><a href="index.html#join" class="menu-item" data-nav data-cursor="GO"><span class="item-number">05</span><span class="item-label">Join Us</span></a></li>
@@ -232,9 +228,9 @@
   <p>An initiative of The Daydreamers Society. Screened by members, for members.</p>
 </footer>
 
-<div id="modal" role="dialog" aria-modal="true" aria-label="Reservation ticket">
+<div id="modal" class="attendee-modal" role="dialog" aria-modal="true" aria-label="Reservation ticket">
   <div class="ticket" id="ticket">
-    <button class="t-close" id="modalClose" data-cursor="CLOSE">X</button>
+    <button class="t-close modal-close" id="modalClose" data-action="close-modal" data-cursor="CLOSE" aria-label="Close modal">&times;</button>
     
     <!-- Step 1: Attendee Information Form -->
     <div id="bookingFormStep">

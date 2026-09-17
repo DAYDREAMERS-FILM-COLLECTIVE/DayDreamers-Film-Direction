@@ -17,6 +17,30 @@ let camera = null;
 let scrollListener = null;
 let resizeListener = null;
 
+let instancedMesh = null;
+let meshWidth = 0;
+let meshHeight = 0;
+
+let origX = null;
+let origY = null;
+let origZ = null;
+let origS = null;
+let origRotX = null;
+let origRotY = null;
+let origRotZ = null;
+let flatX = null;
+let flatY = null;
+let totalCubes = 0;
+let instanceSize = 0;
+
+let currentP = 0;
+let targetP = 0;
+let lastRenderedP = -1;
+let rafId = null;
+
+const tempMatrix = new THREE.Matrix4();
+const tempEuler = new THREE.Euler();
+const tempScale = new THREE.Vector3();
 const targetCameraZ = 180;
 const initCameraZ = targetCameraZ / 5;
 
@@ -47,22 +71,97 @@ function setStageVisible(on) {
   const fallbackImg = document.getElementById('voxelFallback');
   try {
     if (stage) stage.style.opacity = on ? '1' : '0';
-    if (fallbackImg) fallbackImg.style.opacity = on ? '0' : '1';
+    if (fallbackImg && !on) fallbackImg.style.opacity = '1';
   } catch (e) {}
 }
 
-function framePoint(x, y, targetZ, randRangeZ) {
+function framePoint(x, y, targetZ) {
   const h = 0.5;
   const d = targetCameraZ;
-  const D = -targetZ + d;
+  const D = Math.max(1, -targetZ + d);
   const H = (h / d) * D;
-  const s = H / h;
+  const s = Math.max(0.01, H / h);
   return { s, p: new THREE.Vector3(x * s, y * s, targetZ) };
 }
 
+function updateCubeMatrices(p) {
+  if (!instancedMesh || !origX) return;
+  const isComplete = p >= 0.999;
+  for (let i = 0; i < totalCubes; i++) {
+    const x = isComplete ? flatX[i] : THREE.MathUtils.lerp(origX[i], flatX[i], p);
+    const y = isComplete ? flatY[i] : THREE.MathUtils.lerp(origY[i], flatY[i], p);
+    const z = isComplete ? 0 : THREE.MathUtils.lerp(origZ[i], 0, p);
+    const s = isComplete ? instanceSize : THREE.MathUtils.lerp(origS[i], instanceSize, p);
+
+    if (isComplete || !origRotX) {
+      tempMatrix.makeScale(s, s, s);
+      tempMatrix.setPosition(x, y, z);
+    } else {
+      const rx = THREE.MathUtils.lerp(origRotX[i], 0, p);
+      const ry = THREE.MathUtils.lerp(origRotY[i], 0, p);
+      const rz = THREE.MathUtils.lerp(origRotZ[i], 0, p);
+      tempEuler.set(rx, ry, rz);
+      tempMatrix.makeRotationFromEuler(tempEuler);
+      tempMatrix.scale(tempScale.set(s, s, s));
+      tempMatrix.setPosition(x, y, z);
+    }
+    instancedMesh.setMatrixAt(i, tempMatrix);
+  }
+  instancedMesh.instanceMatrix.needsUpdate = true;
+}
+
 function renderFrame() {
-  if (!running || !renderer || !scene || !camera || window.isScrollingToBooking) return;
+  if (!running || !renderer || !scene || !camera || !instancedMesh) return;
+
+  // Lerp scroll progress p toward target with damping factor 0.08
+  currentP += (targetP - currentP) * 0.08;
+  if (Math.abs(targetP - currentP) < 0.0005) {
+    currentP = targetP;
+  }
+
+  const p = currentP;
+
+  // Dirty check: Only recalculate instance matrices if Math.abs(p - lastRenderedP) >= 0.0005
+  if (Math.abs(p - lastRenderedP) >= 0.0005) {
+    updateCubeMatrices(p);
+    lastRenderedP = p;
+  }
+
+  // Camera follows p
+  camera.position.z = initCameraZ + (targetCameraZ - initCameraZ) * p;
+
+  // Smooth cross-fade when p >= 0.92 to reveal clean cinema frame backing
+  const fallbackImg = document.getElementById('voxelFallback');
+  if (p >= 0.92) {
+    const fade = Math.min(1, (p - 0.92) / 0.08); // 0.0 -> 1.0
+    instancedMesh.material.opacity = Math.max(0, 1.0 - fade);
+    if (fallbackImg) fallbackImg.style.opacity = String(fade);
+  } else {
+    instancedMesh.material.opacity = 1.0;
+    if (fallbackImg) fallbackImg.style.opacity = '0';
+  }
+
   renderer.render(scene, camera);
+}
+
+function startRenderLoop() {
+  if (rafId) return;
+  function tick() {
+    if (!running) {
+      rafId = null;
+      return;
+    }
+    renderFrame();
+    rafId = requestAnimationFrame(tick);
+  }
+  rafId = requestAnimationFrame(tick);
+}
+
+function stopRenderLoop() {
+  if (rafId) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
 }
 
 function sizeStage() {
@@ -72,34 +171,29 @@ function sizeStage() {
   renderer.setSize(w, h);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
+
+  if (instancedMesh && meshWidth > 0 && meshHeight > 0) {
+    const frustumHeight = 2 * 180 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    const frustumWidth = frustumHeight * camera.aspect;
+    const coverScale = Math.max(frustumWidth / meshWidth, frustumHeight / meshHeight);
+    instancedMesh.scale.set(coverScale, coverScale, coverScale);
+  }
+
   renderFrame();
 }
 
-let ticking = false;
-let lastP = -1;
-
 function applyScroll() {
-  ticking = false;
-  if (!running || !renderer || !scene || !camera || window.isScrollingToBooking) return;
-  const s = document.getElementById('showcase');
-  if (!s) return;
-  const r = s.getBoundingClientRect();
-  if (r.bottom <= 0 || r.top >= window.innerHeight) return;
-  const totalH = r.height - window.innerHeight;
-  let p = totalH > 0 ? (0 - r.top) / totalH : 0;
-  if (p < 0) p = 0;
-  if (p > 1) p = 1;
-  if (Math.abs(p - lastP) < 0.001) return;
-  lastP = p;
-  camera.position.z = initCameraZ + (targetCameraZ - initCameraZ) * p;
-  renderFrame();
+  // Calculate scroll progress strictly relative to #showcase
+  const showcaseEl = document.getElementById('showcase');
+  if (!showcaseEl) return;
+  const rect = showcaseEl.getBoundingClientRect();
+  const maxScroll = rect.height - window.innerHeight;
+  const p = maxScroll > 0 ? Math.min(Math.max(-rect.top / maxScroll, 0), 1) : 0;
+  targetP = p;
 }
 
 function onScroll() {
-  if (!ticking) {
-    ticking = true;
-    requestAnimationFrame(applyScroll);
-  }
+  applyScroll();
 }
 
 function watchSection() {
@@ -110,6 +204,7 @@ function watchSection() {
   }
   if (!s || !booted) {
     running = false;
+    stopRenderLoop();
     setStageVisible(false);
     return;
   }
@@ -119,7 +214,12 @@ function watchSection() {
       const vis = entries[0].isIntersecting;
       running = vis;
       setStageVisible(vis);
-      if (vis) renderFrame();
+      if (vis) {
+        applyScroll();
+        startRenderLoop();
+      } else {
+        stopRenderLoop();
+      }
     }, { threshold: 0 });
     voxelObserver.observe(s);
   }
@@ -128,7 +228,12 @@ function watchSection() {
   const visNow = r.bottom > 0 && r.top < window.innerHeight;
   running = visNow;
   setStageVisible(visNow);
-  if (visNow) renderFrame();
+  if (visNow) {
+    applyScroll();
+    startRenderLoop();
+  } else {
+    stopRenderLoop();
+  }
 }
 
 function boot() {
@@ -139,18 +244,34 @@ function boot() {
   booted = true;
 
   const aspect = (posterImg.naturalWidth || posterImg.width) / (posterImg.naturalHeight || posterImg.height);
-  let nRow = 130;
+  let nRow = Math.round(Math.sqrt(16000 / aspect));
   let nCol = Math.round(nRow * aspect);
-  const total = nRow * nCol;
+  let total = nRow * nCol;
 
-  // Safeguard: strictly cap instanced cubes to 20,000 max
-  if (total > 20000) {
-    const k = Math.sqrt(19900 / total);
+  // Safeguard: strictly calibrate to 16,000 cubes max
+  if (total > 16000) {
+    const k = Math.sqrt(16000 / total);
     nRow = Math.floor(nRow * k);
     nCol = Math.floor(nCol * k);
+    total = nRow * nCol;
   }
-  const randRangeZ = 2 * targetCameraZ * 0.99;
-  const instanceSize = 220 / nRow;
+  totalCubes = total;
+
+  const randRangeZ = 320;
+  instanceSize = 220 / nRow;
+  const instanceSpacing = instanceSize; // Exact contiguous pitch: spacing == size (no gaps at p=1.0)
+  meshWidth = nCol * instanceSpacing;
+  meshHeight = nRow * instanceSpacing;
+
+  origX = new Float32Array(total);
+  origY = new Float32Array(total);
+  origZ = new Float32Array(total);
+  origS = new Float32Array(total);
+  origRotX = new Float32Array(total);
+  origRotY = new Float32Array(total);
+  origRotZ = new Float32Array(total);
+  flatX = new Float32Array(total);
+  flatY = new Float32Array(total);
 
   try {
     renderer = new THREE.WebGLRenderer({
@@ -174,6 +295,7 @@ function boot() {
     e.preventDefault();
     running = false;
     booted = false;
+    stopRenderLoop();
     setStageVisible(false);
     console.warn('voxelStage: WebGL context lost. Safely halting rendering and enabling 2D fallback.');
     enable2DFallback();
@@ -183,32 +305,43 @@ function boot() {
   camera = new THREE.PerspectiveCamera(75, 2, 0.5, 1000);
   camera.position.set(0, 0, initCameraZ);
 
-  const geom = new THREE.BoxGeometry(instanceSize, instanceSize, instanceSize);
-  geom.translate(0, 0, -0.5 * instanceSize);
-  const mat = new THREE.MeshBasicMaterial();
-  const mesh = new THREE.InstancedMesh(geom, mat, nCol * nRow);
+  const geom = new THREE.BoxGeometry(1, 1, 1);
+  const mat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 1.0 });
+  instancedMesh = new THREE.InstancedMesh(geom, mat, total);
   const m4 = new THREE.Matrix4();
   const white = new THREE.Color('white');
   let c = 0;
 
   for (let ri = 0; ri < nRow; ri++) {
     for (let ci = 0; ci < nCol; ci++) {
-      const fp = framePoint(
-        (ci - nCol / 2 + 0.5) * instanceSize,
-        (nRow / 2 - ri + 0.5) * instanceSize,
-        THREE.MathUtils.randFloatSpread(randRangeZ) * instanceSize,
-        randRangeZ
-      );
-      m4.makeScale(fp.s, fp.s, fp.s);
-      m4.setPosition(fp.p);
-      mesh.setMatrixAt(c, m4);
-      mesh.setColorAt(c, white);
+      const targetGridX = (ci - (nCol - 1) / 2) * instanceSize;
+      const targetGridY = ((nRow - 1) / 2 - ri) * instanceSize;
+      const rawZ = THREE.MathUtils.randFloatSpread(randRangeZ);
+      const targetZ = Math.min(170, Math.max(-180, rawZ));
+      const fp = framePoint(targetGridX, targetGridY, targetZ);
+
+      flatX[c] = targetGridX;
+      flatY[c] = targetGridY;
+      origX[c] = fp.p.x;
+      origY[c] = fp.p.y;
+      origZ[c] = fp.p.z;
+      origS[c] = fp.s * instanceSize;
+      origRotX[c] = THREE.MathUtils.randFloatSpread(Math.PI * 0.4);
+      origRotY[c] = THREE.MathUtils.randFloatSpread(Math.PI * 0.4);
+      origRotZ[c] = THREE.MathUtils.randFloatSpread(Math.PI * 0.3);
+
+      tempEuler.set(origRotX[c], origRotY[c], origRotZ[c]);
+      m4.makeRotationFromEuler(tempEuler);
+      m4.scale(tempScale.set(origS[c], origS[c], origS[c]));
+      m4.setPosition(fp.p.x, fp.p.y, fp.p.z);
+      instancedMesh.setMatrixAt(c, m4);
+      instancedMesh.setColorAt(c, white);
       c++;
     }
   }
-  mesh.instanceMatrix.needsUpdate = true;
-  if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-  scene.add(mesh);
+  instancedMesh.instanceMatrix.needsUpdate = true;
+  if (instancedMesh.instanceColor) instancedMesh.instanceColor.needsUpdate = true;
+  scene.add(instancedMesh);
 
   const can = document.createElement('canvas');
   can.width = nCol;
@@ -221,9 +354,9 @@ function boot() {
 
   for (let i = 0; i < n; i++) {
     col.setRGB(data[i * 4] / 255, data[i * 4 + 1] / 255, data[i * 4 + 2] / 255, THREE.SRGBColorSpace);
-    mesh.setColorAt(i, col);
+    instancedMesh.setColorAt(i, col);
   }
-  if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+  if (instancedMesh.instanceColor) instancedMesh.instanceColor.needsUpdate = true;
 
   sizeStage();
   resizeListener = sizeStage;
@@ -291,6 +424,7 @@ export function setVoxelVisible(on) {
     watchSection();
   } else {
     running = false;
+    stopRenderLoop();
     setStageVisible(false);
   }
 }
@@ -298,6 +432,7 @@ export function setVoxelVisible(on) {
 export function destroyVoxelShowcase() {
   running = false;
   booted = false;
+  stopRenderLoop();
   if (voxelObserver) {
     try { voxelObserver.disconnect(); } catch (e) {}
     voxelObserver = null;
@@ -314,6 +449,23 @@ export function destroyVoxelShowcase() {
     try { renderer.dispose(); } catch (e) {}
     renderer = null;
   }
+  if (instancedMesh) {
+    try {
+      if (instancedMesh.geometry) instancedMesh.geometry.dispose();
+      if (instancedMesh.material) instancedMesh.material.dispose();
+    } catch (e) {}
+    instancedMesh = null;
+  }
+  origX = null;
+  origY = null;
+  origZ = null;
+  origS = null;
+  origRotX = null;
+  origRotY = null;
+  origRotZ = null;
+  flatX = null;
+  flatY = null;
+  totalCubes = 0;
   scene = null;
   camera = null;
   setStageVisible(false);

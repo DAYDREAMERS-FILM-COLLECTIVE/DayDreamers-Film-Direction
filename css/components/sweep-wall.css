@@ -14,11 +14,56 @@
   border-right: 2px solid rgba(200, 155, 178, 0.4);
   box-shadow: 25px 0 60px rgba(0, 0, 0, 0.85);
   will-change: transform;
-  transform: translateX(-100%);
+  transform: translate3d(-100%, 0, 0);
+  backface-visibility: hidden;
+}
+
+/* Synchronous zero-latency arrival hold */
+.wall-entering .sweep-wall {
+  transform: translate3d(0, 0, 0) !important;
 }
 
 /* 2D Fallback safety override */
 .seatmap-2d-mode .sweep-wall {
   display: none !important;
-  transform: translateX(-100%) !important;
+  transform: translate3d(-100%, 0, 0) !important;
 }
+
+/* Unified Pure Purple Cinematic Drawer Overlay */
+.nav-overlay {
+  background: radial-gradient(circle at 70% 30%, rgba(58, 31, 51, 0.95), rgba(18, 12, 16, 0.98)) !important;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+/* Burger Toggle Reset & Aesthetics */
+.burger-toggle {
+  background: transparent !important;
+  border: none !important;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 44px;
+  height: 44px;
+  cursor: pointer;
+}
+
+.burger-icon {
+  width: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.burger-icon .bar,
+.bar {
+  width: 24px;
+  height: 1.5px;
+  background: #ffffff !important;
+  display: block;
+  margin: 3px 0;
+}
+
