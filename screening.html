@@ -553,239 +553,11 @@ function initLandingScroll(){
   }
 }
 
-/* Prevent browser from restoring top scroll on fresh enter */
-if('scrollRestoration' in history){
-  history.scrollRestoration = 'manual';
-}
+/* Expose for external modules */
+window.slowScrollToBooking = slowScrollToBooking;
 
-/* Start with wall off-screen to the left (Dogstudio standard) */
-if(sweepWall){
-  if(window.is2DFallbackActive || !hasGsap){
-    sweepWall.style.display = 'none';
-  } else {
-    gsap.set(sweepWall, { xPercent: -100 });
-  }
-}
-
-/* Native Dogstudio transition on load */
-(function checkArrivalSweep(){
-  if(window.is2DFallbackActive){
-    if(sweepWall) sweepWall.style.display = 'none';
-    initLandingScroll();
-    return;
-  }
-  try {
-    if(window.sessionStorage.getItem('wallEnter') === '1'){
-      window.sessionStorage.removeItem('wallEnter');
-      if(hasGsap && sweepWall){
-        gsap.set(sweepWall, { xPercent: 0 });
-        gsap.to(sweepWall, {
-          xPercent: 100,
-          duration: 0.45,
-          ease: 'power2.inOut',
-          delay: 0.1,
-          onComplete: function(){
-            gsap.set(sweepWall, { xPercent: -100 });
-            initLandingScroll();
-          }
-        });
-        return;
-      }
-    }
-  } catch(e){}
-  setTimeout(initLandingScroll, 60);
-})();
-
-function setBurger(open){
-  burgerToggle.classList.toggle('menu-active', open);
-  burgerToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-  if(!hasGsap) return;
-  if(open){
-    gsap.to(barTop, { y: 8, rotate: 45, duration: 0.35, ease: 'power2.inOut' });
-    gsap.to(barMid, { opacity: 0, duration: 0.25, ease: 'power2.inOut' });
-    gsap.to(barBottom, { y: -8, rotate: -45, duration: 0.35, ease: 'power2.inOut' });
-  } else {
-    gsap.to([barTop, barBottom], { y: 0, rotate: 0, duration: 0.35, ease: 'power2.inOut' });
-    gsap.to(barMid, { opacity: 1, duration: 0.35, ease: 'power2.inOut' });
-  }
-}
-
-function swapViews(){
-  if(!isOpen){
-    menuView.style.display = 'flex';
-    document.body.classList.add('menu-open');
-    window.dispatchEvent(new Event('menuGlass:start'));
-  } else {
-    menuView.style.display = 'none';
-    document.body.classList.remove('menu-open');
-    window.dispatchEvent(new Event('menuGlass:stop'));
-  }
-}
-
-function animateMenuText(entering){
-  if(!hasGsap) return;
-  var links = menuView.querySelectorAll('.menu-item');
-  var meta = menuView.querySelectorAll('.nav-meta, .menu-action, .menu-socials');
-  if(entering){
-    gsap.fromTo(links,
-      { y: 60, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.7, stagger: 0.05, ease: 'power3.out', delay: 0.1 }
-    );
-    gsap.fromTo(meta,
-      { y: 30, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.6, stagger: 0.04, ease: 'power2.out', delay: 0.3 }
-    );
-  } else {
-    gsap.to(links, { y: -30, opacity: 0, duration: 0.3, stagger: 0.02, ease: 'power2.in' });
-    gsap.to(meta, { y: -15, opacity: 0, duration: 0.25, ease: 'power2.in' });
-  }
-}
-
-/* Continuous Dogstudio Wall Transition on burger menu click (works on all devices / phones) */
-function toggleMenu(){
-  if(isAnimating) return; // Strict lock: will not close before wall finishes
-  isAnimating = true;
-
-  // 1. Morph burger icon
-  setBurger(!isOpen);
-
-  if(!hasGsap || !sweepWall){
-    swapViews();
-    isOpen = !isOpen;
-    isAnimating = false;
-    finishToggle();
-    return;
-  }
-
-  // 2. Continuous Wall Transition with Hold at the Right Wall
-  var tl = gsap.timeline({
-    onComplete: function(){
-      // Reset wall back to the left off-screen for the next transition
-      gsap.set(sweepWall, { xPercent: -100 });
-      isOpen = !isOpen;
-      isAnimating = false;
-      finishToggle();
-    }
-  });
-
-  tl
-    // STEP 1: Wall sweeps in from the left until it reaches the right corner (0% = covers viewport)
-    .fromTo(
-      sweepWall,
-      { xPercent: -100 },
-      { xPercent: 0, duration: 0.55, ease: 'power2.inOut' }
-    )
-
-    // STEP 2: Swap screens behind the wall while screen is 100% blocked
-    .add(function(){
-      swapViews();
-      if(!isOpen){
-        animateMenuText(true);
-      } else {
-        animateMenuText(false);
-      }
-    })
-
-    // STEP 3: Hold firmly at the right wall
-    .to({}, { duration: 0.35 })
-
-    // STEP 4: Only after reaching the right wall and waiting, it sweeps off to the right (100%)
-    .to(sweepWall, {
-      xPercent: 100,
-      duration: 0.45,
-      ease: 'power2.inOut'
-    });
-}
-
-function finishToggle(){
-  if(pendingHash){
-    var target = document.querySelector(pendingHash);
-    if(target){
-      try { history.pushState(null, '', pendingHash); } catch(e){}
-      if(pendingHash === '#booking'){
-        slowScrollToBooking();
-      } else {
-        target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
-      }
-    }
-    pendingHash = null;
-  }
-}
-
-burgerToggle.addEventListener('click', toggleMenu);
-
-function splitNav(href){
-  var hashIdx = href.indexOf('#');
-  if(hashIdx < 0){ return { page: href, hash: '' }; }
-  return { page: href.slice(0, hashIdx), hash: href.slice(hashIdx) };
-}
-function currentPage(){
-  var p = window.location.pathname.split('/').pop() || 'index.html';
-  return p;
-}
-function isModifiedClick(e){
-  return e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0;
-}
-
-function leavePage(url, newTab){
-  if(newTab){ window.open(url, '_blank', 'noopener'); return; }
-  if(!hasGsap || !sweepWall){
-    window.location.href = url;
-    return;
-  }
-  isAnimating = true;
-  try { window.sessionStorage.setItem('wallEnter', '1'); } catch(e){}
-  gsap.timeline({
-    onComplete: function(){
-      window.location.href = url;
-    }
-  })
-  .set(sweepWall, { xPercent: -100 })
-  .to(sweepWall, { xPercent: 0, duration: 0.55, ease: 'power2.inOut' });
-}
-
-function handleNavClick(e){
-  if(isModifiedClick(e)){ return; }
-  var link = e.currentTarget;
-  var href = link.getAttribute('href');
-  if(!href){ return; }
-  if(href.indexOf('mailto:') === 0 || href.indexOf('tel:') === 0){ return; }
-  var parts = splitNav(href);
-  var isExternal = (href.indexOf('://') >= 0);
-  if(!isExternal && (parts.page === '' || parts.page === currentPage())){
-    if(!parts.hash){ return; }
-    e.preventDefault();
-    if(isAnimating){ return; }
-    if(isOpen){
-      pendingHash = parts.hash;
-      toggleMenu();
-    } else {
-      if(parts.hash === '#booking'){
-        slowScrollToBooking();
-      } else {
-        var target = document.querySelector(parts.hash);
-        if(target){ target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' }); }
-      }
-    }
-    return;
-  }
-  e.preventDefault();
-  if(e.stopImmediatePropagation){ e.stopImmediatePropagation(); }
-  var isBlank = link.getAttribute('target') === '_blank';
-  leavePage(href, isBlank);
-}
-
-Array.prototype.forEach.call(document.querySelectorAll('[data-nav]'), function(link){
-  link.addEventListener('click', handleNavClick);
-});
-
-document.getElementById('brandLink').addEventListener('click', function(e){
-  if(isModifiedClick(e)){ return; }
-  e.preventDefault();
-  if(e.stopImmediatePropagation){ e.stopImmediatePropagation(); }
-  var href = this.getAttribute('href');
-  leavePage(href, false);
-});
+/* Dogstudio sweep-wall and burger navigation are extracted to /js/core/sweep-wall.js */
+setTimeout(initLandingScroll, 60);
 
 /* Movie and Showing Management */
 var grid = null;
@@ -1436,54 +1208,7 @@ function closeModal(){
   if(modal){ modal.classList.remove('open'); }
 }
 
-/* Director viewfinder cursor */
-var frame = document.getElementById('cursor-frame');
-var label = document.getElementById('cursor-label');
-if(window.matchMedia('(hover:hover) and (min-width:769px)').matches && hasGsap){
-  gsap.set(frame, { xPercent: -50, yPercent: -50 });
-  gsap.set(label, { xPercent: -50, yPercent: -140 });
-  var fx = gsap.quickTo(frame, 'x', { duration: 0.08, ease: 'power2.out' });
-  var fy = gsap.quickTo(frame, 'y', { duration: 0.08, ease: 'power2.out' });
-  var lx = gsap.quickTo(label, 'x', { duration: 0.08, ease: 'power2.out' });
-  var ly = gsap.quickTo(label, 'y', { duration: 0.08, ease: 'power2.out' });
-  window.addEventListener('mousemove', function(e){
-    fx(e.clientX);
-    fy(e.clientY);
-    lx(e.clientX);
-    ly(e.clientY);
-  });
-  document.addEventListener('mouseover', function(e){
-    var t = null;
-    if(e.target && e.target.closest){
-      t = e.target.closest('[data-cursor],a,button,.seat');
-    }
-    document.body.classList.remove('c-hover', 'c-label', 'c-seat');
-    if(!t){ return; }
-    document.body.classList.add('c-hover');
-    var holder = null;
-    if(t.closest){ holder = t.closest('[data-cursor]'); }
-    var text = holder ? holder.getAttribute('data-cursor') : '';
-    if(!text && t.classList && t.classList.contains('seat') && !t.classList.contains('occupied')){
-      text = 'PICK';
-    }
-    if(t.classList && t.classList.contains('seat') && !t.classList.contains('occupied')){
-      document.body.classList.add('c-seat');
-    }
-    if(text){
-      label.textContent = text;
-      document.body.classList.add('c-label');
-    }
-  });
-  document.addEventListener('mousedown', function(){
-    if(!reduceMotion){ gsap.to(frame, { scale: 0.9, duration: 0.08, ease: 'power2.out' }); }
-  });
-  document.addEventListener('mouseup', function(){
-    if(!reduceMotion){ gsap.to(frame, { scale: 1, duration: 0.12, ease: 'power2.out' }); }
-  });
-} else {
-  if(frame) frame.style.display = 'none';
-  if(label) label.style.display = 'none';
-}
+/* Director viewfinder cursor is extracted to /js/core/cursor.js */
 
 /* Soft reveal */
 var revealObserver = null;
@@ -2203,10 +1928,15 @@ window.addEventListener('load', function(){
       }
       return;
     }
-    var s = document.createElement('script');
-    s.type = 'module';
-    s.src = '/js/modules/screening/main.js';
-    document.body.appendChild(s);
+    function loadModule(src) {
+      var s = document.createElement('script');
+      s.type = 'module';
+      s.src = src;
+      document.body.appendChild(s);
+    }
+    loadModule('/js/core/cursor.js');
+    loadModule('/js/core/sweep-wall.js');
+    loadModule('/js/modules/screening/main.js');
   })();
 </script>
 </body>
