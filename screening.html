@@ -15,7 +15,18 @@
 <link rel="preload" href="/fonts/Gilroy-Thin.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="/fonts/Gilroy-UltraLight.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="/textures/menu-glass-normal.jpeg" as="image" />
-<link rel="modulepreload" href="https://esm.sh/three@0.136.0" />
+<link rel="modulepreload" href="/js/vendor/three.module.js" />
+
+<!-- Local Import Map for Three.js (Offline Development) -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "/js/vendor/three.module.js",
+    "three/addons/": "/js/vendor/addons/"
+  }
+}
+</script>
+
 <link rel="stylesheet" href="/css/base.css" />
 <link rel="stylesheet" href="/css/components/sweep-wall.css" />
 <link rel="stylesheet" href="/css/components/cursor.css" />

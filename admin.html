@@ -20,6 +20,16 @@
         body.authenticated .auth-gate { display: none !important; }
     </style>
 
+    <!-- Local Import Map for Three.js (Offline Development) -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "/js/vendor/three.module.js",
+            "three/addons/": "/js/vendor/addons/"
+        }
+    }
+    </script>
+
     <link rel="stylesheet" href="/css/base.css">
     <link rel="stylesheet" href="/css/pages/admin.css">
 </head>
