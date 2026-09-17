@@ -29,10 +29,10 @@
         <aside class="sidebar">
             <div class="brand">Daydreamers <span>CMS</span></div>
             <nav class="nav-links">
-                <a class="nav-item active" onclick="showSection('movies')">Film Catalogue</a>
-                <a class="nav-item" onclick="showSection('seats')">Seat Locker</a>
-                <a class="nav-item" onclick="showSection('bookings')">Attendee Bookings</a>
-                <a class="nav-item" onclick="showSection('scanner')">Door QR Scanner</a>
+                <a class="nav-item active" data-action="navigate" data-section="movies">Film Catalogue</a>
+                <a class="nav-item" data-action="navigate" data-section="seats">Seat Locker</a>
+                <a class="nav-item" data-action="navigate" data-section="bookings">Attendee Bookings</a>
+                <a class="nav-item" data-action="navigate" data-section="scanner">Door QR Scanner</a>
             </nav>
             <a href="screening.html" class="back-link">&larr; Back to Screenings</a>
         </aside>
@@ -43,7 +43,7 @@
             <section id="moviesSection">
                 <div class="section-header">
                     <h2>Film Catalogue</h2>
-                    <button class="btn btn-primary" onclick="toggleAddMovieForm()">+ Add New Film</button>
+                    <button class="btn btn-primary" data-action="toggle-add-movie">+ Add New Film</button>
                 </div>
 
                 <div class="card" id="addMovieForm" style="display: none;">
@@ -80,7 +80,7 @@
                             <textarea id="newBlurb" rows="3" placeholder="Brief description of the story..."></textarea>
                         </div>
                         <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                            <button type="button" class="btn btn-secondary" onclick="toggleAddMovieForm()">Cancel</button>
+                            <button type="button" class="btn btn-secondary" data-action="toggle-add-movie">Cancel</button>
                             <button type="submit" class="btn btn-primary">Save Film</button>
                         </div>
                     </form>
@@ -113,11 +113,11 @@
                     <div class="form-grid" style="margin-bottom: 0;">
                         <div class="form-group">
                             <label>Select Film</label>
-                            <select id="seatMovieSelect" onchange="onSeatMovieChange()"></select>
+                            <select id="seatMovieSelect" data-action="change-movie"></select>
                         </div>
                         <div class="form-group">
                             <label>Select Showing Date &amp; Time</label>
-                            <select id="seatShowingSelect" onchange="onSeatShowingChange()"></select>
+                            <select id="seatShowingSelect" data-action="change-showing"></select>
                         </div>
                     </div>
                 </div>
@@ -140,7 +140,7 @@
                     <div style="display: flex; gap: 10px;">
                         <input type="text" id="bookingSearchInput" placeholder="Search by USN, Name, Ref..." 
                                style="background: var(--bg2); border: 1px solid var(--border); padding: 8px 14px; border-radius: 6px; color: #fff;"
-                               oninput="loadBookings(this.value)" />
+                               data-action="search-bookings" />
                     </div>
                 </div>
 
@@ -174,7 +174,7 @@
                         <div class="card" style="padding: 16px;">
                             <div id="reader"></div>
                             <div style="margin-top: 14px; text-align: center;">
-                                <button class="btn btn-secondary" onclick="restartScanner()">Restart Camera</button>
+                                <button class="btn btn-secondary" data-action="restart-scanner">Restart Camera</button>
                             </div>
                         </div>
 
@@ -207,7 +207,7 @@
                             </div>
 
                             <div id="scanActionBox" style="display: none;">
-                                <button class="btn btn-secondary" style="width: 100%; justify-content: center;" onclick="resetScanView()">Ready for Next Attendee</button>
+                                <button class="btn btn-secondary" style="width: 100%; justify-content: center;" data-action="reset-scan">Ready for Next Attendee</button>
                             </div>
                         </div>
                     </div>
@@ -616,6 +616,35 @@
 
         // Init
         loadMovies();
+    </script>
+
+    <!-- Protocol Guard & Dynamic Module Injection -->
+    <script>
+        (function() {
+            if (window.location.protocol === 'file:') {
+                alert('Daydreamers Film Club requires a local HTTP server to load ES modules.\n\nPlease run "npm start" and visit http://localhost:3000');
+                function renderLocalWarning() {
+                    document.body.innerHTML = 
+                        '<div style="display:flex;min-height:100vh;align-items:center;justify-content:center;background:#10131c;color:#f2e9ed;font-family:sans-serif;text-align:center;padding:24px;">' +
+                            '<div>' +
+                                '<h2 style="font-size:24px;color:#c89bb2;margin-bottom:12px;">Local Server Required</h2>' +
+                                '<p style="color:#a49aa0;line-height:1.6;margin-bottom:20px;">ES modules cannot run directly from the <code>file:///</code> protocol due to browser CORS security policies.</p>' +
+                                '<p style="background:rgba(200,155,178,0.1);padding:10px 16px;border-radius:4px;font-family:monospace;display:inline-block;">npm start &rarr; http://localhost:3000</p>' +
+                            '</div>' +
+                        '</div>';
+                }
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', renderLocalWarning);
+                } else {
+                    renderLocalWarning();
+                }
+                return;
+            }
+            var s = document.createElement('script');
+            s.type = 'module';
+            s.src = '/js/modules/admin/main.js';
+            document.body.appendChild(s);
+        })();
     </script>
 </body>
 </html>

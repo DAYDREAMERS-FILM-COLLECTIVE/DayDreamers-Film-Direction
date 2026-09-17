@@ -2170,5 +2170,33 @@ window.addEventListener('load', function(){
 });
 </script>
 
+<!-- Protocol Guard & Dynamic Module Injection -->
+<script>
+  (function() {
+    if (window.location.protocol === 'file:') {
+      alert('Daydreamers Film Club requires a local HTTP server to load ES modules.\n\nPlease run "npm start" and visit http://localhost:3000');
+      function renderLocalWarning() {
+        document.body.innerHTML = 
+          '<div style="display:flex;min-height:100vh;align-items:center;justify-content:center;background:#10131c;color:#f2e9ed;font-family:sans-serif;text-align:center;padding:24px;">' +
+            '<div>' +
+              '<h2 style="font-size:24px;color:#c89bb2;margin-bottom:12px;">Local Server Required</h2>' +
+              '<p style="color:#a49aa0;line-height:1.6;margin-bottom:20px;">ES modules cannot run directly from the <code>file:///</code> protocol due to browser CORS security policies.</p>' +
+              '<p style="background:rgba(200,155,178,0.1);padding:10px 16px;border-radius:4px;font-family:monospace;display:inline-block;">npm start &rarr; http://localhost:3000</p>' +
+            '</div>' +
+          '</div>';
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', renderLocalWarning);
+      } else {
+        renderLocalWarning();
+      }
+      return;
+    }
+    var s = document.createElement('script');
+    s.type = 'module';
+    s.src = '/js/modules/screening/main.js';
+    document.body.appendChild(s);
+  })();
+</script>
 </body>
 </html>
