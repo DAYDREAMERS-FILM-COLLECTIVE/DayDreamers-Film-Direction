@@ -309,20 +309,39 @@ export async function handleBookingSubmit(e) {
   }
 }
 
+let modalDocEventsBound = false;
+
 export function initBookingModal() {
   const form = document.getElementById('attendeeForm');
   if (form) {
     form.addEventListener('submit', handleBookingSubmit);
   }
 
-  // Document-level event delegation for closing modal
-  document.addEventListener('click', (e) => {
-    const closeBtn = e.target.closest('#modalClose, .modal-close, [data-action="close-modal"]');
-    if (closeBtn) {
-      e.preventDefault();
-      closeBookingModal();
-    }
-  });
+  if (!modalDocEventsBound) {
+    // Document-level event delegation for closing modal
+    document.addEventListener('click', (e) => {
+      const closeBtn = e.target.closest('#modalClose, .modal-close, [data-action="close-modal"]');
+      if (closeBtn) {
+        e.preventDefault();
+        closeBookingModal();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const modal = getModal();
+        if (modal && modal.classList.contains('open')) {
+          const successStep = document.getElementById('ticketSuccessStep');
+          if (successStep && successStep.style.display === 'block') {
+            return;
+          }
+          closeBookingModal();
+        }
+      }
+    });
+
+    modalDocEventsBound = true;
+  }
 
   const doneBtn = document.getElementById('donePassBtn');
   if (doneBtn) {
@@ -352,17 +371,4 @@ export function initBookingModal() {
   if (confirmBtn) {
     confirmBtn.addEventListener('click', openBookingModal);
   }
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      const modal = getModal();
-      if (modal && modal.classList.contains('open')) {
-        const successStep = document.getElementById('ticketSuccessStep');
-        if (successStep && successStep.style.display === 'block') {
-          return;
-        }
-        closeBookingModal();
-      }
-    }
-  });
 }

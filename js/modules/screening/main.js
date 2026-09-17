@@ -20,6 +20,7 @@ import { initBookingModal, openBookingModal } from './booking-modal.js';
 import { initScrubShowcase } from './scrub-showcase.js';
 
 let revealObserver = null;
+let reserveDocListenerBound = false;
 if (typeof window !== 'undefined' && window.location.hash !== '#booking') {
   window.scrollTo(0, 0);
 }
@@ -321,22 +322,17 @@ function setupBookingModes() {
 
   // Intercept any click for all "Reserve Seats" buttons
   const reserveSelector = '[data-action="reserve-seats"], .reserve-seats-btn, #heroReserveBtn, a[href="#booking"]';
-  document.querySelectorAll(reserveSelector).forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      slowScrollToBooking();
+  if (!reserveDocListenerBound) {
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest(reserveSelector);
+      if (btn) {
+        e.preventDefault();
+        e.stopPropagation();
+        slowScrollToBooking();
+      }
     });
-  });
-
-  document.addEventListener('click', (e) => {
-    const btn = e.target.closest(reserveSelector);
-    if (btn) {
-      e.preventDefault();
-      e.stopPropagation();
-      slowScrollToBooking();
-    }
-  });
+    reserveDocListenerBound = true;
+  }
 }
 
 function observeReveals() {

@@ -5,6 +5,14 @@
  * Includes safeguards against missing GSAP and 2D fallback mode.
  */
 
+import {
+  toggle as toggleBurgerMenu,
+  show as openBurgerMenu,
+  hide as closeBurgerMenu,
+  isBurgerMenuOpen
+} from '../modules/burger-menu/burger-menu.js';
+import { navigateTo } from './router.js';
+
 let isOpen = false;
 let isAnimating = false;
 let pendingHash = null;
@@ -61,39 +69,13 @@ function currentPage() {
 export function setBurger(open) {
   const burgerToggle = cachedBurgerToggle || document.getElementById('burgerToggle');
   if (burgerToggle) {
+    burgerToggle.classList.toggle('is-active', open);
     burgerToggle.classList.toggle('menu-active', open);
     burgerToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-  }
-
-  const hasGsap = typeof window.gsap !== 'undefined';
-  if (!hasGsap || !burgerToggle) return;
-
-  const spans = burgerToggle.querySelectorAll('span:not(.burger-icon)');
-  if (spans.length === 2) {
-    if (open) {
-      window.gsap.to(spans[0], { y: 4, rotate: 45, duration: 0.35, ease: 'power2.inOut' });
-      window.gsap.to(spans[1], { y: -4, rotate: -45, duration: 0.35, ease: 'power2.inOut' });
-    } else {
-      window.gsap.to(spans, { y: 0, rotate: 0, duration: 0.35, ease: 'power2.inOut' });
-    }
-    return;
-  }
-
-  const bTop = document.querySelector('#burgerToggle .bar-top') || burgerToggle.children[0];
-  const bMid = document.querySelector('#burgerToggle .bar-mid') || burgerToggle.children[1];
-  const bBottom = document.querySelector('#burgerToggle .bar-bottom') || burgerToggle.children[2];
-
-  if (!bTop || !bMid || !bBottom) return;
-
-  if (open) {
-    window.gsap.to(bTop, { y: 8, rotate: 45, duration: 0.35, ease: 'power2.inOut' });
-    window.gsap.to(bMid, { opacity: 0, duration: 0.25, ease: 'power2.inOut' });
-    window.gsap.to(bBottom, { y: -8, rotate: -45, duration: 0.35, ease: 'power2.inOut' });
-  } else {
-    window.gsap.to([bTop, bBottom], { y: 0, rotate: 0, duration: 0.35, ease: 'power2.inOut' });
-    window.gsap.to(bMid, { opacity: 1, duration: 0.35, ease: 'power2.inOut' });
+    try { burgerToggle.blur(); } catch(e) {}
   }
 }
+
 
 export function swapViews() {
   const navOverlay = cachedNavOverlay || document.querySelector('.nav-overlay') || document.getElementById('menuView');
@@ -168,53 +150,7 @@ function finishToggle() {
 }
 
 export function toggleMenu() {
-  const { sweepWall, navOverlay } = getElements();
-  const menuView = navOverlay;
-  const hasGsap = typeof window.gsap !== 'undefined';
-  const is2DFallback = Boolean(window.is2DFallbackActive || (document.body && document.body.classList.contains('seatmap-2d-mode')));
-
-  if (isAnimating || !menuView) return;
-
-  setBurger(!isOpen);
-
-  if (!hasGsap || !sweepWall || is2DFallback) {
-    swapViews();
-    isOpen = !isOpen;
-    if (!isOpen && pendingHash) {
-      const t = document.querySelector(pendingHash);
-      pendingHash = null;
-      if (t) t.scrollIntoView();
-    }
-    return;
-  }
-
-  isAnimating = true;
-
-  // Pre-warm set before timeline execution
-  window.gsap.set(sweepWall, { xPercent: -100, force3D: true });
-
-  const tl = window.gsap.timeline({
-    defaults: { ease: "power3.inOut", duration: 0.35 },
-    onComplete: finishToggle
-  });
-
-  tl.fromTo(
-    sweepWall,
-    { xPercent: -100, force3D: true },
-    { xPercent: 0, force3D: true }
-  )
-  .add(function() {
-    swapViews();
-    if (!isOpen) {
-      animateMenuText(true);
-    } else {
-      animateMenuText(false);
-    }
-  })
-  .to(sweepWall, {
-    xPercent: 100,
-    force3D: true
-  });
+  toggleBurgerMenu();
 }
 
 export function leavePage(url, newTab) {
@@ -224,38 +160,17 @@ export function leavePage(url, newTab) {
     return;
   }
 
-  const { sweepWall } = getElements();
-  const hasGsap = typeof window.gsap !== 'undefined';
-  const is2DFallback = Boolean(window.is2DFallbackActive || (document.body && document.body.classList.contains('seatmap-2d-mode')));
-
   if (newTab) {
     window.open(url, '_blank', 'noopener');
     return;
   }
 
-  if (!hasGsap || !sweepWall || is2DFallback) {
-    window.location.href = url;
+  if (typeof navigateTo === 'function') {
+    navigateTo(url);
     return;
   }
 
-  isAnimating = true;
-  try {
-    window.sessionStorage.setItem('wallEnter', '1');
-  } catch (e) {}
-
-  window.gsap.fromTo(
-    sweepWall,
-    { xPercent: -100, force3D: true },
-    {
-      xPercent: 0,
-      duration: 0.35,
-      ease: 'power3.inOut',
-      force3D: true,
-      onComplete: function() {
-        window.location.href = url;
-      }
-    }
-  );
+  window.location.href = url;
 }
 
 export function initSweepWall() {
@@ -275,56 +190,28 @@ export function initSweepWall() {
     if (sweepWall) sweepWall.style.display = 'none';
   }
 
-  // Arrival transition if navigated via leavePage
-  try {
-    if (window.sessionStorage.getItem('wallEnter') === '1') {
-      window.sessionStorage.removeItem('wallEnter');
-      if (hasGsap && sweepWall && !is2DFallback) {
-        isAnimating = true;
-        window.gsap.set(sweepWall, { xPercent: 0, force3D: true });
-        document.documentElement.classList.remove('wall-entering');
-        window.gsap.to(sweepWall, {
-          xPercent: 100,
-          duration: 0.35,
-          ease: 'power3.inOut',
-          force3D: true,
-          onComplete: function() {
-            window.gsap.set(sweepWall, { xPercent: -100, force3D: true });
-            isAnimating = false;
-            if (window.location.hash) {
-              const target = document.querySelector(window.location.hash);
-              if (target) {
-                if (window.location.hash === '#booking' && typeof window.slowScrollToBooking === 'function') {
-                  window.slowScrollToBooking();
-                } else {
-                  target.scrollIntoView({ behavior: 'smooth' });
-                }
-              }
-            }
-          }
-        });
-      } else {
-        document.documentElement.classList.remove('wall-entering');
+  // Arrival hash scrolling (arrival curtain sweep-out is handled uniformly by burger-menu.js / CSS)
+  if (window.location.hash) {
+    setTimeout(() => {
+      const target = document.querySelector(window.location.hash);
+      if (target) {
+        if (window.location.hash === '#booking' && typeof window.slowScrollToBooking === 'function') {
+          window.slowScrollToBooking();
+        } else {
+          target.scrollIntoView({ behavior: 'smooth' });
+        }
       }
-    } else {
-      document.documentElement.classList.remove('wall-entering');
-      if (hasGsap && sweepWall && !is2DFallback) {
-        window.gsap.set(sweepWall, { xPercent: -100, force3D: true });
-      }
-    }
-  } catch (e) {
-    document.documentElement.classList.remove('wall-entering');
+    }, 800);
   }
 
-  // Event Listeners for Burger
+  // Event Listeners for Burger handled by burger-menu.js
   if (burgerToggle) {
     burgerToggle.removeEventListener('click', toggleMenu);
-    burgerToggle.addEventListener('click', toggleMenu);
   }
 
   if (menuClose) {
     menuClose.removeEventListener('click', toggleMenu);
-    menuClose.addEventListener('click', toggleMenu);
+    menuClose.addEventListener('click', () => closeBurgerMenu());
   }
 
   // Document-level event delegation for navigation links
@@ -340,9 +227,9 @@ export function initSweepWall() {
         if (!href || href === '#') return;
         e.preventDefault();
         e.stopPropagation();
-        if (isOpen) {
+        if (isOpen || isBurgerMenuOpen()) {
           pendingHash = href;
-          toggleMenu();
+          closeBurgerMenu();
         } else {
           if (href === '#booking' && typeof window.slowScrollToBooking === 'function') {
             window.slowScrollToBooking();
@@ -401,44 +288,14 @@ export function initSweepWall() {
         return;
       }
 
-      // Internal cross-page navigation -> animate sweep wall exit
+      // Internal cross-page navigation -> delegate to unified 1.6s router wipe
       e.preventDefault();
-      if (isAnimating) return;
-
-      if (isOpen) {
-        isOpen = false;
-        const navOverlay = cachedNavOverlay || document.querySelector('.nav-overlay') || document.getElementById('menuView');
-        if (navOverlay) navOverlay.style.display = 'none';
-        document.body.classList.remove('menu-open');
-      }
-
-      try {
-        window.sessionStorage.setItem('wallEnter', '1');
-      } catch (_) {}
-
-      const sWall = cachedSweepWall || document.getElementById('sweepWall');
-      const g = typeof window.gsap !== 'undefined';
-      const fallback = Boolean(window.is2DFallbackActive || (document.body && document.body.classList.contains('seatmap-2d-mode')));
-
-      if (!g || !sWall || fallback) {
+      if (typeof navigateTo === 'function') {
+        navigateTo(link.href);
+      } else {
         window.location.href = link.href;
-        return;
       }
-
-      isAnimating = true;
-      window.gsap.fromTo(
-        sWall,
-        { xPercent: -100, force3D: true },
-        {
-          xPercent: 0,
-          duration: 0.35,
-          ease: 'power3.inOut',
-          force3D: true,
-          onComplete: function() {
-            window.location.href = link.href;
-          }
-        }
-      );
+      return;
     });
   }
 

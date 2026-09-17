@@ -86,7 +86,7 @@ h1,h2,h3,.serif{font-family:'Playfair Display',serif}
   display:flex;
   justify-content:space-between;
   align-items:center;
-  z-index:1000;
+  z-index:1001;
   background:transparent;
   border-bottom:none;
 }
@@ -100,21 +100,8 @@ h1,h2,h3,.serif{font-family:'Playfair Display',serif}
 }
 .brand small{color:var(--gold);font-weight:500;letter-spacing:.22em}
 
-.burger-toggle{
-  background:transparent !important;
-  border:none !important;
-  padding:0;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  width:44px;
-  height:44px;
-  cursor:pointer;
-}
+/* Burger toggle is managed exclusively by css/burger-menu/burger-menu.css */
 .burger-toggle:focus-visible{outline:2px solid var(--gold);outline-offset:4px;border-radius:0}
-.burger-icon{width:24px;display:flex;flex-direction:column;justify-content:center;align-items:center}
-.burger-icon .bar, .bar{width:24px;height:1.5px;background:#ffffff !important;display:block;margin:3px 0}
 
 /* fixed 2D moonlight backdrop */
 #backdrop{position:fixed;inset:0;z-index:0;overflow:hidden;

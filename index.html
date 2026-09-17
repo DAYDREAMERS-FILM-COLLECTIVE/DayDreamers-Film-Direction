@@ -14,7 +14,7 @@
         <link rel="preconnect" href="https://esm.sh" crossorigin />
         <link rel="preconnect" href="https://miroleon.github.io" crossorigin />
         <link
-            href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700&family=Plus+Jakarta+Sans:wght@200;300;400;700;800&family=Inter:wght@300;400;500;600&family=Bebas+Neue&display=swap"
+            href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&family=Heebo:wght@200;400;500;700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700&family=Plus+Jakarta+Sans:wght@200;300;400;700;800&family=Inter:wght@300;400;500;600&family=Bebas+Neue&display=swap"
             rel="stylesheet"
         />
         <link rel="prefetch" href="screening.html" as="document" />
@@ -37,82 +37,62 @@
         <link rel="stylesheet" href="/css/components/sweep-wall.css" />
         <link rel="stylesheet" href="/css/components/cursor.css" />
         <link rel="stylesheet" href="/css/components/footer.css" />
-        <link rel="stylesheet" href="/css/pages/home.css" />
+        <link rel="stylesheet" href="/css/burger-menu/burger-menu.css" />
+        <link id="pageStyleHome" rel="stylesheet" href="/css/pages/home.css" />
+        <link id="pageStyleScreening" rel="stylesheet" href="/css/pages/screening.css" disabled />
         <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
         <script>try{if(sessionStorage.getItem('wallEnter')==='1')document.documentElement.classList.add('wall-entering');}catch(e){}</script>
     </head>
     <body>
-        <div class="noise"></div>
         <div id="star-cursor" class="star-cursor">&#10022;</div>
 
         <header class="site-header">
             <a class="brand" href="#home" aria-label="Daydreamers home"
                 ><span>DAYDREAMERS</span><i></i> STUDENT FILM SOCIETY</a
             >
-            <button id="burgerToggle" class="burger-toggle" aria-label="Menu" data-cursor="MENU"><span></span><span></span></button>
+            <button id="burgerToggle" class="site-header-button burger-toggle" aria-expanded="false" aria-controls="site-menu" aria-label="Toggle menu" data-cursor="MENU">
+                <span class="u-visually-hidden">Toggle menu</span>
+                <span class="button-bar button-bar--1"></span>
+                <span class="button-bar button-bar--2"></span>
+                <span class="button-bar button-bar--3"></span>
+            </button>
         </header>
 
         <div class="sweep-wall" id="sweepWall" aria-hidden="true"></div>
 
-        <nav class="menu-view nav-overlay" id="menuView" aria-label="Site menu">
-            <div class="menu-ambient" aria-hidden="true">
-                <div class="glow-purple"></div>
-                <div class="glow-cyan"></div>
-                <div class="glow-top"></div>
-                <div class="grain"></div>
-            </div>
-            <div class="menu-main nav-content">
-                <ul class="menu-list">
-                    <li>
-                        <a href="index.html#home" class="menu-item" data-nav data-cursor="GO"
-                            ><span class="item-number">01</span
-                            ><span class="item-label">Home</span></a
-                        >
-                    </li>
-                    <li>
-                        <a href="screening.html" class="menu-item" data-nav data-cursor="GO"
-                            ><span class="item-number">02</span
-                            ><span class="item-label">Screening</span></a
-                        >
-                    </li>
-                    <li>
-                        <a href="index.html#gallery" class="menu-item" data-nav data-cursor="GO"
-                            ><span class="item-number">03</span
-                            ><span class="item-label">Past Events</span></a
-                        >
-                    </li>
-                    <li>
-                        <a href="index.html#about" class="menu-item" data-nav data-cursor="GO"
-                            ><span class="item-number">04</span
-                            ><span class="item-label">About Us</span></a
-                        >
-                    </li>
-                    <li>
-                        <a href="index.html#join" class="menu-item" data-nav data-cursor="GO"
-                            ><span class="item-number">05</span
-                            ><span class="item-label">Join Us</span></a
-                        >
-                    </li>
+        <!-- Persistent Fullscreen Menu System (Phase 2) -->
+        <div class="site-menu-back" aria-hidden="true">
+            <canvas id="menuGlass" class="menu-glass-canvas" aria-hidden="true"></canvas>
+        </div>
+        <div class="site-menu-panel" aria-hidden="true"></div>
+        <nav id="site-menu" class="site-menu" aria-hidden="true" inert>
+            <div class="center">
+                <ul class="site-menu-list">
+                    <li class="site-menu-item"><a href="index.html#home" data-nav data-cursor="GO">Home</a></li>
+                    <li class="site-menu-item"><a href="screening.html" data-nav data-cursor="GO">Screening</a></li>
+                    <li class="site-menu-item"><a href="index.html#gallery" data-nav data-cursor="GO">Past Events</a></li>
+                    <li class="site-menu-item"><a href="index.html#about" data-nav data-cursor="GO">About Us</a></li>
+                    <li class="site-menu-item"><a href="index.html#join" data-nav data-cursor="GO">Join Us</a></li>
                 </ul>
-            </div>
-            <div class="menu-foot">
-                <div class="menu-foot-left">
-                    <div class="nav-meta">
-                        Daydreamers<br />D Block, 3rd Floor and D Block, 4th Floor<br />Showtimes at
-                        21:00
+                <div class="site-menu-footer">
+                    <div class="site-menu-tagline">Daydreamers Film Society</div>
+                    <div class="site-menu-content">
+                        <ul>
+                            <li><a href="mailto:hello@daydreamers.club" data-cursor="OPEN">Email</a></li>
+                            <li><a href="admin.html" data-cursor="OPEN">Admin</a></li>
+                            <li><a href="screening.html#booking" data-cursor="GO">Reserve</a></li>
+                        </ul>
                     </div>
-                    <a class="menu-action" href="screening.html#booking" data-nav data-cursor="GO"
-                        ><span>&gt;</span> Reserve Seats</a
-                    >
                 </div>
-                <ul class="menu-socials">
-                    <li><a href="mailto:hello@daydreamers.club" data-nav data-cursor="OPEN">Email</a></li>
-                    <li><a href="admin.html" data-nav data-cursor="OPEN">Admin</a></li>
-                </ul>
             </div>
         </nav>
 
-        <main>
+        <!-- Persistent Site Loader Curtain (Phase 3) -->
+        <div class="site-loader" id="siteLoader" aria-hidden="true"></div>
+
+        <div id="routerWrapper" data-router-wrapper>
+        <div class="noise"></div>
+        <main data-router-view="home">
 <section class="hero" id="home">
                 <div
                     class="hero-image"
@@ -695,6 +675,7 @@
             <p class="dialog-info"></p>
             <button class="watch">&#9654; &nbsp; PLAY TRAILER</button>
         </dialog>
+        </div>
 
         <script>
             (function () {
@@ -784,329 +765,7 @@
                 /* Star sprinkle cursor is extracted to /js/core/cursor.js */
             })();
         </script>
-        <script type="module">
-import * as THREE from 'https://esm.sh/three@0.136.0';
-import { RGBELoader } from 'https://esm.sh/three@0.136.0/examples/jsm/loaders/RGBELoader.js';
-import { EffectComposer } from 'https://esm.sh/three@0.136.0/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'https://esm.sh/three@0.136.0/examples/jsm/postprocessing/RenderPass.js';
-import { ShaderPass } from 'https://esm.sh/three@0.136.0/examples/jsm/postprocessing/ShaderPass.js';
-import { AfterimagePass } from 'https://esm.sh/three@0.136.0/examples/jsm/postprocessing/AfterimagePass.js';
-import { UnrealBloomPass } from 'https://esm.sh/three@0.136.0/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { FBXLoader } from 'https://esm.sh/three@0.136.0/examples/jsm/loaders/FBXLoader.js';
-import { OrbitControls } from 'https://esm.sh/three@0.136.0/examples/jsm/controls/OrbitControls.js';
-
-(function(){
-  var canvas = document.getElementById('menuGlass');
-  if(!canvas){ return; }
-  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){ return; }
-  if(!window.WebGLRenderingContext){ return; }
-
-  var renderer = null;
-  var running = false;
-  var apiStart = null;
-  var apiStop = null;
-
-  function fallbackTexture(){
-    var c = document.createElement('canvas');
-    c.width = 256;
-    c.height = 256;
-    var x = c.getContext('2d');
-    var imgd = x.createImageData(256, 256);
-    var xi, yi, v, o;
-    for(yi = 0; yi < 256; yi++){
-      for(xi = 0; xi < 256; xi++){
-        v = Math.floor(128 + 100 * Math.sin(xi * 0.11) * Math.sin(yi * 0.13) + 27 * Math.sin(xi * 0.031 + yi * 0.043));
-        o = (yi * 256 + xi) * 4;
-        imgd.data[o] = v;
-        imgd.data[o + 1] = 255 - v;
-        imgd.data[o + 2] = 128;
-        imgd.data[o + 3] = 255;
-      }
-    }
-    x.putImageData(imgd, 0, 0);
-    var t = new THREE.CanvasTexture(c);
-    t.wrapS = THREE.RepeatWrapping;
-    t.wrapT = THREE.RepeatWrapping;
-    t.minFilter = THREE.NearestFilter;
-    return t;
-  }
-
-  function init(){
-    try {
-      renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-    } catch(err){
-      renderer = null;
-      return;
-    }
-    renderer.setClearColor(0x11151c);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(window.innerWidth, window.innerHeight);
-
-    var scene = new THREE.Scene();
-    var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 0, 10);
-
-    var isTouch = window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 768;
-    var controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.enabled = !isTouch;
-    controls.dampingFactor = 1;
-    controls.enablePan = false;
-    controls.enableZoom = false;
-    var angleLimit = Math.PI / 7;
-    controls.minPolarAngle = Math.PI / 2 - angleLimit;
-    controls.maxPolarAngle = Math.PI / 2 + angleLimit;
-
-    var hdrEquirect = new RGBELoader()
-      .setPath('https://miroleon.github.io/daily-assets/')
-      .load('GRADIENT_01_01_comp.hdr', function(){
-        hdrEquirect.mapping = THREE.EquirectangularReflectionMapping;
-      });
-    scene.environment = hdrEquirect;
-    var fill = new THREE.DirectionalLight(0xffb46b, 0.55);
-    fill.position.set(-6, 2, 6);
-    scene.add(fill);
-
-    scene.fog = new THREE.Fog(0x11151c, 1, 100);
-    scene.fog = new THREE.FogExp2(0x11151c, 0.5);
-
-    var surfaceImperfection = new THREE.TextureLoader().load('https://miroleon.github.io/daily-assets/surf_imp_02.jpg');
-    surfaceImperfection.wrapT = THREE.RepeatWrapping;
-    surfaceImperfection.wrapS = THREE.RepeatWrapping;
-
-    var hands_mat = new THREE.MeshPhysicalMaterial({
-      color: 0x606060,
-      roughness: 0.2,
-      metalness: 1,
-      roughnessMap: surfaceImperfection,
-      envMap: hdrEquirect,
-      envMapIntensity: 1.5
-    });
-
-    var fbxloader = new FBXLoader();
-    fbxloader.load('https://miroleon.github.io/daily-assets/two_hands_01.fbx', function(object){
-      object.traverse(function(child){
-        if(child.isMesh){ child.material = hands_mat; }
-      });
-      object.position.set(0, 0, 0);
-      var modelScale = window.innerWidth <= 768 ? 0.042 : 0.05;
-      object.scale.setScalar(modelScale);
-      scene.add(object);
-    });
-
-    var renderScene = new RenderPass(scene, camera);
-    var afterimagePass = new AfterimagePass();
-    afterimagePass.uniforms['damp'].value = 0.94;
-    var bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-    bloomPass.threshold = 0.1;
-    bloomPass.strength = 1.75;
-    bloomPass.radius = 1;
-
-    var displacementShader = {
-      uniforms: {
-        tDiffuse: { value: null },
-        displacement: { value: null },
-        scale: { value: 0.1 },
-        tileFactor: { value: 2 },
-        time: { value: 0 }
-      },
-      vertexShader: `
-        varying vec2 vUv;
-        void main() {
-            vUv = uv;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-    `,
-      fragmentShader: `
-        uniform sampler2D tDiffuse;
-        uniform sampler2D displacement;
-        uniform float scale;
-        uniform float tileFactor;
-        uniform float time;
-        varying vec2 vUv;
-        void main() {
-            if (vUv.x < 0.65 && vUv.x > 0.35 && vUv.y < 0.65 && vUv.y > 0.35) {
-                vec2 tiledUv = mod(vec2(vUv.x, vUv.y + time * 0.004) * tileFactor, 1.0);
-                vec2 disp = texture2D(displacement, tiledUv).rg * scale;
-                vec2 distUv = vUv + disp;
-                gl_FragColor = texture2D(tDiffuse, distUv);
-            } else {
-                gl_FragColor = texture2D(tDiffuse, vUv);
-            }
-        }
-    `
-    };
-    var displacementPass = new ShaderPass(displacementShader);
-    displacementPass.uniforms['displacement'].value = fallbackTexture();
-    displacementPass.uniforms['scale'].value = 0.008;
-    displacementPass.uniforms['tileFactor'].value = 3;
-    new THREE.TextureLoader().load('textures/menu-glass-normal.jpeg', function(texture){
-      texture.minFilter = THREE.NearestFilter;
-      displacementPass.uniforms['displacement'].value = texture;
-    });
-
-    var composer = new EffectComposer(renderer);
-    composer.addPass(renderScene);
-    composer.addPass(afterimagePass);
-    composer.addPass(bloomPass);
-    composer.addPass(displacementPass);
-    var gradePass = new ShaderPass({
-      uniforms: {
-        tDiffuse: { value: null },
-        time: { value: 0 },
-        grain: { value: 0.04 },
-        chroma: { value: 0.012 },
-        darken: { value: 0.35 }
-      },
-      vertexShader: `
-        varying vec2 vUv;
-        void main() {
-            vUv = uv;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-    `,
-      fragmentShader: `
-        uniform sampler2D tDiffuse;
-        uniform float time;
-        uniform float grain;
-        uniform float chroma;
-        uniform float darken;
-        varying vec2 vUv;
-        float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-        void main() {
-            vec2 d = vUv - 0.5;
-            float r2 = dot(d, d);
-            vec2 off = d * r2 * chroma;
-            vec3 col;
-            col.r = texture2D(tDiffuse, vUv + off).r;
-            col.g = texture2D(tDiffuse, vUv).g;
-            col.b = texture2D(tDiffuse, vUv - off).b;
-            float a = texture2D(tDiffuse, vUv).a;
-            col += (hash(vUv * vec2(1920.0, 1080.0) + fract(time) * 7.13) - 0.5) * grain;
-            col *= 1.0 - darken * smoothstep(0.12, 0.45, r2);
-            gl_FragColor = vec4(col, a);
-        }
-    `
-    });
-    composer.addPass(gradePass);
-
-    function easeInOutCubic(x){
-      return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
-    }
-    var isUserInteracting = false;
-    var transitionProgress = 0;
-    var transitionTime = 9;
-    var transitionIncrement = 1 / (60 * transitionTime);
-    var transitionStartCameraPosition = new THREE.Vector3();
-    var transitionStartCameraQuaternion = new THREE.Quaternion();
-    var theta = 0;
-
-    function update(){
-      theta += 0.0016;
-      var targetPosition = new THREE.Vector3(Math.sin(theta) * 3, Math.sin(theta), Math.cos(theta) * 3);
-      var targetQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -theta, 0));
-      if(isUserInteracting){
-        if(transitionProgress > 0){ transitionProgress = 0; }
-        transitionStartCameraPosition.copy(camera.position);
-        transitionStartCameraQuaternion.copy(camera.quaternion);
-      } else {
-        if(transitionProgress < 1){
-          transitionProgress += transitionIncrement;
-          var easedProgress = easeInOutCubic(transitionProgress);
-          camera.position.lerpVectors(transitionStartCameraPosition, targetPosition, easedProgress);
-          camera.quaternion.slerp(transitionStartCameraQuaternion, targetQuaternion, easedProgress);
-        } else {
-          camera.position.copy(targetPosition);
-          camera.quaternion.copy(targetQuaternion);
-        }
-      }
-      camera.lookAt(scene.position);
-    }
-
-    controls.addEventListener('start', function(){ isUserInteracting = true; });
-    controls.addEventListener('end', function(){
-      isUserInteracting = false;
-      transitionStartCameraPosition.copy(camera.position);
-      transitionStartCameraQuaternion.copy(camera.quaternion);
-      transitionProgress = 0;
-    });
-
-    function onWindowResize(){
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      composer.setSize(window.innerWidth, window.innerHeight);
-    }
-    window.addEventListener('resize', onWindowResize);
-
-    var pushT = 1;
-    var t0 = 0;
-    var frameErrors = 0;
-    var handAnimationLoaded = false;
-    function animate(){
-      if(!running){ return; }
-      requestAnimationFrame(animate);
-      try {
-        controls.update();
-        var nowSecs = (performance.now() - t0) / 1000;
-        displacementPass.uniforms['time'].value = nowSecs % 3600;
-        gradePass.uniforms['time'].value = nowSecs % 3600;
-        if(pushT < 1){
-          pushT = Math.min(1, pushT + 1 / (60 * 5));
-          camera.fov = 45 - 3 * easeInOutCubic(pushT);
-          camera.updateProjectionMatrix();
-        } else if(transitionProgress >= 1){
-          handAnimationLoaded = true;
-        }
-        composer.render();
-        update();
-        frameErrors = 0;
-      } catch(frameErr){
-        frameErrors += 1;
-        if(frameErrors > 5){ running = false; }
-      }
-    }
-
-    apiStart = function(){
-      if(running){ return; }
-      running = true;
-      if(!handAnimationLoaded){
-        pushT = 0;
-        camera.fov = 45;
-      } else {
-        pushT = 1;
-        camera.fov = 42;
-      }
-      t0 = performance.now();
-      camera.updateProjectionMatrix();
-      onWindowResize();
-      requestAnimationFrame(animate);
-    };
-    apiStop = function(){ running = false; };
-  }
-
-  window.addEventListener('menuGlass:start', function(){
-    if(!apiStart){ init(); }
-    if(apiStart){ apiStart(); }
-  });
-  window.addEventListener('menuGlass:stop', function(){
-    if(apiStop){ apiStop(); }
-  });
-
-  // Pre-warm WebGL menu canvas, shaders, and geometry in idle time
-  function warmMenuGlass() {
-    if (!apiStart && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      try { init(); } catch(e){}
-    }
-  }
-  if ('requestIdleCallback' in window) {
-    requestIdleCallback(warmMenuGlass, { timeout: 2500 });
-  } else {
-    setTimeout(warmMenuGlass, 1000);
-  }
-})();
-
-// Speculatively preload screening HTML and API data into HTTP cache
+        <script>
 window.addEventListener('load', function(){
   var preload = function(){
     fetch('screening.html', { priority: 'low' }).catch(function(){});
@@ -1150,8 +809,11 @@ window.addEventListener('load', function(){
                     document.body.appendChild(s);
                 }
                 loadModule('/js/core/cursor.js');
+                loadModule('/js/modules/burger-menu/burger-menu.js');
+                loadModule('/js/core/router.js');
                 loadModule('/js/core/sweep-wall.js');
                 loadModule('/js/modules/home/main.js');
+                loadModule('/js/modules/three/menu-glass.js');
             })();
         </script>
     </body>
