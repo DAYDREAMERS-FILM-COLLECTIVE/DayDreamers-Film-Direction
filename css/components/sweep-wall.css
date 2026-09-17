@@ -1,0 +1,24 @@
+/* ==========================================================================
+   Dogstudio Continuous Horizontal Sweep Wall Curtain
+   ========================================================================== */
+
+.sweep-wall {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #3A1F33;
+  z-index: 999;
+  pointer-events: none;
+  border-right: 2px solid rgba(200, 155, 178, 0.4);
+  box-shadow: 25px 0 60px rgba(0, 0, 0, 0.85);
+  will-change: transform;
+  transform: translateX(-100%);
+}
+
+/* 2D Fallback safety override */
+.seatmap-2d-mode .sweep-wall {
+  display: none !important;
+  transform: translateX(-100%) !important;
+}

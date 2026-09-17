@@ -1,0 +1,33 @@
+/* ==========================================================================
+   Shared Footer Styles
+   ========================================================================== */
+
+footer {
+  position: relative;
+  z-index: 2;
+  border-top: 1px solid rgba(207, 214, 228, 0.14);
+  padding: 44px clamp(20px, 6vw, 90px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  background: rgba(7, 7, 12, 0.8);
+}
+
+footer .f-logo {
+  font-size: 20px;
+  letter-spacing: 0.3em;
+  font-weight: 600;
+}
+
+footer .f-logo em {
+  color: var(--gold);
+  font-style: normal;
+}
+
+footer p {
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+}
