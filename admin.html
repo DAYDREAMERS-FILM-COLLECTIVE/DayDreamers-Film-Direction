@@ -34,6 +34,24 @@
     <link rel="stylesheet" href="/css/pages/admin.css">
 </head>
 <body>
+    <!-- Auth Gate -->
+    <div class="auth-gate" id="authGate">
+        <div class="auth-card">
+            <div class="brand" style="margin-bottom: 1.2rem; font-size: 1.4rem;">Daydreamers <span>CMS</span></div>
+            <h2>Door &amp; Admin Access</h2>
+            <p>Enter your authorization passkey to manage film catalogue, seat locks, and door check-ins.</p>
+            <form id="authGateForm">
+                <div class="form-group" style="text-align: left; margin-bottom: 1.2rem;">
+                    <label for="adminPasskey" style="display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--muted);">Passkey</label>
+                    <input type="password" id="adminPasskey" required placeholder="Enter passkey..." autocomplete="current-password"
+                           style="width: 100%; background: var(--panel); border: 1px solid var(--border); padding: 12px 16px; border-radius: 6px; color: #fff; font-size: 1rem;" />
+                </div>
+                <div id="authError" style="display: none; color: var(--danger); font-size: 0.85rem; margin-bottom: 1rem; text-align: left;"></div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;" data-action="submit-auth">Unlock CMS &rarr;</button>
+            </form>
+        </div>
+    </div>
+
     <div class="admin-layout">
         <!-- Sidebar -->
         <aside class="sidebar">
@@ -43,6 +61,7 @@
                 <a class="nav-item" data-action="navigate" data-section="seats">Seat Locker</a>
                 <a class="nav-item" data-action="navigate" data-section="bookings">Attendee Bookings</a>
                 <a class="nav-item" data-action="navigate" data-section="scanner">Door QR Scanner</a>
+                <a class="nav-item" data-action="logout" style="margin-top: 1.5rem; color: var(--danger); cursor: pointer;">Log Out</a>
             </nav>
             <a href="screening.html" class="back-link">&larr; Back to Screenings</a>
         </aside>
@@ -151,6 +170,7 @@
                         <input type="text" id="bookingSearchInput" placeholder="Search by USN, Name, Ref..." 
                                style="background: var(--bg2); border: 1px solid var(--border); padding: 8px 14px; border-radius: 6px; color: #fff;"
                                data-action="search-bookings" />
+                        <button class="btn btn-secondary" data-action="export-csv">Export CSV</button>
                     </div>
                 </div>
 
@@ -225,408 +245,6 @@
             </section>
         </main>
     </div>
-
-    <script>
-        const ADMIN_KEY = 'fps-door-admin-alpha-2026';
-        let allMovies = [];
-        let allShowings = [];
-        let currentShowingId = null;
-        let html5QrScanner = null;
-
-        function showSection(section) {
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            if (window.event && window.event.currentTarget) {
-                window.event.currentTarget.classList.add('active');
-            }
-
-            document.getElementById('moviesSection').style.display = 'none';
-            document.getElementById('seatsSection').style.display = 'none';
-            document.getElementById('bookingsSection').style.display = 'none';
-            document.getElementById('scannerSection').style.display = 'none';
-
-            if (section === 'movies') {
-                document.getElementById('moviesSection').style.display = 'block';
-                loadMovies();
-            } else if (section === 'seats') {
-                document.getElementById('seatsSection').style.display = 'block';
-                initSeatLocker();
-            } else if (section === 'bookings') {
-                document.getElementById('bookingsSection').style.display = 'block';
-                loadBookings();
-            } else if (section === 'scanner') {
-                document.getElementById('scannerSection').style.display = 'block';
-                startQrScanner();
-            }
-        }
-
-        // -----------------------------------------------------------------
-        // 1. Movies Management
-        // -----------------------------------------------------------------
-        function toggleAddMovieForm() {
-            const form = document.getElementById('addMovieForm');
-            form.style.display = form.style.display === 'none' ? 'block' : 'none';
-        }
-
-        async function loadMovies() {
-            try {
-                const res = await fetch('/api/movies');
-                allMovies = await res.json();
-                const tbody = document.getElementById('moviesList');
-                tbody.innerHTML = '';
-                if (!allMovies.length) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--muted);">No films currently in schedule</td></tr>';
-                    return;
-                }
-                allMovies.forEach(m => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td style="font-weight: 600; color: #fff;">${m.title}</td>
-                        <td style="color: var(--muted);">${m.director}</td>
-                        <td><span class="status-badge status-pending">${m.genre}</span></td>
-                        <td>${m.runtime}</td>
-                        <td style="color: var(--muted);">${m.hall}</td>
-                        <td style="text-align: right;">
-                            <button class="btn btn-danger" onclick="deleteMovie('${m.id}')">Remove</button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } catch (err) {
-                console.error('Failed to load movies:', err);
-            }
-        }
-
-        document.getElementById('newMovieForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const payload = {
-                title: document.getElementById('newTitle').value.trim(),
-                director: document.getElementById('newDir').value.trim(),
-                genre: document.getElementById('newGenre').value.trim(),
-                runtime: document.getElementById('newRuntime').value.trim(),
-                hall: document.getElementById('newHall').value.trim(),
-                poster_url: document.getElementById('newPoster').value.trim(),
-                blurb: document.getElementById('newBlurb').value.trim()
-            };
-            try {
-                const res = await fetch('/api/movies', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-admin-key': ADMIN_KEY
-                    },
-                    body: JSON.stringify(payload)
-                });
-                if (res.ok) {
-                    toggleAddMovieForm();
-                    e.target.reset();
-                    loadMovies();
-                } else {
-                    const err = await res.json();
-                    alert(err.error || 'Failed to add movie');
-                }
-            } catch (err) {
-                alert('Network error: ' + err.message);
-            }
-        });
-
-        async function deleteMovie(id) {
-            if (!confirm('Are you sure you want to remove this film from the schedule?')) return;
-            try {
-                const res = await fetch(`/api/movies/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'x-admin-key': ADMIN_KEY }
-                });
-                if (res.ok) {
-                    loadMovies();
-                } else {
-                    alert('Failed to delete movie');
-                }
-            } catch (err) {
-                alert('Error: ' + err.message);
-            }
-        }
-
-        // -----------------------------------------------------------------
-        // 2. Seat Locker
-        // -----------------------------------------------------------------
-        async function initSeatLocker() {
-            try {
-                const [moviesRes, showingsRes] = await Promise.all([
-                    fetch('/api/movies'),
-                    fetch('/api/showings')
-                ]);
-                allMovies = await moviesRes.json();
-                allShowings = await showingsRes.json();
-
-                const movieSelect = document.getElementById('seatMovieSelect');
-                movieSelect.innerHTML = '';
-                allMovies.forEach(m => {
-                    const opt = document.createElement('option');
-                    opt.value = m.id;
-                    opt.textContent = m.title;
-                    movieSelect.appendChild(opt);
-                });
-
-                onSeatMovieChange();
-            } catch (err) {
-                console.error('Failed to init seat locker:', err);
-            }
-        }
-
-        function onSeatMovieChange() {
-            const movieId = document.getElementById('seatMovieSelect').value;
-            const filteredShowings = allShowings.filter(s => s.movie_id === movieId);
-            const showingSelect = document.getElementById('seatShowingSelect');
-            showingSelect.innerHTML = '';
-
-            if (!filteredShowings.length) {
-                showingSelect.innerHTML = '<option value="">No showings scheduled</option>';
-                currentShowingId = null;
-                renderAdminSeats([], []);
-                return;
-            }
-
-            filteredShowings.forEach(s => {
-                const d = new Date(s.show_date);
-                const dateStr = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
-                const opt = document.createElement('option');
-                opt.value = s.id;
-                opt.textContent = `${dateStr} @ ${s.show_time} (${s.hall})`;
-                showingSelect.appendChild(opt);
-            });
-
-            onSeatShowingChange();
-        }
-
-        async function onSeatShowingChange() {
-            currentShowingId = document.getElementById('seatShowingSelect').value;
-            if (!currentShowingId) return;
-
-            try {
-                const res = await fetch(`/api/seats/status?showing_id=${encodeURIComponent(currentShowingId)}`);
-                const data = await res.json();
-                renderAdminSeats(data.lockedSeats || [], data.bookedSeats || []);
-            } catch (err) {
-                console.error('Failed to load seat status:', err);
-            }
-        }
-
-        function renderAdminSeats(lockedSeats, bookedSeats) {
-            const grid = document.getElementById('adminSeatGrid');
-            grid.innerHTML = '';
-            const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
-            const lockedSet = new Set(lockedSeats);
-            const bookedSet = new Set(bookedSeats);
-
-            rows.forEach(r => {
-                const rowDiv = document.createElement('div');
-                rowDiv.className = 'seat-row';
-                const label = document.createElement('div');
-                label.className = 'seat-row-label';
-                label.textContent = r;
-                rowDiv.appendChild(label);
-
-                for (let i = 1; i <= 10; i++) {
-                    const seatId = r + i;
-                    const seatBtn = document.createElement('button');
-                    seatBtn.className = 'admin-seat';
-                    seatBtn.textContent = i;
-                    seatBtn.setAttribute('title', `Seat ${seatId}`);
-
-                    if (bookedSet.has(seatId)) {
-                        seatBtn.classList.add('booked');
-                        seatBtn.setAttribute('title', `Seat ${seatId} (Booked by Attendee)`);
-                        seatBtn.disabled = true;
-                    } else if (lockedSet.has(seatId)) {
-                        seatBtn.classList.add('locked');
-                        seatBtn.setAttribute('title', `Seat ${seatId} (Locked by Admin - Click to Unlock)`);
-                        seatBtn.onclick = () => toggleSeatLock(seatId, 'unlock');
-                    } else {
-                        seatBtn.setAttribute('title', `Seat ${seatId} (Available - Click to Lock)`);
-                        seatBtn.onclick = () => toggleSeatLock(seatId, 'lock');
-                    }
-                    rowDiv.appendChild(seatBtn);
-                }
-                grid.appendChild(rowDiv);
-            });
-        }
-
-        async function toggleSeatLock(seatId, action) {
-            if (!currentShowingId) return;
-            try {
-                const res = await fetch('/api/seats/lock', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-admin-key': ADMIN_KEY
-                    },
-                    body: JSON.stringify({
-                        showingId: currentShowingId,
-                        seatId: seatId,
-                        action: action,
-                        reason: 'admin_panel'
-                    })
-                });
-                if (res.ok) {
-                    onSeatShowingChange();
-                } else {
-                    const err = await res.json();
-                    alert(err.error || 'Failed to update seat lock');
-                }
-            } catch (err) {
-                alert('Error: ' + err.message);
-            }
-        }
-
-        // -----------------------------------------------------------------
-        // 3. Attendee Bookings Roster
-        // -----------------------------------------------------------------
-        async function loadBookings(search = '') {
-            try {
-                let url = '/api/admin/bookings';
-                if (search) url += '?search=' + encodeURIComponent(search);
-                const res = await fetch(url, {
-                    headers: { 'x-admin-key': ADMIN_KEY }
-                });
-                const list = await res.json();
-                const tbody = document.getElementById('bookingsList');
-                tbody.innerHTML = '';
-                if (!list.length) {
-                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--muted);">No bookings found</td></tr>';
-                    return;
-                }
-                list.forEach(b => {
-                    const d = new Date(b.show_date);
-                    const dateStr = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
-                    const statusClass = b.checked_in ? 'status-checkedin' : 'status-confirmed';
-                    const statusText = b.checked_in ? 'Checked In' : 'Confirmed';
-
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td style="font-family: monospace; font-weight: 600; color: var(--gold);">${b.ref_code}</td>
-                        <td style="font-weight: 500;">${b.film_title}</td>
-                        <td style="color: #fff;">${b.user_name}</td>
-                        <td style="font-family: monospace;">${b.user_usn}</td>
-                        <td style="color: var(--gold);">${(b.seats || []).join(', ')}</td>
-                        <td>${dateStr} @ ${b.show_time}</td>
-                        <td style="color: var(--muted);">${b.hall}</td>
-                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } catch (err) {
-                console.error('Failed to load bookings:', err);
-            }
-        }
-
-        // -----------------------------------------------------------------
-        // 4. Door QR Scanner & Check-in
-        // -----------------------------------------------------------------
-        function startQrScanner() {
-            if (html5QrScanner) {
-                try { html5QrScanner.clear(); } catch(e){}
-            }
-            html5QrScanner = new Html5QrcodeScanner(
-                "reader",
-                { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 },
-                /* verbose= */ false
-            );
-            html5QrScanner.render(onScanSuccess, onScanError);
-        }
-
-        function restartScanner() {
-            startQrScanner();
-        }
-
-        function onScanSuccess(decodedText) {
-            verifyAndCheckIn({ qrToken: decodedText });
-        }
-
-        function onScanError(errorMessage) {
-            // Ignored frame parse errors
-        }
-
-        document.getElementById('manualVerifyForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const val = document.getElementById('manualInput').value.trim();
-            if (!val) return;
-            if (val.startsWith('DD-') || val.startsWith('dd-')) {
-                verifyAndCheckIn({ refCode: val });
-            } else {
-                verifyAndCheckIn({ usn: val });
-            }
-        });
-
-        async function verifyAndCheckIn(payload) {
-            const banner = document.getElementById('scanStatusBanner');
-            const details = document.getElementById('scanDetailsGrid');
-            const actionBox = document.getElementById('scanActionBox');
-
-            banner.className = 'result-banner';
-            banner.textContent = 'Verifying cryptographic credentials...';
-            details.style.display = 'none';
-            actionBox.style.display = 'none';
-
-            try {
-                const res = await fetch('/api/bookings/verify', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-admin-key': ADMIN_KEY
-                    },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-
-                if (res.status === 200 && data.valid) {
-                    banner.className = 'result-banner success';
-                    banner.innerHTML = data.message;
-                    populateDetails(data.booking);
-                } else if (res.status === 409 && data.duplicate) {
-                    banner.className = 'result-banner duplicate';
-                    banner.innerHTML = data.message;
-                    populateDetails(data.booking);
-                } else {
-                    banner.className = 'result-banner error';
-                    banner.innerHTML = '[ERROR] ' + (data.message || data.error || 'Verification Failed');
-                }
-                actionBox.style.display = 'block';
-            } catch (err) {
-                banner.className = 'result-banner error';
-                banner.innerHTML = '[ERROR] Network Error: ' + err.message;
-                actionBox.style.display = 'block';
-            }
-        }
-
-        function populateDetails(b) {
-            if (!b) return;
-            const details = document.getElementById('scanDetailsGrid');
-            details.style.display = 'grid';
-
-            document.getElementById('scName').textContent = b.userName || '-';
-            document.getElementById('scUsn').textContent = b.userUsn || '-';
-            document.getElementById('scFilm').textContent = b.filmTitle || '-';
-            document.getElementById('scSeats').textContent = Array.isArray(b.seats) ? b.seats.join(', ') : (b.seats || '-');
-            document.getElementById('scShow').textContent = (b.showDate ? new Date(b.showDate).toLocaleDateString() : '') + ' @ ' + (b.showTime || '');
-            document.getElementById('scHall').textContent = b.hall || '-';
-            document.getElementById('scRef').textContent = b.refCode || '-';
-            document.getElementById('scTime').textContent = b.checkedInAt ? new Date(b.checkedInAt).toLocaleTimeString() : 'Just now';
-        }
-
-        function resetScanView() {
-            const banner = document.getElementById('scanStatusBanner');
-            banner.className = 'result-banner';
-            banner.style.background = 'rgba(255,255,255,0.05)';
-            banner.style.color = 'var(--muted)';
-            banner.textContent = 'Ready for scan. Point camera at ticket QR code or use manual lookup.';
-            document.getElementById('scanDetailsGrid').style.display = 'none';
-            document.getElementById('scanActionBox').style.display = 'none';
-            document.getElementById('manualInput').value = '';
-        }
-
-        // Init
-        loadMovies();
-    </script>
 
     <!-- Protocol Guard & Dynamic Module Injection -->
     <script>

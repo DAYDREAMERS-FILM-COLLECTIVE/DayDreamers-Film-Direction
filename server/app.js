@@ -34,6 +34,15 @@ function requireAdmin(req, res, next) {
     next();
 }
 
+// Admin Passkey Verification
+app.post('/api/admin/verify', (req, res) => {
+    const key = req.headers['x-admin-key'] || req.body.key || req.body.passkey || req.body.admin_key;
+    if (key && key === ADMIN_KEY) {
+        return res.json({ valid: true, message: 'Passkey verified successfully' });
+    }
+    return res.status(401).json({ valid: false, error: 'Invalid admin passkey' });
+});
+
 // -------------------------------------------------------------
 // 1. MOVIES API
 // -------------------------------------------------------------
