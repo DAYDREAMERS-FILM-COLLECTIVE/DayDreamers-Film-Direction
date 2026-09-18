@@ -18,6 +18,8 @@ export function toggleAddMovieForm() {
   }
 }
 
+export const renderFilmCatalogue = loadMovies;
+
 export async function loadMovies() {
   const tbody = document.getElementById('moviesList');
   if (!tbody) return [];

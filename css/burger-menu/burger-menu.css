@@ -36,32 +36,64 @@
    Section 1 — Toggle Button (Phase 1)
    ========================================================================== */
 
-/* 1. Toggle Button Container (32x30px base with 46x44px accessible touch target) */
+/* 1. Toggle Button Container (Pinned fixed positioning to eliminate layout shifts) */
+#burgerToggle,
 .site-header-button,
 .burger-toggle {
-  position: relative;
-  width: 32px;
-  height: 30px;
-  padding: 8px 6px;
-  border: 0;
+  position: fixed !important;
+  top: 2rem !important;
+  right: 2.5rem !important;
+  left: auto !important;
+  z-index: 1001 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 44px !important;
+  height: 44px !important;
   background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
   cursor: pointer;
-  z-index: 1002 !important;
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
   box-sizing: border-box;
+  pointer-events: auto !important;
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
-/* Touch hit target expansion without affecting visual layout */
-.site-header-button::after,
-.burger-toggle::after {
-  content: '';
-  position: absolute;
-  inset: -7px;
-  pointer-events: auto;
+/* Daydreamers logo pinned independently top-left */
+.screening-header .logo,
+.site-header .logo,
+.brand-logo {
+  position: fixed !important;
+  top: 2rem !important;
+  left: 2.5rem !important;
+  right: auto !important;
+  z-index: 1000 !important;
+  pointer-events: auto !important;
+}
+
+/* Header wrapper collapse */
+.screening-header,
+.site-header.header {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 0 !important;
+  padding: 0 !important;
+  pointer-events: none !important;
+  border: none !important;
+  background: transparent !important;
+  z-index: 1001 !important;
+}
+
+.screening-header .logo,
+.site-header .logo,
+.brand-logo,
+.burger-toggle,
+#burgerToggle {
+  pointer-events: auto !important;
 }
 
 .site-header-button:focus-visible,
@@ -592,14 +624,14 @@ body.menu-running .site-menu-panel {
   border-right: 2px solid rgba(200, 155, 178, 0.4);
   box-shadow: 25px 0 60px rgba(0, 0, 0, 0.85);
   transform: translateX(-100%);
-  pointer-events: none;
+  pointer-events: none !important;
   z-index: 1000;
   will-change: transform;
 }
 
 body.loader-running .site-loader {
   animation: wipe 1.6s cubic-bezier(0.86, 0, 0.07, 1) 1;
-  pointer-events: auto;
+  pointer-events: none !important;
 }
 
 /* Synchronous zero-latency arrival hold */
@@ -607,7 +639,7 @@ body.loader-running .site-loader {
 .wall-entering .site-loader,
 .wall-entering .sweep-wall {
   transform: translateX(0) !important;
-  pointer-events: auto;
+  pointer-events: none !important;
 }
 
 @keyframes sweepOut {
@@ -619,5 +651,32 @@ body.loader-running .site-loader {
 .wall-exiting .site-loader,
 .wall-exiting .sweep-wall {
   animation: sweepOut 0.8s cubic-bezier(0.86, 0, 0.07, 1) forwards !important;
-  pointer-events: none;
+  pointer-events: none !important;
+}
+
+/* ==========================================================================
+   Pointer-Event Traps & Interactive Layer Elevation
+   ========================================================================== */
+.site-loader,
+.wall-entering,
+.wall-exiting,
+.nav-overlay:not(.is-open),
+.site-menu:not(.active),
+.sweep-wall:not(.active),
+#vignette,
+#grain,
+#star-canvas,
+canvas#menuGlass {
+  pointer-events: none !important;
+}
+
+body.menu-open .site-menu,
+body.menu-open .site-menu-panel {
+  pointer-events: auto !important;
+}
+
+body.menu-open .site-menu a,
+body.menu-open .site-menu button {
+  pointer-events: auto !important;
+  cursor: pointer !important;
 }

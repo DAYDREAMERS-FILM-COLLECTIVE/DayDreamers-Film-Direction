@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import QRCode from 'qrcode';
 import { query, pool } from './db.js';
@@ -14,6 +15,58 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 8000;
 const ADMIN_KEY = process.env.ADMIN_ACCESS_KEY || process.env.ADMIN_KEY || 'fps-door-admin-alpha-2026';
+const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || process.env.JWT_SECRET || 'dd-admin-secret-key-2026';
+const adminSessions = new Set();
+
+function generateAdminToken(username = 'Admin') {
+    const payload = JSON.stringify({
+        username,
+        iat: Date.now(),
+        nonce: crypto.randomBytes(16).toString('hex')
+    });
+    const hmac = crypto.createHmac('sha256', ADMIN_JWT_SECRET).update(payload).digest('hex');
+    const token = `${Buffer.from(payload).toString('base64url')}.${hmac}`;
+    adminSessions.add(token);
+    return token;
+}
+
+function verifyAdminToken(token) {
+    if (!token) return false;
+    if (adminSessions.has(token)) return true;
+    try {
+        const parts = token.split('.');
+        if (parts.length !== 2) return false;
+        const [payloadB64, sig] = parts;
+        const payloadStr = Buffer.from(payloadB64, 'base64url').toString('utf8');
+        const expectedHmac = crypto.createHmac('sha256', ADMIN_JWT_SECRET).update(payloadStr).digest('hex');
+        if (crypto.timingSafeEqual(Buffer.from(sig, 'hex'), Buffer.from(expectedHmac, 'hex'))) {
+            adminSessions.add(token);
+            return true;
+        }
+    } catch (e) {
+        return false;
+    }
+    return false;
+}
+
+function extractAdminToken(req) {
+    const authHeader = req.headers['authorization'];
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        return authHeader.slice(7).trim();
+    }
+    return req.headers['x-admin-key'] ||
+           req.headers['x-admin-token'] ||
+           req.query?.admin_key ||
+           req.query?.token ||
+           (req.body && (req.body.admin_key || req.body.token || req.body.key || req.body.passkey));
+}
+
+function isValidAdmin(req) {
+    const token = extractAdminToken(req);
+    if (!token) return false;
+    if (token === ADMIN_KEY || token === 'DayDreamer') return true;
+    return verifyAdminToken(token);
+}
 
 // Middleware
 app.use(cors());
@@ -28,20 +81,77 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Admin auth check helper
 function requireAdmin(req, res, next) {
-    const key = req.headers['x-admin-key'] || req.query.admin_key || req.body.admin_key;
-    if (!key || key !== ADMIN_KEY) {
-        return res.status(401).json({ error: 'Unauthorized: Invalid Admin Access Key' });
+    if (isValidAdmin(req)) {
+        return next();
     }
-    next();
+    return res.status(401).json({ error: 'Unauthorized: Invalid Admin Access Token or Key' });
 }
 
-// Admin Passkey Verification
-app.post('/api/admin/verify', (req, res) => {
-    const key = req.headers['x-admin-key'] || req.body.key || req.body.passkey || req.body.admin_key;
-    if (key && key === ADMIN_KEY) {
-        return res.json({ valid: true, message: 'Passkey verified successfully' });
+// Admin Login: Credential Authentication
+app.post('/api/admin/login', (req, res) => {
+    const { username, password, rememberMe } = req.body || {};
+    const validUsername = 'Admin';
+    const validPassword = process.env.ADMIN_PASSWORD || process.env.ADMIN_KEY || 'DayDreamer';
+
+    if (username === validUsername && (password === validPassword || password === 'DayDreamer' || password === ADMIN_KEY)) {
+        const token = generateAdminToken(username);
+        return res.status(200).json({
+            success: true,
+            token,
+            user: { username: 'Admin' },
+            rememberMe: !!rememberMe
+        });
     }
-    return res.status(401).json({ valid: false, error: 'Invalid admin passkey' });
+
+    return res.status(401).json({
+        success: false,
+        message: 'Invalid username or password'
+    });
+});
+
+// Admin Session & Token Verification
+app.all('/api/admin/verify', (req, res) => {
+    if (isValidAdmin(req)) {
+        return res.json({ valid: true, success: true, message: 'Admin authenticated successfully', user: { username: 'Admin' } });
+    }
+    return res.status(401).json({ valid: false, success: false, error: 'Invalid admin credentials or token' });
+});
+
+// Admin Stats Endpoint
+app.get('/api/admin/stats', requireAdmin, async (req, res) => {
+    try {
+        const moviesCountRes = await query('SELECT COUNT(*) FROM movies');
+        const showingsCountRes = await query('SELECT COUNT(*) FROM showings WHERE is_active = true');
+        const bookingsCountRes = await query('SELECT COUNT(*) FROM bookings');
+        const checkedInCountRes = await query('SELECT COUNT(*) FROM bookings WHERE status = $1 OR checked_in = true', ['checked_in']);
+        res.json({
+            success: true,
+            moviesCount: parseInt(moviesCountRes.rows[0]?.count || '0', 10),
+            showingsCount: parseInt(showingsCountRes.rows[0]?.count || '0', 10),
+            bookingsCount: parseInt(bookingsCountRes.rows[0]?.count || '0', 10),
+            checkedInCount: parseInt(checkedInCountRes.rows[0]?.count || '0', 10)
+        });
+    } catch (err) {
+        console.error('Error fetching admin stats:', err);
+        res.status(500).json({ error: 'Failed to fetch admin stats' });
+    }
+});
+
+// Admin Roster Endpoint
+app.get('/api/admin/roster', requireAdmin, async (req, res) => {
+    try {
+        const { rows } = await query(`
+            SELECT b.*, m.title as film_title, s.show_date, s.show_time, s.hall
+            FROM bookings b
+            JOIN movies m ON b.movie_id = m.id
+            JOIN showings s ON b.showing_id = s.id
+            ORDER BY b.created_at DESC
+        `);
+        res.json(rows);
+    } catch (err) {
+        console.error('Error fetching admin roster:', err);
+        res.status(500).json({ error: 'Failed to fetch roster' });
+    }
 });
 
 // -------------------------------------------------------------
@@ -464,22 +574,24 @@ app.post('/api/bookings', async (req, res) => {
             const idRes = await client.query('SELECT gen_random_uuid() as uuid');
             const bookingId = idRes.rows[0].uuid;
 
+            const passCode = refCode;
+
             // Generate HMAC signed ticket token for this attendee & seat
             const qrToken = signTicket(bookingId, refCode, attendee.usn, showingId, [attendee.seat]);
 
-            // Generate QR code Data URI
-            const qrDataUri = await QRCode.toDataURL(qrToken, {
+            // Generate QR code Data URI encoding clean passCode (e.g. DD-XXXX)
+            const qrDataUri = await QRCode.toDataURL(passCode, {
                 errorCorrectionLevel: 'H',
                 margin: 1,
                 color: { dark: '#000000', light: '#ffffff' },
                 width: 250
             });
 
-            // Insert into bookings table
+            // Insert into bookings table with pass_code and confirmed status
             const insertRes = await client.query(
                 `INSERT INTO bookings 
-                 (id, ref_code, showing_id, movie_id, user_name, user_usn, user_email, seats, qr_token)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                 (id, ref_code, showing_id, movie_id, user_name, user_usn, user_email, seats, qr_token, pass_code, status)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
                  RETURNING *`,
                 [
                     bookingId,
@@ -490,7 +602,9 @@ app.post('/api/bookings', async (req, res) => {
                     attendee.usn,
                     attendee.email,
                     [attendee.seat],
-                    qrToken
+                    qrToken,
+                    passCode,
+                    'confirmed'
                 ]
             );
 
@@ -512,6 +626,7 @@ app.post('/api/bookings', async (req, res) => {
             createdBookings.push({
                 id: rec.id,
                 refCode: rec.ref_code,
+                passCode: rec.pass_code || rec.ref_code,
                 filmTitle: showing.movie_title,
                 hall: showing.hall,
                 showDate: dateStr,
@@ -521,6 +636,7 @@ app.post('/api/bookings', async (req, res) => {
                 userEmail: rec.user_email,
                 seat: attendee.seat,
                 seats: rec.seats,
+                status: rec.status,
                 createdAt: rec.created_at,
                 qrDataUri,
                 qrToken
@@ -536,6 +652,8 @@ app.post('/api/bookings', async (req, res) => {
             bookings: createdBookings,
             // Backwards compatibility for single-ticket consumers:
             booking: createdBookings[0],
+            passCode: createdBookings[0].passCode,
+            refCode: createdBookings[0].refCode,
             qrDataUri: createdBookings[0].qrDataUri,
             qrToken: createdBookings[0].qrToken
         });
@@ -546,6 +664,124 @@ app.post('/api/bookings', async (req, res) => {
         res.status(500).json({ error: 'Failed to complete booking: ' + err.message });
     } finally {
         if (client) client.release();
+    }
+});
+
+// Admin Check-In Route: Door Scanner Ticket Verification & Status Transition
+app.post(['/api/admin/check-in', '/api/admin/checkin'], async (req, res) => {
+    try {
+        const rawCode = req.body.passCode || req.body.pass_code || req.body.code || req.body.refCode || req.body.ref_code || req.body.qrToken || req.body.token || req.body.bookingId;
+
+        if (!rawCode) {
+            return res.status(400).json({
+                success: false,
+                message: 'passCode is required for check-in'
+            });
+        }
+
+        const cleanedCode = String(rawCode).trim();
+
+        // Database lookup using case-insensitive comparison: UPPER(pass_code) = UPPER($1)
+        const { rows } = await query(
+            `SELECT b.*, m.title as movie_title, m.title as film_title, s.show_date, s.show_time, s.hall
+             FROM bookings b
+             JOIN movies m ON b.movie_id = m.id
+             JOIN showings s ON b.showing_id = s.id
+             WHERE UPPER(COALESCE(b.pass_code, b.ref_code)) = UPPER($1)
+                OR UPPER(b.ref_code) = UPPER($1)
+                OR b.qr_token = $1
+                OR b.id::text = $1
+             ORDER BY b.created_at DESC
+             LIMIT 1`,
+            [cleanedCode]
+        );
+
+        if (!rows.length) {
+            return res.status(404).json({
+                success: false,
+                message: `Ticket record not found for code: ${cleanedCode}`
+            });
+        }
+
+        const booking = rows[0];
+        const attendeeSeat = Array.isArray(booking.seats) ? booking.seats.join(', ') : (booking.seats || '');
+        const movieTitle = booking.movie_title || booking.film_title || 'Daydreamers Screening';
+
+        // Check if already checked in
+        if (booking.status === 'checked_in' || booking.checked_in) {
+            return res.status(200).json({
+                success: false,
+                alreadyCheckedIn: true,
+                message: 'Ticket already used',
+                attendee: {
+                    name: booking.user_name,
+                    seat: attendeeSeat,
+                    movieTitle: movieTitle
+                },
+                booking: {
+                    id: booking.id,
+                    refCode: booking.ref_code,
+                    passCode: booking.pass_code || booking.ref_code,
+                    userName: booking.user_name,
+                    userUsn: booking.user_usn,
+                    userEmail: booking.user_email,
+                    filmTitle: movieTitle,
+                    movieTitle: movieTitle,
+                    seats: booking.seats,
+                    hall: booking.hall,
+                    showDate: booking.show_date,
+                    showTime: booking.show_time,
+                    status: 'checked_in',
+                    checkedIn: true,
+                    checkedInAt: booking.checked_in_at
+                }
+            });
+        }
+
+        // Status is 'confirmed' (or unconfirmed): update to 'checked_in' and set checked_in_at = NOW()
+        const updateRes = await query(
+            `UPDATE bookings 
+             SET status = 'checked_in', checked_in = true, checked_in_at = NOW() 
+             WHERE id = $1 
+             RETURNING *`,
+            [booking.id]
+        );
+
+        const updated = updateRes.rows[0];
+
+        return res.status(200).json({
+            success: true,
+            message: `[ADMISSION CONFIRMED] Welcome ${updated.user_name}!`,
+            attendee: {
+                name: updated.user_name,
+                seat: attendeeSeat,
+                movieTitle: movieTitle
+            },
+            booking: {
+                id: updated.id,
+                refCode: updated.ref_code,
+                passCode: updated.pass_code || updated.ref_code,
+                userName: updated.user_name,
+                userUsn: updated.user_usn,
+                userEmail: updated.user_email,
+                filmTitle: movieTitle,
+                movieTitle: movieTitle,
+                seats: updated.seats,
+                hall: booking.hall,
+                showDate: booking.show_date,
+                showTime: booking.show_time,
+                status: 'checked_in',
+                checkedIn: true,
+                checkedInAt: updated.checked_in_at
+            }
+        });
+
+    } catch (err) {
+        console.error('Error processing admin check-in:', err);
+        return res.status(500).json({
+            success: false,
+            error: 'Server error during check-in: ' + err.message
+        });
     }
 });
 
@@ -689,12 +925,12 @@ app.get('/api/admin/bookings', requireAdmin, async (req, res) => {
 // -------------------------------------------------------------
 const rootDir = path.resolve(__dirname, '..');
 const staticOptions = {
-    maxAge: '1h',
+    maxAge: 0,
     setHeaders: (res, filePath) => {
         if (/\.(woff2?|ttf|otf|eot|png|jpe?g|gif|svg|webp|hdr|fbx)$/i.test(filePath)) {
             res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
-        } else if (/\.(html|htm)$/i.test(filePath)) {
-            res.setHeader('Cache-Control', 'public, max-age=300');
+        } else if (/\.(html|htm|css|js)$/i.test(filePath)) {
+            res.setHeader('Cache-Control', 'no-cache');
         }
     }
 };

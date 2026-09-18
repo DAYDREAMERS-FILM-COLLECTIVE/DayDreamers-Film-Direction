@@ -11,6 +11,9 @@ export function getBookings() {
   return allBookings;
 }
 
+export const loadBookingsRoster = loadBookings;
+export const fetchBookings = loadBookings;
+
 export async function loadBookings(search = '') {
   const tbody = document.getElementById('bookingsList');
   if (!tbody) return [];

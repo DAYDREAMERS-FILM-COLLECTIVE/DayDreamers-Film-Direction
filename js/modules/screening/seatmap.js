@@ -307,16 +307,19 @@ export function initSeatmap() {
     });
     seatmapWindowEventsBound = true;
   }
+}
 
-  // Delegate seat clicks
-  const seatmap = document.getElementById('seatmap');
-  if (seatmap) {
-    seatmap.addEventListener('click', (e) => {
-      const btn = e.target.closest('.seat:not(.occupied)');
-      if (btn) {
-        const id = btn.getAttribute('data-id');
-        if (id) handleSeatToggle(id);
-      }
-    });
-  }
+if (typeof window !== 'undefined') {
+  window.handleSeatToggle = handleSeatToggle;
+}
+
+// Unconditional document-level click delegation for seats
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.seat:not(.occupied)');
+    if (btn) {
+      const id = btn.getAttribute('data-id');
+      if (id) handleSeatToggle(id);
+    }
+  });
 }

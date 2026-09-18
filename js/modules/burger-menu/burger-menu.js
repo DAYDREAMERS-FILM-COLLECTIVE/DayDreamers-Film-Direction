@@ -267,19 +267,30 @@ export function updateCurrentNavItem() {
  */
 function handleArrivalCurtain() {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  const cleanup = () => {
+    document.documentElement.classList.remove('wall-entering', 'wall-exiting');
+    if (document.body) {
+      document.body.classList.remove('wall-entering', 'wall-exiting', 'loader-running');
+    }
+    const loader = document.querySelector('.site-loader');
+    if (loader) {
+      loader.style.pointerEvents = 'none';
+      loader.style.opacity = '0';
+    }
+  };
+
   try {
     if (sessionStorage.getItem('wallEnter') === '1') {
       sessionStorage.removeItem('wallEnter');
       document.documentElement.classList.remove('wall-entering');
+      if (document.body) document.body.classList.remove('wall-entering');
       document.documentElement.classList.add('wall-exiting');
-      setTimeout(() => {
-        document.documentElement.classList.remove('wall-exiting');
-      }, 800);
+      setTimeout(cleanup, 500);
     } else {
-      document.documentElement.classList.remove('wall-entering');
+      cleanup();
     }
   } catch (_) {
-    document.documentElement.classList.remove('wall-entering');
+    cleanup();
   }
 }
 
@@ -312,6 +323,16 @@ export function initBurgerMenu() {
     }
   });
 
+  // Explicit Admin link handler bypassing router
+  const adminLinks = document.querySelectorAll('#site-menu a[href*="admin"], a[href*="admin"]');
+  adminLinks.forEach((link) => {
+    link.setAttribute('data-no-router', 'true');
+    link.addEventListener('click', (e) => {
+      e.stopPropagation();
+      window.location.href = 'admin.html';
+    });
+  });
+
   // Intercept clicks on links inside the menu room
   const menu = document.getElementById('site-menu');
   if (menu) {
@@ -321,6 +342,13 @@ export function initBurgerMenu() {
 
       const href = link.getAttribute('href');
       if (!href) return;
+
+      // Explicit Admin link bypass
+      if (href.includes('admin') || link.dataset.noRouter === 'true') {
+        e.stopPropagation();
+        window.location.href = 'admin.html';
+        return;
+      }
 
       // If opening in a new tab or external protocol, let default behavior proceed
       if (link.target === '_blank' || href.startsWith('mailto:') || href.startsWith('tel:')) {
@@ -362,6 +390,10 @@ export function initBurgerMenu() {
         // At 800ms when screen is 100% covered, swap view and stylesheets in-memory!
         e.preventDefault();
         hide();
+        if (href.includes('admin.html') || href.includes('admin') || link.dataset.noRouter === 'true') {
+          window.location.href = 'admin.html';
+          return;
+        }
         if (typeof window.navigateTo === 'function') {
           window.navigateTo(href, false, true);
         } else {

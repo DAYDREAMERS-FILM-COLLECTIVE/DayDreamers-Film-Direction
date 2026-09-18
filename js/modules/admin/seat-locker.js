@@ -13,6 +13,9 @@ export function getCurrentShowingId() {
   return currentShowingId;
 }
 
+export const renderSeatLockerGrid = initSeatLocker;
+export const populateSeats = initSeatLocker;
+
 export async function initSeatLocker() {
   try {
     const [moviesRes, showingsRes] = await Promise.all([

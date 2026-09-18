@@ -8,15 +8,15 @@
  * Consumes 0% GPU/CPU when the menu is closed.
  */
 
-import * as THREE from 'https://esm.sh/three@0.136.0';
-import { RGBELoader } from 'https://esm.sh/three@0.136.0/examples/jsm/loaders/RGBELoader.js';
-import { EffectComposer } from 'https://esm.sh/three@0.136.0/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'https://esm.sh/three@0.136.0/examples/jsm/postprocessing/RenderPass.js';
-import { ShaderPass } from 'https://esm.sh/three@0.136.0/examples/jsm/postprocessing/ShaderPass.js';
-import { AfterimagePass } from 'https://esm.sh/three@0.136.0/examples/jsm/postprocessing/AfterimagePass.js';
-import { UnrealBloomPass } from 'https://esm.sh/three@0.136.0/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { FBXLoader } from 'https://esm.sh/three@0.136.0/examples/jsm/loaders/FBXLoader.js';
-import { OrbitControls } from 'https://esm.sh/three@0.136.0/examples/jsm/controls/OrbitControls.js';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+let RGBELoader = null;
+let EffectComposer = null;
+let RenderPass = null;
+let AfterimagePass = null;
+let UnrealBloomPass = null;
+let FBXLoader = null;
 
 let renderer = null;
 let running = false;
@@ -150,7 +150,7 @@ function animate() {
 /**
  * Initialize WebGL canvas, Three.js scene, lights, model, and post-processing pipeline.
  */
-export function initMenuGlass() {
+export async function initMenuGlass() {
   if (initialized) return;
   const canvas = document.getElementById('menuGlass');
   if (!canvas) return;
@@ -158,6 +158,42 @@ export function initMenuGlass() {
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   if (!window.WebGLRenderingContext) return;
   if (window.is2DFallbackActive) return;
+
+  // Dynamically load optional external CDN helpers with try/catch
+  if (!RGBELoader) {
+    try {
+      const rgbeMod = await import('https://esm.sh/three@0.136.0/examples/jsm/loaders/RGBELoader.js?bundle');
+      RGBELoader = rgbeMod.RGBELoader;
+    } catch (err) {
+      console.warn('[menuGlass] Optional RGBELoader unavailable:', err.message);
+    }
+  }
+
+  if (!FBXLoader) {
+    try {
+      const fbxMod = await import('https://esm.sh/three@0.136.0/examples/jsm/loaders/FBXLoader.js?bundle');
+      FBXLoader = fbxMod.FBXLoader;
+    } catch (err) {
+      console.warn('[menuGlass] Optional FBXLoader unavailable:', err.message);
+    }
+  }
+
+  if (!EffectComposer) {
+    try {
+      const [ecMod, rpMod, aiMod, ubMod] = await Promise.all([
+        import('https://esm.sh/three@0.136.0/examples/jsm/postprocessing/EffectComposer.js?bundle'),
+        import('https://esm.sh/three@0.136.0/examples/jsm/postprocessing/RenderPass.js?bundle'),
+        import('https://esm.sh/three@0.136.0/examples/jsm/postprocessing/AfterimagePass.js?bundle'),
+        import('https://esm.sh/three@0.136.0/examples/jsm/postprocessing/UnrealBloomPass.js?bundle')
+      ]);
+      EffectComposer = ecMod.EffectComposer;
+      RenderPass = rpMod.RenderPass;
+      AfterimagePass = aiMod.AfterimagePass;
+      UnrealBloomPass = ubMod.UnrealBloomPass;
+    } catch (err) {
+      console.warn('[menuGlass] Optional postprocessing passes unavailable:', err.message);
+    }
+  }
 
   try {
     renderer = new THREE.WebGLRenderer({
@@ -233,18 +269,20 @@ export function initMenuGlass() {
   scene.add(ambientLight);
 
   // 4. HDR Environment map (local with remote CDN fallback)
-  try {
-    const rgbeLoader = new RGBELoader();
-    const loadHdr = (url, onFail) => {
-      rgbeLoader.load(url, (hdrEquirect) => {
-        hdrEquirect.mapping = THREE.EquirectangularReflectionMapping;
-        scene.environment = hdrEquirect;
-      }, undefined, onFail);
-    };
-    loadHdr('/assets/3d/GRADIENT_01_01_comp.hdr', () => {
-      loadHdr('https://miroleon.github.io/daily-assets/GRADIENT_01_01_comp.hdr');
-    });
-  } catch (_) {}
+  if (RGBELoader) {
+    try {
+      const rgbeLoader = new RGBELoader();
+      const loadHdr = (url, onFail) => {
+        rgbeLoader.load(url, (hdrEquirect) => {
+          hdrEquirect.mapping = THREE.EquirectangularReflectionMapping;
+          scene.environment = hdrEquirect;
+        }, undefined, onFail);
+      };
+      loadHdr('/assets/3d/GRADIENT_01_01_comp.hdr', () => {
+        loadHdr('https://miroleon.github.io/daily-assets/GRADIENT_01_01_comp.hdr');
+      });
+    } catch (_) {}
+  }
 
   // 5. Pristine Satin Metallic Physical Material (Zero scratches / zero fingertip lines)
   const handsMaterial = new THREE.MeshPhysicalMaterial({
@@ -282,25 +320,29 @@ export function initMenuGlass() {
     introStartTime = performance.now();
   };
 
-  try {
-    const fbxLoader = new FBXLoader();
-    fbxLoader.load(
-      '/assets/3d/two_hands_01.fbx',
-      setupModel,
-      undefined,
-      () => {
-        // Fallback to remote CDN if local is unavailable
-        fbxLoader.load(
-          'https://miroleon.github.io/daily-assets/two_hands_01.fbx',
-          setupModel,
-          undefined,
-          () => {
-            if (!modelLoaded) createProceduralSculpture(handsMaterial);
-          }
-        );
-      }
-    );
-  } catch (_) {
+  if (FBXLoader) {
+    try {
+      const fbxLoader = new FBXLoader();
+      fbxLoader.load(
+        '/assets/3d/two_hands_01.fbx',
+        setupModel,
+        undefined,
+        () => {
+          // Fallback to remote CDN if local is unavailable
+          fbxLoader.load(
+            'https://miroleon.github.io/daily-assets/two_hands_01.fbx',
+            setupModel,
+            undefined,
+            () => {
+              if (!modelLoaded) createProceduralSculpture(handsMaterial);
+            }
+          );
+        }
+      );
+    } catch (_) {
+      createProceduralSculpture(handsMaterial);
+    }
+  } else {
     createProceduralSculpture(handsMaterial);
   }
 
@@ -313,25 +355,29 @@ export function initMenuGlass() {
 
   // 6. Post-Processing Pipeline (RenderPass + AfterimagePass + UnrealBloomPass)
   // Stripped of grid-displacement pass to remove all line and stripe distortions across the hands
-  try {
-    composer = new EffectComposer(renderer);
+  if (EffectComposer && RenderPass && AfterimagePass && UnrealBloomPass) {
+    try {
+      composer = new EffectComposer(renderer);
 
-    const renderPass = new RenderPass(scene, camera);
-    composer.addPass(renderPass);
+      const renderPass = new RenderPass(scene, camera);
+      composer.addPass(renderPass);
 
-    const afterimagePass = new AfterimagePass();
-    afterimagePass.uniforms.damp.value = 0.90; // Dreamy cinema motion blur trails
-    composer.addPass(afterimagePass);
+      const afterimagePass = new AfterimagePass();
+      afterimagePass.uniforms.damp.value = 0.90; // Dreamy cinema motion blur trails
+      composer.addPass(afterimagePass);
 
-    bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(window.innerWidth, window.innerHeight),
-      1.25, // bloom strength
-      0.55, // radius
-      0.16  // threshold
-    );
-    composer.addPass(bloomPass);
-  } catch (err) {
-    console.warn('[menuGlass] Post-processing pipeline disabled, using standard renderer:', err);
+      bloomPass = new UnrealBloomPass(
+        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        1.25, // bloom strength
+        0.55, // radius
+        0.16  // threshold
+      );
+      composer.addPass(bloomPass);
+    } catch (err) {
+      console.warn('[menuGlass] Post-processing pipeline disabled, using standard renderer:', err);
+      composer = null;
+    }
+  } else {
     composer = null;
   }
 
@@ -356,8 +402,8 @@ function createProceduralSculpture(material) {
 /**
  * Start animation loop when burger menu opens.
  */
-export function startMenuGlass() {
-  if (!initialized) initMenuGlass();
+export async function startMenuGlass() {
+  if (!initialized) await initMenuGlass();
   if (running || !renderer) return;
 
   running = true;
@@ -390,9 +436,9 @@ if (typeof window !== 'undefined') {
   window.addEventListener('menuGlass:stop', stopMenuGlass);
 
   // Pre-warm Three.js and shaders during idle time
-  const warm = () => {
+  const warm = async () => {
     if (!window.is2DFallbackActive && !initialized) {
-      try { initMenuGlass(); } catch (_) {}
+      try { await initMenuGlass(); } catch (_) {}
     }
   };
   if ('requestIdleCallback' in window) {

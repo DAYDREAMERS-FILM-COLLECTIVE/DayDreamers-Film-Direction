@@ -28,13 +28,13 @@
 }
 </script>
 
-<link rel="stylesheet" href="/css/base.css" />
-<link rel="stylesheet" href="/css/components/sweep-wall.css" />
-<link rel="stylesheet" href="/css/components/cursor.css" />
-<link rel="stylesheet" href="/css/components/footer.css" />
-<link rel="stylesheet" href="/css/burger-menu/burger-menu.css" />
-<link id="pageStyleHome" rel="stylesheet" href="/css/pages/home.css" disabled />
-<link id="pageStyleScreening" rel="stylesheet" href="/css/pages/screening.css" />
+<link rel="stylesheet" href="/css/base.css?v=fresh3" />
+<link rel="stylesheet" href="/css/components/sweep-wall.css?v=fresh3" />
+<link rel="stylesheet" href="/css/components/cursor.css?v=fresh3" />
+<link rel="stylesheet" href="/css/components/footer.css?v=fresh3" />
+<link rel="stylesheet" href="/css/burger-menu/burger-menu.css?v=fresh3" />
+<link id="pageStyleHome" rel="stylesheet" href="/css/pages/home.css?v=fresh3" disabled />
+<link id="pageStyleScreening" rel="stylesheet" href="/css/pages/screening.css?v=fresh3" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script>try{if(sessionStorage.getItem('wallEnter')==='1')document.documentElement.classList.add('wall-entering');}catch(e){}</script>
 </head>
@@ -43,8 +43,8 @@
 
 <div class="sweep-wall" id="sweepWall"></div>
 
-<header class="site-header header">
-  <a class="brand" href="index.html#home" id="brandLink" data-leave data-cursor="TOP">
+<header class="site-header header screening-header">
+  <a class="brand logo brand-logo" href="index.html#home" id="brandLink" data-leave data-cursor="TOP">
     <svg class="mark-svg" viewBox="0 0 32 32" fill="none" aria-hidden="true">
       <path d="M22.5 19.5A9.5 9.5 0 1 1 12.5 5.8 7.4 7.4 0 0 0 22.5 19.5Z" fill="var(--gold)"/>
       <path d="M24.5 4.5c.5 2.3 1.2 3 3.5 3.5-2.3.5-3 1.2-3.5 3.5-.5-2.3-1.2-3-3.5-3.5 2.3-.5 3-1.2 3.5-3.5Z" fill="var(--gold)"/>
@@ -77,7 +77,7 @@
       <div class="site-menu-content">
         <ul>
           <li><a href="mailto:hello@daydreamers.club" data-cursor="OPEN">Email</a></li>
-          <li><a href="admin.html" data-cursor="OPEN">Admin</a></li>
+          <li><a href="admin.html" data-cursor="OPEN" data-no-router="true">Admin</a></li>
           <li><a href="screening.html#booking" data-cursor="GO">Reserve</a></li>
         </ul>
       </div>
@@ -316,6 +316,14 @@
     loadModule('/js/modules/three/menu-glass.js');
     loadModule('/js/modules/screening/main.js');
   })();
+</script>
+<script>
+  setTimeout(() => {
+    document.body.classList.remove('wall-entering');
+    document.documentElement.classList.remove('wall-entering');
+    const loader = document.querySelector('.site-loader');
+    if (loader) loader.style.pointerEvents = 'none';
+  }, 600);
 </script>
 </body>
 </html>

@@ -37,8 +37,11 @@ dist-ssr
 temp/
 archive/
 
-# Markdown and text files (preserve README.md)
+# Markdown and text files (preserve README.md and project reference docs)
 *.md
 !README.md
+!CODEBASE_METADATA.md
+!WEBSITE_ACTUAL_ISSUES.md
+!WEBSITE_POTENTIAL_RISKS.md
 *.txt
 

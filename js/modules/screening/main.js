@@ -16,11 +16,10 @@ import {
 
 import { fetchMovies, fetchShowings } from './api.js';
 import { initSeatmap, enable2DFallback, rebuildSeatsAnimated } from './seatmap.js';
-import { initBookingModal, openBookingModal } from './booking-modal.js';
-import { initScrubShowcase } from './scrub-showcase.js';
+import { initBookingModal } from './booking-modal.js';
+import { initScrubShowcase, destroyScrubShowcase } from './scrub-showcase.js';
 
 let revealObserver = null;
-let reserveDocListenerBound = false;
 if (typeof window !== 'undefined' && window.location.hash !== '#booking') {
   window.scrollTo(0, 0);
 }
@@ -319,20 +318,6 @@ function setupBookingModes() {
       if (hint) hint.innerHTML = 'Group Mode &bull; Select up to 4 seats at once';
     });
   }
-
-  // Intercept any click for all "Reserve Seats" buttons
-  const reserveSelector = '[data-action="reserve-seats"], .reserve-seats-btn, #heroReserveBtn, a[href="#booking"]';
-  if (!reserveDocListenerBound) {
-    document.addEventListener('click', (e) => {
-      const btn = e.target.closest(reserveSelector);
-      if (btn) {
-        e.preventDefault();
-        e.stopPropagation();
-        slowScrollToBooking();
-      }
-    });
-    reserveDocListenerBound = true;
-  }
 }
 
 function observeReveals() {
@@ -354,6 +339,8 @@ function observeReveals() {
 }
 
 export async function initScreening() {
+  destroyScreening();
+
   if (window.location.hash !== '#booking') {
     window.scrollTo(0, 0);
   }
@@ -380,19 +367,26 @@ export function destroyScreening() {
     try { revealObserver.disconnect(); } catch (e) {}
     revealObserver = null;
   }
+  try { destroyScrubShowcase(); } catch (_) {}
 }
 
 if (typeof window !== 'undefined') {
+  window.slowScrollToBooking = slowScrollToBooking;
   window.initScreening = initScreening;
   window.destroyScreening = destroyScreening;
 }
 
-// Auto-boot on DOM readiness
+// Auto-boot on DOM readiness only if screening view elements are present in DOM
 if (typeof document !== 'undefined') {
+  const bootIfScreening = () => {
+    if (document.getElementById('bookingView') || document.getElementById('moviesGrid') || window.location.pathname.includes('screening')) {
+      initScreening();
+    }
+  };
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initScreening);
+    document.addEventListener('DOMContentLoaded', bootIfScreening);
   } else {
-    initScreening();
+    bootIfScreening();
   }
 }
 

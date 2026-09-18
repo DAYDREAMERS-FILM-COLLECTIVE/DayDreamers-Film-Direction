@@ -72,12 +72,18 @@ function getViewFromUrl(urlStr) {
   try {
     const u = new URL(urlStr, window.location.href);
     const path = u.pathname;
+    if (path.includes('admin')) {
+      return null;
+    }
     if (path.endsWith('/screening.html') || path.endsWith('/screening')) {
       return 'screening';
     }
-    return 'home';
+    if (path === '/' || path.endsWith('/index.html') || path.endsWith('/index') || path.endsWith('/')) {
+      return 'home';
+    }
+    return null;
   } catch (_) {
-    return 'home';
+    return null;
   }
 }
 
@@ -106,6 +112,10 @@ function switchPageStylesheet(targetView) {
  */
 export async function navigateTo(targetUrl, replace = false, fromMenu = false) {
   if (!targetUrl || targetUrl.startsWith('javascript:')) return;
+  if (targetUrl.includes('admin')) {
+    window.location.href = targetUrl;
+    return;
+  }
   if (isNavigating) return;
 
   const urlObj = new URL(targetUrl, window.location.href);
@@ -255,16 +265,23 @@ export function initRouter() {
     const link = e.target.closest('a[href]');
     if (!link) return;
 
+    const href = link.getAttribute('href');
+    if (!href) return;
+
+    // Check anchor before any routing logic:
+    // If href contains 'admin', or if link.dataset.noRouter === 'true', or if href starts with 'http',
+    // do NOT call e.preventDefault(). Return immediately and allow standard browser navigation.
     if (
+      href.includes('admin') ||
+      link.dataset.noRouter === 'true' ||
+      href.startsWith('http') ||
       link.hasAttribute('data-router-disabled') ||
       link.getAttribute('target') === '_blank' ||
-      link.hasAttribute('download')
+      link.hasAttribute('download') ||
+      href.startsWith('javascript:') ||
+      href.startsWith('mailto:') ||
+      href.startsWith('tel:')
     ) {
-      return;
-    }
-
-    const href = link.getAttribute('href');
-    if (!href || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) {
       return;
     }
 
@@ -276,6 +293,10 @@ export function initRouter() {
     }
 
     if (url.origin !== window.location.origin) return;
+
+    if (url.pathname.includes('admin')) {
+      return;
+    }
 
     // Do not intercept menu links here; burger-menu.js handles menu clicks directly
     if (link.closest('#site-menu')) return;

@@ -91,17 +91,21 @@ export function openBookingModal() {
   document.body.classList.add('modal-open');
 }
 
-export function closeBookingModal() {
-  if (isSubmitting) return; // Disallow closing modal while submission is in-flight
-  const modal = getModal();
-  if (modal) modal.classList.remove('open');
-  document.body.classList.remove('modal-open');
+export function resetBookingForm() {
   const formStep = document.getElementById('bookingFormStep');
   const form = document.getElementById('attendeeForm');
   const successStep = document.getElementById('ticketSuccessStep');
   if (formStep) formStep.style.display = 'block';
   if (form) form.style.display = 'block';
   if (successStep) successStep.style.display = 'none';
+}
+
+export function closeBookingModal() {
+  if (isSubmitting) return; // Disallow closing modal while submission is in-flight
+  const modal = getModal();
+  if (modal) modal.classList.remove('open');
+  document.body.classList.remove('modal-open');
+  resetBookingForm();
 }
 
 export function renderTicketSuccess(bookings) {
@@ -117,6 +121,7 @@ export function renderTicketSuccess(bookings) {
   }
 
   bookings.forEach(b => {
+    const code = b.passCode || b.refCode || '';
     const passCard = document.createElement('div');
     passCard.className = 'single-pass-card';
     passCard.innerHTML = `
@@ -127,13 +132,13 @@ export function renderTicketSuccess(bookings) {
         <div class="r"><span>Date &amp; Time</span><b>${b.showDate || ''} | ${b.showTime || ''}</b></div>
         <div class="r"><span>Venue</span><b>${b.hall || ''}</b></div>
         <div class="r"><span>Seat Reserved</span><b style="color: var(--gold); font-size: 15px;">Seat ${b.seat || (Array.isArray(b.seats) ? b.seats.join(', ') : (b.seats || ''))}</b></div>
-        <div class="r"><span>Reference</span><b style="color: var(--gold); font-family: monospace;">${b.refCode || ''}</b></div>
+        <div class="r"><span>Pass Code</span><b style="color: var(--gold); font-family: monospace;">${code}</b></div>
       </div>
       <div style="text-align: center; margin: 16px 0 10px;">
-        <img src="${b.qrDataUri}" alt="QR Ticket ${b.refCode}" width="150" height="150" style="background:#fff; padding:6px; display:inline-block; border-radius:4px;" />
+        <img src="${b.qrDataUri}" alt="QR Ticket ${code}" width="150" height="150" style="background:#fff; padding:6px; display:inline-block; border-radius:4px;" />
       </div>
       <div style="text-align: center; margin-bottom: 6px;">
-        <a href="${b.qrDataUri}" download="daydreamers-ticket-${b.refCode}.png" class="btn-line" style="display:inline-block; font-size:10px; padding:6px 14px; text-decoration:none; cursor:pointer;">Download Pass [${b.refCode}]</a>
+        <a href="${b.qrDataUri}" download="daydreamers-ticket-${code}.png" class="btn-line" style="display:inline-block; font-size:10px; padding:6px 14px; text-decoration:none; cursor:pointer;">Download Pass [${code}]</a>
       </div>
     `;
     list.appendChild(passCard);
@@ -309,66 +314,71 @@ export async function handleBookingSubmit(e) {
   }
 }
 
-let modalDocEventsBound = false;
+// Unconditional Document-Level Event Delegation for Modal & Reservation Controls
+const reserveSelector = '[data-action="reserve-seats"], .reserve-seats-btn, #heroReserveBtn, a[href="#booking"]';
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', (e) => {
+    // 1. Reserve Seats buttons -> trigger slow scroll
+    const reserveBtn = e.target.closest(reserveSelector);
+    if (reserveBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (typeof window.slowScrollToBooking === 'function') {
+        window.slowScrollToBooking();
+      } else {
+        const bookingEl = document.getElementById('booking');
+        if (bookingEl) bookingEl.scrollIntoView({ behavior: 'smooth' });
+      }
+      return;
+    }
+
+    // 2. Confirm / Open Booking Modal button
+    const confirmBtn = e.target.closest('#confirmBtn');
+    if (confirmBtn) {
+      e.preventDefault();
+      openBookingModal();
+      return;
+    }
+
+    // 3. Close Modal buttons & Done button
+    const closeBtn = e.target.closest('#modalClose, .modal-close, [data-action="close-modal"], #donePassBtn');
+    if (closeBtn) {
+      e.preventDefault();
+      closeBookingModal();
+      return;
+    }
+
+    // 4. Modal Backdrop click
+    const modal = getModal();
+    if (modal && e.target === modal) {
+      if (isSubmitting) return;
+      const successStep = document.getElementById('ticketSuccessStep');
+      if (successStep && successStep.style.display === 'block') return;
+      closeBookingModal();
+    }
+  });
+
+  document.addEventListener('submit', (e) => {
+    if (e.target && e.target.id === 'attendeeForm') {
+      handleBookingSubmit(e);
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const modal = getModal();
+      if (modal && modal.classList.contains('open')) {
+        const successStep = document.getElementById('ticketSuccessStep');
+        if (successStep && successStep.style.display === 'block') {
+          return;
+        }
+        closeBookingModal();
+      }
+    }
+  });
+}
 
 export function initBookingModal() {
-  const form = document.getElementById('attendeeForm');
-  if (form) {
-    form.addEventListener('submit', handleBookingSubmit);
-  }
-
-  if (!modalDocEventsBound) {
-    // Document-level event delegation for closing modal
-    document.addEventListener('click', (e) => {
-      const closeBtn = e.target.closest('#modalClose, .modal-close, [data-action="close-modal"]');
-      if (closeBtn) {
-        e.preventDefault();
-        closeBookingModal();
-      }
-    });
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        const modal = getModal();
-        if (modal && modal.classList.contains('open')) {
-          const successStep = document.getElementById('ticketSuccessStep');
-          if (successStep && successStep.style.display === 'block') {
-            return;
-          }
-          closeBookingModal();
-        }
-      }
-    });
-
-    modalDocEventsBound = true;
-  }
-
-  const doneBtn = document.getElementById('donePassBtn');
-  if (doneBtn) {
-    doneBtn.addEventListener('click', closeBookingModal);
-  }
-
-  const modal = getModal();
-  if (modal) {
-    modal.addEventListener('click', (e) => {
-      // 1. Prevent dismissal while submit is in-flight
-      if (isSubmitting) return;
-
-      // 2. Prevent dismissal if ticketSuccessStep is displayed
-      const successStep = document.getElementById('ticketSuccessStep');
-      if (successStep && successStep.style.display === 'block') {
-        return;
-      }
-
-      // 3. Only close if backdrop itself was clicked
-      if (e.target === modal) {
-        closeBookingModal();
-      }
-    });
-  }
-
-  const confirmBtn = document.getElementById('confirmBtn');
-  if (confirmBtn) {
-    confirmBtn.addEventListener('click', openBookingModal);
-  }
+  resetBookingForm();
 }

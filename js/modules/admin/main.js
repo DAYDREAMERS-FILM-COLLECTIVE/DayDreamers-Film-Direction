@@ -2,19 +2,22 @@
  * js/modules/admin/main.js
  * Central Administrative Orchestrator:
  * Integrates auth gate, film catalog, seat locker, booking roster, and QR scanner.
- * Coordinates programmatic event delegation for declarative data attributes.
+ * Coordinates programmatic event delegation for declarative data attributes and tabs.
  */
 
 import {
   getAdminKey,
+  getAdminToken,
   verifyPasskey,
   checkExistingAuth,
   unlockDashboard,
-  lockDashboard
+  lockDashboard,
+  initAuth
 } from './auth.js';
 
 import {
   loadMovies,
+  renderFilmCatalogue,
   toggleAddMovieForm,
   deleteMovie,
   handleAddMovieSubmit
@@ -22,6 +25,8 @@ import {
 
 import {
   initSeatLocker,
+  renderSeatLockerGrid,
+  populateSeats,
   onSeatMovieChange,
   onSeatShowingChange,
   toggleSeatLock
@@ -29,6 +34,8 @@ import {
 
 import {
   loadBookings,
+  loadBookingsRoster,
+  fetchBookings,
   exportBookingsCsv
 } from './bookings.js';
 
@@ -42,60 +49,121 @@ import {
 
 let currentSection = 'movies';
 
-export function showSection(section) {
-  if (!section) return;
+export function switchTab(target) {
+  if (!target) return;
+
+  let panelId = target;
+  let sectionKey = 'movies';
+
+  if (target === 'movies' || target === '#tabCatalogue' || target === 'tabCatalogue' || target === 'moviesSection' || target === '#moviesSection' || target === 'catalogue' || target === 'film-catalogue' || target === 'filmCatalogue') {
+    panelId = 'tabCatalogue';
+    sectionKey = 'movies';
+  } else if (target === 'seats' || target === '#tabSeatLocker' || target === 'tabSeatLocker' || target === 'seatsSection' || target === '#seatsSection' || target === 'seat-locker' || target === 'seatLocker' || target === 'seatlocker') {
+    panelId = 'tabSeatLocker';
+    sectionKey = 'seats';
+  } else if (target === 'bookings' || target === '#tabBookings' || target === 'tabBookings' || target === 'bookingsSection' || target === '#bookingsSection' || target === 'attendee-bookings' || target === 'attendeeBookings') {
+    panelId = 'tabBookings';
+    sectionKey = 'bookings';
+  } else if (target === 'scanner' || target === '#tabScanner' || target === 'tabScanner' || target === 'scannerSection' || target === '#scannerSection' || target === 'door-scanner' || target === 'doorScanner' || target === 'doorscanner') {
+    panelId = 'tabScanner';
+    sectionKey = 'scanner';
+  } else {
+    panelId = target.replace(/^#/, '');
+    if (panelId.toLowerCase().includes('catalogue') || panelId.toLowerCase().includes('movie')) sectionKey = 'movies';
+    else if (panelId.toLowerCase().includes('seat')) sectionKey = 'seats';
+    else if (panelId.toLowerCase().includes('booking')) sectionKey = 'bookings';
+    else if (panelId.toLowerCase().includes('scan')) sectionKey = 'scanner';
+  }
 
   // Stop scanner camera if leaving scanner view
-  if (currentSection === 'scanner' && section !== 'scanner') {
+  if (currentSection === 'scanner' && sectionKey !== 'scanner') {
     stopQrScanner();
   }
-  currentSection = section;
+  currentSection = sectionKey;
 
-  // Update nav item active states
-  document.querySelectorAll('.nav-item').forEach(el => {
-    const targetSection = el.getAttribute('data-section');
-    if (targetSection === section) {
-      el.classList.add('active');
+  // 1. Update button active states
+  document.querySelectorAll('.sidebar .nav-item, [data-tab], .admin-tab-btn').forEach(btn => {
+    const bTab = btn.getAttribute('data-tab');
+    const bSec = btn.getAttribute('data-section');
+    if (bTab === `#${panelId}` || bTab === panelId || bSec === sectionKey) {
+      btn.classList.add('active');
     } else {
-      el.classList.remove('active');
+      btn.classList.remove('active');
     }
   });
 
-  const moviesSec = document.getElementById('moviesSection');
-  const seatsSec = document.getElementById('seatsSection');
-  const bookingsSec = document.getElementById('bookingsSection');
-  const scannerSec = document.getElementById('scannerSection');
+  // 2. Hide all tab panels, display only target panel
+  const allPanels = document.querySelectorAll('.admin-tab-pane, #tabCatalogue, #tabSeatLocker, #tabBookings, #tabScanner, #moviesSection, #seatsSection, #bookingsSection, #scannerSection');
+  allPanels.forEach(pane => {
+    pane.classList.remove('active');
+    pane.style.display = 'none';
+  });
 
-  if (moviesSec) moviesSec.style.display = 'none';
-  if (seatsSec) seatsSec.style.display = 'none';
-  if (bookingsSec) bookingsSec.style.display = 'none';
-  if (scannerSec) scannerSec.style.display = 'none';
+  const activePanel = document.getElementById(panelId) || document.querySelector(`[data-tab-pane="${panelId}"]`);
+  if (activePanel) {
+    activePanel.classList.add('active');
+    activePanel.style.display = 'block';
+  }
 
-  if (section === 'movies') {
-    if (moviesSec) moviesSec.style.display = 'block';
-    loadMovies();
-  } else if (section === 'seats') {
-    if (seatsSec) seatsSec.style.display = 'block';
-    initSeatLocker();
-  } else if (section === 'bookings') {
-    if (bookingsSec) bookingsSec.style.display = 'block';
-    loadBookings();
-  } else if (section === 'scanner') {
-    if (scannerSec) scannerSec.style.display = 'block';
+  // 3. Trigger Panel-Specific Renderers on Switch
+  if (sectionKey === 'movies') {
+    if (typeof renderFilmCatalogue === 'function') {
+      renderFilmCatalogue();
+    } else {
+      loadMovies();
+    }
+  } else if (sectionKey === 'seats') {
+    if (typeof renderSeatLockerGrid === 'function') {
+      renderSeatLockerGrid();
+    } else if (typeof populateSeats === 'function') {
+      populateSeats();
+    } else {
+      initSeatLocker();
+    }
+  } else if (sectionKey === 'bookings') {
+    if (typeof loadBookingsRoster === 'function') {
+      loadBookingsRoster();
+    } else if (typeof fetchBookings === 'function') {
+      fetchBookings();
+    } else {
+      loadBookings();
+    }
+  } else if (sectionKey === 'scanner') {
     startQrScanner();
+    // Force scanner container reflow: layout was computed as 0 while hidden
+    // behind the auth gate, so re-assert dimensions after unhiding.
+    requestAnimationFrame(() => {
+      const reader = document.getElementById('reader');
+      if (reader) {
+        reader.style.minHeight = '280px';
+        reader.style.width = '100%';
+      }
+    });
   }
 }
 
+export function showSection(section) {
+  switchTab(section);
+}
+
+export function switchAdminTab(tabName) {
+  return switchTab(tabName);
+}
+
 function bindEventDelegation() {
-  // 1. Click delegation
+  // 1. Document-level Click Delegation (survives auth-gate unhiding)
   document.addEventListener('click', (e) => {
-    // Navigation
-    const navBtn = e.target.closest('[data-action="navigate"]');
-    if (navBtn) {
+    // Admin Tab Navigation
+    const tabBtn = e.target.closest('[data-tab], .nav-item, .admin-tab-btn, .admin-nav-btn');
+    if (tabBtn && !tabBtn.closest('.admin-header-actions') && !tabBtn.closest('[data-action="logout"]')) {
       e.preventDefault();
-      const section = navBtn.getAttribute('data-section');
-      showSection(section);
-      return;
+      const target = tabBtn.getAttribute('data-tab')
+        || tabBtn.getAttribute('data-section')
+        || tabBtn.getAttribute('href')?.replace('#', '');
+      if (target) {
+        switchTab(target);
+        return;
+      }
     }
 
     // Toggle Add Movie Form
@@ -150,10 +218,11 @@ function bindEventDelegation() {
     }
 
     // Logout
-    const logoutBtn = e.target.closest('[data-action="logout"]');
+    const logoutBtn = e.target.closest('[data-action="logout"], #adminLogoutBtn');
     if (logoutBtn) {
       e.preventDefault();
       lockDashboard();
+      window.location.href = 'index.html';
       return;
     }
   });
@@ -185,52 +254,42 @@ function bindEventDelegation() {
     manualVerifyForm.addEventListener('submit', handleManualLookupSubmit);
   }
 
-  const authGateForm = document.getElementById('authGateForm');
-  if (authGateForm) {
-    authGateForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const passkeyInput = document.getElementById('adminPasskey');
-      const errorEl = document.getElementById('authError');
-      const key = passkeyInput ? passkeyInput.value : '';
-
-      if (errorEl) errorEl.style.display = 'none';
-
-      const res = await verifyPasskey(key);
-      if (res.success) {
-        showSection('movies');
-      } else {
-        if (errorEl) {
-          errorEl.textContent = res.error || 'Authentication Failed';
-          errorEl.style.display = 'block';
-        }
-      }
-    });
-  }
+  // 5. Authentication Event Listener
+  window.addEventListener('admin:authenticated', () => {
+    switchTab('#tabCatalogue');
+  });
 }
 
 export async function bootstrap() {
   bindEventDelegation();
+  initAuth();
 
   const authenticated = await checkExistingAuth();
   if (authenticated) {
-    showSection('movies');
+    switchTab('#tabCatalogue');
   } else {
-    const passkeyInput = document.getElementById('adminPasskey');
-    if (passkeyInput) passkeyInput.focus();
+    const userInp = document.getElementById('adminUsername');
+    if (userInp) userInp.focus();
   }
 }
 
 // Global window exposure for debugging and backward compatibility
 if (typeof window !== 'undefined') {
-  window.showSection = showSection;
+  window.switchTab = switchTab;
+  window.switchAdminTab = switchAdminTab;
+  window.showSection = switchTab;
   window.toggleAddMovieForm = toggleAddMovieForm;
   window.restartScanner = restartScanner;
   window.resetScanView = resetScanView;
   window.adminApp = {
-    showSection,
+    switchTab,
+    switchAdminTab,
+    showSection: switchTab,
     loadMovies,
     initSeatLocker,
+    renderSeatLockerGrid,
     loadBookings,
+    loadBookingsRoster,
     startQrScanner,
     verifyPasskey,
     lockDashboard

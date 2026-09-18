@@ -14,6 +14,16 @@ let lastRenderedIndex = -1;
 let rafId = null;
 let framesLoaded = false;
 
+const posterImg = typeof Image !== 'undefined' ? new Image() : null;
+if (posterImg) {
+  posterImg.src = '/assets/showcase-poster.jpg';
+  posterImg.onload = () => {
+    if (lastRenderedIndex === -1 && ctx && canvas) {
+      drawSingleImage(posterImg);
+    }
+  };
+}
+
 /**
  * Preload all 60 frames into memory and decode them.
  */
@@ -42,19 +52,15 @@ async function preloadFrames() {
 }
 
 /**
- * Draw the frame using cover-fit math to fill the canvas without distortion or letterboxing.
+ * Draw image with cover-fit math to fill canvas without distortion.
  */
-function drawFrame(frameIndex) {
-  if (!ctx || !canvas) return;
-  const img = frames[frameIndex];
-  if (!img) return;
-
+function drawSingleImage(img) {
+  if (!ctx || !canvas || !img) return;
   const cw = canvas.width;
   const ch = canvas.height;
   const iw = img.naturalWidth || 1920;
   const ih = img.naturalHeight || 1080;
 
-  // Cover-fit math: scale proportionally to fill entire canvas viewport
   const scale = Math.max(cw / iw, ch / ih);
   const dw = Math.ceil(iw * scale);
   const dh = Math.ceil(ih * scale);
@@ -62,6 +68,22 @@ function drawFrame(frameIndex) {
   const dy = Math.round((ch - dh) / 2);
 
   ctx.drawImage(img, dx, dy, dw, dh);
+}
+
+/**
+ * Draw the frame using cover-fit math to fill the canvas without distortion or letterboxing.
+ */
+function drawFrame(frameIndex) {
+  if (!ctx || !canvas) return;
+  const img = frames[frameIndex];
+  if (!img || !img.complete || img.naturalWidth === 0) {
+    if (posterImg && posterImg.complete && posterImg.naturalWidth > 0) {
+      drawSingleImage(posterImg);
+    }
+    return;
+  }
+
+  drawSingleImage(img);
   lastRenderedIndex = frameIndex;
 }
 
@@ -69,25 +91,39 @@ function drawFrame(frameIndex) {
  * Update text overlay fade and crisp poster image cross-fade.
  */
 function updateOverlays(p) {
-  // Ensure the text ("Cinema, One Cube at a Time") remains at opacity: 1 and visible throughout scrub
+  // Fade showcase text overlay out between p = 0.15 and p = 0.35
   const copyEls = document.querySelectorAll('.showcase-copy, .showcase-content, .featured-presentation');
+  let textOpacity = 1;
+  if (p <= 0.15) {
+    textOpacity = 1;
+  } else if (p >= 0.35) {
+    textOpacity = 0;
+  } else {
+    textOpacity = 1 - (p - 0.15) / (0.35 - 0.15);
+  }
+
   copyEls.forEach((el) => {
-    el.style.opacity = '1';
-    el.style.visibility = 'visible';
-    el.style.pointerEvents = 'auto';
+    el.style.opacity = textOpacity.toFixed(3);
+    el.style.visibility = textOpacity > 0 ? 'visible' : 'hidden';
+    el.style.pointerEvents = textOpacity > 0.1 ? 'auto' : 'none';
   });
 
-  // Between p = 0.75 and p = 0.88, smoothly fade in crisp poster to 100%
-  // Hold fully visible from p = 0.88 to p = 1.0
+  // Ensure canvas opacity strictly remains at 1.0 (no exit fade)
+  if (canvas) {
+    canvas.style.opacity = '1';
+    canvas.style.display = 'block';
+  }
+
+  // Once p >= 0.65, clamp to frame 59 or assets/showcase-poster.jpg
   const posterEl = document.getElementById('showcasePoster') || document.getElementById('voxelFallback');
   if (posterEl) {
     let posterOpacity = 0;
-    if (p <= 0.75) {
-      posterOpacity = 0;
-    } else if (p >= 0.88) {
+    if (p >= 0.65) {
       posterOpacity = 1;
+    } else if (p >= 0.50) {
+      posterOpacity = (p - 0.50) / 0.15;
     } else {
-      posterOpacity = (p - 0.75) / 0.13;
+      posterOpacity = 0;
     }
     posterEl.style.opacity = posterOpacity.toFixed(3);
   }
@@ -99,11 +135,17 @@ function updateOverlays(p) {
 function render() {
   const p = scrollProgress;
 
-  // Map frame scrubbing to the first 75% of the scroll track:
-  const scrubP = Math.min(1, Math.max(0, p / 0.75));
-  const frameIndex = Math.min(59, Math.floor(scrubP * 59));
+  // Scrub frames 0 to 59 smoothly across p = 0.0 to p = 0.65:
+  let frameIndex = 0;
+  if (p < 0.65) {
+    const scrubP = p / 0.65;
+    frameIndex = Math.min(TOTAL_FRAMES - 1, Math.floor(scrubP * TOTAL_FRAMES));
+  } else {
+    // Once p >= 0.65, clamp to frame 59 (or assets/showcase-poster.jpg)
+    frameIndex = TOTAL_FRAMES - 1;
+  }
 
-  if (frameIndex !== lastRenderedIndex) {
+  if (frameIndex !== lastRenderedIndex || lastRenderedIndex === -1) {
     drawFrame(frameIndex);
   }
 
@@ -141,14 +183,19 @@ function resizeCanvas() {
 
 /**
  * Calculate progress relative to #showcase sticky container.
+ * p = clamp((scrollY - showcaseTop) / (showcaseHeight - windowHeight), 0, 1)
  */
 function onScroll() {
   const showcaseEl = document.getElementById('showcase');
   if (!showcaseEl) return;
 
   const rect = showcaseEl.getBoundingClientRect();
-  const maxScroll = rect.height - window.innerHeight;
-  const p = maxScroll > 0 ? Math.min(Math.max(-rect.top / maxScroll, 0), 1) : 0;
+  const showcaseTop = rect.top + window.scrollY;
+  const showcaseHeight = rect.height;
+  const windowHeight = window.innerHeight;
+  const maxScroll = showcaseHeight - windowHeight;
+
+  const p = maxScroll > 0 ? Math.min(Math.max((window.scrollY - showcaseTop) / maxScroll, 0), 1) : 0;
 
   setScrubProgress(p);
 }
@@ -175,4 +222,18 @@ export function initScrubShowcase() {
     window.__setScrubProgress = setScrubProgress;
     window.__checkScrubVisibility = onScroll;
   }
+}
+
+/**
+ * Clean up listeners and animation frames.
+ */
+export function destroyScrubShowcase() {
+  window.removeEventListener('resize', resizeCanvas);
+  window.removeEventListener('scroll', onScroll);
+  if (rafId) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+  canvas = null;
+  ctx = null;
 }
