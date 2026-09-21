@@ -242,6 +242,7 @@ export function updateCurrentNavItem() {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
   const path = window.location.pathname;
   const isScreening = path.endsWith('/screening.html') || path.endsWith('/screening');
+  const isContact = path.endsWith('/contact.html') || path.endsWith('/contact');
 
   const menuItems = document.querySelectorAll('.site-menu-item');
   menuItems.forEach((item) => {
@@ -250,9 +251,14 @@ export function updateCurrentNavItem() {
     if (a) a.removeAttribute('aria-current');
   });
 
-  const selector = isScreening
-    ? '.site-menu-item a[href*="screening.html"], .site-menu-item a[href="screening.html"]'
-    : '.site-menu-item a[href*="index.html#home"], .site-menu-item a[href="#home"], .site-menu-item:first-child a';
+  let selector;
+  if (isScreening) {
+    selector = '.site-menu-item a[href*="screening.html"], .site-menu-item a[href="screening.html"]';
+  } else if (isContact) {
+    selector = '.site-menu-item a[href*="contact.html"], .site-menu-item a[href="contact.html"]';
+  } else {
+    selector = '.site-menu-item a[href*="index.html#home"], .site-menu-item a[href="#home"], .site-menu-item:first-child a';
+  }
 
   const activeLink = document.querySelector(selector);
   if (activeLink) {
@@ -316,6 +322,12 @@ export function initBurgerMenu() {
     });
   }
 
+  if (typeof window !== 'undefined' && window.location.search.includes('openMenu')) {
+    setTimeout(() => {
+      show();
+    }, 400);
+  }
+
   // Close on Escape key
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && visible && !running) {
@@ -332,6 +344,25 @@ export function initBurgerMenu() {
       window.location.href = 'admin.html';
     });
   });
+
+  // Menu Camera Toggle for Nitrate Inversion Lens (PC Only, Boxless Icon)
+  const menuCameraBtn = document.getElementById('menuCameraBtn');
+  if (menuCameraBtn) {
+    menuCameraBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      hide();
+      scheduleTimeout(() => {
+        if (window.secretStory && typeof window.secretStory.toggleNitrateMode === 'function') {
+          window.secretStory.toggleNitrateMode();
+        } else {
+          import('../screening/secret-story.js').then(({ secretStory }) => {
+            secretStory.toggleNitrateMode();
+          }).catch(() => {});
+        }
+      }, 500);
+    });
+  }
 
   // Intercept clicks on links inside the menu room
   const menu = document.getElementById('site-menu');

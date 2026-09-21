@@ -9,8 +9,15 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
 
-    <!-- HTML5 QR Code Scanner Library for Door Check-in -->
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <!-- HTML5 QR Code Scanner Library for Door Check-in (Local vendor with CDN fallback) -->
+    <script src="js/vendor/html5-qrcode.min.js"></script>
+    <script>
+      if (typeof window.Html5Qrcode === 'undefined') {
+        const s = document.createElement('script');
+        s.src = 'https://unpkg.com/html5-qrcode';
+        document.head.appendChild(s);
+      }
+    </script>
 
         <!-- Critical Synchronous FOUC Guard (Zero-latency layout lock) -->
     <style id="foucGuard">
@@ -131,115 +138,842 @@
         <header class="admin-dashboard-header">
             <div class="brand">Daydreamers <span>CMS</span></div>
             <div class="admin-header-actions">
+                <div class="admin-db-pill" id="adminDbStatus" title="Supabase Database Connectivity">
+                    <span class="db-pill-dot pulsing"></span>
+                    <span class="db-pill-label">DB: Checking...</span>
+                </div>
                 <a href="screening.html" class="admin-action-btn screening-return-btn">Back to Screening</a>
                 <button id="adminLogoutBtn" class="admin-action-btn admin-logout-btn">Logout</button>
             </div>
         </header>
 
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <nav class="nav-links">
-                <a class="nav-item admin-tab-btn active" data-action="navigate" data-tab="#tabCatalogue" data-section="movies">Film Catalogue</a>
-                <a class="nav-item admin-tab-btn" data-action="navigate" data-tab="#tabSeatLocker" data-section="seats">Seat Locker</a>
-                <a class="nav-item admin-tab-btn" data-action="navigate" data-tab="#tabBookings" data-section="bookings">Attendee Bookings</a>
-                <a class="nav-item admin-tab-btn" data-action="navigate" data-tab="#tabScanner" data-section="scanner">Door QR Scanner</a>
+        <!-- Sidebar (vnav: Vertical Navigation with Sliding Speedline Indicator) -->
+        <input type="checkbox" id="vnavToggle" class="vnav__toggle-input" aria-hidden="true" />
+        <label for="vnavToggle" class="vnav__backdrop" aria-hidden="true"></label>
+        <label for="vnavToggle" class="vnav__hamburger" aria-label="Toggle navigation menu">
+            <span class="vnav__hamburger-line"></span>
+            <span class="vnav__hamburger-line"></span>
+            <span class="vnav__hamburger-line"></span>
+        </label>
+
+        <aside class="sidebar vnav">
+            <div class="vnav__logo">
+                <span class="vnav__logo-mark">DD</span>
+                <span class="vnav__logo-text">Daydreamers <span>CMS</span></span>
+            </div>
+            <nav class="vnav__nav nav-links">
+                <ul class="vnav__menu">
+                    <li class="vnav__item">
+                        <a class="nav-item admin-tab-btn active vnav__link" data-action="navigate" data-tab="#tabCatalogue" data-section="movies" data-label="Film Catalogue">
+                            <svg class="vnav__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+                                <line x1="7" y1="2" x2="7" y2="22"></line>
+                                <line x1="17" y1="2" x2="17" y2="22"></line>
+                                <line x1="2" y1="12" x2="22" y2="12"></line>
+                                <line x1="2" y1="7" x2="7" y2="7"></line>
+                                <line x1="2" y1="17" x2="7" y2="17"></line>
+                                <line x1="17" y1="17" x2="22" y2="17"></line>
+                                <line x1="17" y1="7" x2="22" y2="7"></line>
+                            </svg>
+                            <span class="vnav__text">Film Catalogue</span>
+                        </a>
+                    </li>
+                    <li class="vnav__item">
+                        <a class="nav-item admin-tab-btn vnav__link" data-action="navigate" data-tab="#tabSeatLocker" data-section="seats" data-label="Seat Locker">
+                            <svg class="vnav__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                            </svg>
+                            <span class="vnav__text">Seat Locker</span>
+                        </a>
+                    </li>
+                    <li class="vnav__item">
+                        <a class="nav-item admin-tab-btn vnav__link" data-action="navigate" data-tab="#tabBookings" data-section="bookings" data-label="Attendee Bookings">
+                            <svg class="vnav__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                            <span class="vnav__text">Attendee Bookings</span>
+                        </a>
+                    </li>
+                    <li class="vnav__item">
+                        <a class="nav-item admin-tab-btn vnav__link" data-action="navigate" data-tab="#tabScanner" data-section="scanner" data-label="Door QR Scanner">
+                            <svg class="vnav__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+                                <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+                                <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+                                <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
+                                <line x1="7" y1="12" x2="17" y2="12"></line>
+                            </svg>
+                            <span class="vnav__text">Door QR Scanner</span>
+                        </a>
+                    </li>
+                    <li class="vnav__indicator" aria-hidden="true"></li>
+                </ul>
             </nav>
+            <a class="back-link vnav__back" href="screening.html" data-label="Return to Screening">
+                <svg class="vnav__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                <span class="vnav__text">Back to Screening</span>
+            </a>
         </aside>
 
         <!-- Main Content -->
         <main class="main-content">
             <!-- 1. Movies Section -->
             <section id="tabCatalogue" class="admin-tab-pane active" data-tab-panel="catalogue" data-section="movies">
-                <div class="section-header">
-                    <h2>Film Catalogue</h2>
-                    <button class="btn btn-primary" data-action="toggle-add-movie">+ Add New Film</button>
+                <div class="section-header" style="gap: 1rem; flex-wrap: wrap;">
+                    <div>
+                        <h2>Film Catalogue</h2>
+                        <span class="text-muted" style="font-size: 0.85rem;" id="catalogMetaSubtitle">Manage theatrical schedule, screening availability &amp; bulk batch ingestion</span>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-left: auto; flex-wrap: wrap;">
+                        <button class="btn btn-secondary" data-action="open-bulk-ingest" id="btnOpenBulkIngest">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            Bulk Ingest (CSV / JSON)
+                        </button>
+                        <button class="btn btn-primary" data-action="toggle-add-movie">+ Add New Film</button>
+                    </div>
                 </div>
 
-                <div class="card" id="addMovieForm" style="display: none;">
-                    <h3 style="margin-bottom: 1.5rem;">Add Film to Schedule</h3>
+                <!-- Add Single Film Form Drawer / Card -->
+                <div class="card" id="addMovieForm" style="display: none; margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Add Film to Schedule</h3>
                     <form id="newMovieForm">
                         <div class="form-grid">
                             <div class="form-group">
-                                <label>Title</label>
+                                <label>Film Title *</label>
                                 <input type="text" id="newTitle" required placeholder="e.g. Neon Reverie" />
                             </div>
                             <div class="form-group">
                                 <label>Director</label>
-                                <input type="text" id="newDir" required placeholder="e.g. A. Moreau" />
+                                <input type="text" id="newDir" placeholder="e.g. A. Moreau" />
                             </div>
                             <div class="form-group">
-                                <label>Genre</label>
-                                <input type="text" id="newGenre" required placeholder="e.g. Sci-Fi" />
+                                <label>Genre(s) *</label>
+                                <input type="text" id="newGenre" required placeholder="e.g. Sci-Fi, Drama" />
                             </div>
                             <div class="form-group">
-                                <label>Runtime</label>
-                                <input type="text" id="newRuntime" required placeholder="e.g. 2H 14M" />
+                                <label>Runtime / Duration *</label>
+                                <input type="text" id="newRuntime" required placeholder="e.g. 2H 14M or 134" />
                             </div>
                             <div class="form-group">
-                                <label>Hall / Venue</label>
+                                <label>Release Year</label>
+                                <input type="number" id="newYear" min="1880" max="2100" value="2024" placeholder="2024" />
+                            </div>
+                            <div class="form-group">
+                                <label>Auditorium / Hall</label>
                                 <input type="text" id="newHall" required value="D Block 3rd Floor" />
                             </div>
                             <div class="form-group">
-                                <label>Poster Image URL</label>
-                                <input type="url" id="newPoster" placeholder="https://..." />
+                                <label>Age Rating</label>
+                                <select id="newRating" class="admin-select-rect">
+                                    <option value="UA">UA</option>
+                                    <option value="A">A</option>
+                                    <option value="U">U</option>
+                                    <option value="PG-13">PG-13</option>
+                                    <option value="R">R</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Poster / Logo URL *</label>
+                                <input type="url" id="newPoster" required placeholder="https://..." />
+                            </div>
+                            <div class="form-group">
+                                <label>Cinema Quote (Screening Hero)</label>
+                                <input type="text" id="newQuote" placeholder="e.g. Cinema is the closest thing we have to time travel." />
+                            </div>
+                            <div class="form-group">
+                                <label>Quote Author / Attribution</label>
+                                <input type="text" id="newQuoteAuthor" placeholder="e.g. — K. TANAKA" />
                             </div>
                         </div>
                         <div class="form-group" style="margin-bottom: 1.5rem;">
-                            <label>Synopsis / Blurb</label>
-                            <textarea id="newBlurb" rows="3" placeholder="Brief description of the story..."></textarea>
+                            <label>Synopsis / Blurb *</label>
+                            <textarea id="newBlurb" rows="3" required placeholder="Brief description of the story..."></textarea>
                         </div>
                         <div style="display: flex; gap: 1rem; justify-content: flex-end;">
                             <button type="button" class="btn btn-secondary" data-action="toggle-add-movie">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Save Film</button>
+                            <button type="submit" class="btn btn-primary">Save &amp; Activate Film</button>
                         </div>
                     </form>
                 </div>
 
+                <!-- Persistent Filtering & Search Control Bar -->
+                <div class="card movie-tools-card" style="margin-bottom: 16px; padding: 16px 20px;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                        <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 280px;">
+                            <div style="position: relative; width: 100%;">
+                                <input type="text" id="movieSearchInput" class="admin-input-rect" placeholder="Search film title, director, blurb, or keywords..." style="width: 100%; padding-left: 36px;" data-action="search-movies" />
+                                <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; display: flex; align-items: center;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                </span>
+                            </div>
+                            <button class="btn btn-sm btn-secondary" data-action="clear-movie-search" title="Clear search">✕</button>
+                        </div>
+                        <div class="filter-chips-group" id="movieStatusChips">
+                            <button class="chip-btn active" data-status="all">All (<span id="countAllMovies">0</span>)</button>
+                            <button class="chip-btn" data-status="active">Available (<span id="countActiveMovies">0</span>)</button>
+                            <button class="chip-btn" data-status="archived">Archived / Off-Air (<span id="countArchivedMovies">0</span>)</button>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding-top: 12px; border-top: 1px solid rgba(168, 85, 247, 0.15);">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--muted); letter-spacing: 0.08em;">Genre:</span>
+                            <select id="movieGenreFilter" class="admin-select-rect" style="font-size: 0.8rem; padding: 6px 10px;">
+                                <option value="all">All Genres</option>
+                            </select>
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--muted); letter-spacing: 0.08em;">Year:</span>
+                            <input type="number" id="movieYearMin" class="admin-input-rect" placeholder="Min" style="width: 80px; font-size: 0.8rem; padding: 6px 8px; border-radius: 0 !important;" />
+                            <span style="color: var(--muted);">-</span>
+                            <input type="number" id="movieYearMax" class="admin-input-rect" placeholder="Max" style="width: 80px; font-size: 0.8rem; padding: 6px 8px; border-radius: 0 !important;" />
+                            <span id="movieYearRangeError" style="display: none; color: #f43f5e; font-size: 0.72rem; margin-left: 4px; font-weight: 600;"></span>
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
+                            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--muted); letter-spacing: 0.08em;">Sort:</span>
+                            <select id="movieSortSelect" class="admin-select-rect" style="font-size: 0.8rem; padding: 6px 10px;">
+                                <option value="created_at_desc">Date Added (Newest)</option>
+                                <option value="created_at_asc">Date Added (Oldest)</option>
+                                <option value="title_asc">Title (A – Z)</option>
+                                <option value="title_desc">Title (Z – A)</option>
+                                <option value="year_desc">Release Year (Newest)</option>
+                                <option value="year_asc">Release Year (Oldest)</option>
+                                <option value="status_desc">Status (Available First)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Floating Bulk Action Toolbar (appears when >= 1 movie selected) -->
+                <div id="movieBulkToolbar" class="card bulk-actions-toolbar" style="display: none; margin-bottom: 16px; padding: 12px 18px; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span id="bulkSelectedCount" style="font-size: 0.9rem; font-weight: 600; color: #c084fc;">0 films selected</span>
+                        <button class="btn btn-xs btn-secondary" data-action="clear-movie-selection">Clear Selection</button>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn btn-sm btn-secondary" data-action="bulk-mark-active" style="border-color: #10b981; color: #70e000;">
+                            ✓ Mark Available for Scheduling
+                        </button>
+                        <button class="btn btn-sm btn-secondary" data-action="bulk-mark-archived" style="border-color: #f43f5e; color: #ff9bbb;">
+                            ✕ Archive / Off-Air
+                        </button>
+                        <button class="btn btn-sm btn-danger" data-action="bulk-delete-movies">
+                            Delete Selected
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Movie Directory Table -->
                 <div class="card" style="padding: 0; overflow-x: auto;">
-                    <table class="data-table">
+                    <table class="data-table movie-directory-table">
                         <thead>
                             <tr>
-                                <th>Film Title</th>
-                                <th>Director</th>
+                                <th style="width: 44px; text-align: center;">
+                                    <input type="checkbox" id="selectAllMoviesCheckbox" title="Select / Deselect all visible" />
+                                </th>
+                                <th style="min-width: 240px;">Film Title &amp; Details</th>
+                                <th>Director &amp; Hall</th>
                                 <th>Genre</th>
                                 <th>Runtime</th>
-                                <th>Venue</th>
-                                <th style="text-align: right;">Actions</th>
+                                <th style="min-width: 190px;">Screening Status</th>
+                                <th style="text-align: right; min-width: 110px;">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="moviesList"></tbody>
                     </table>
                 </div>
+
+                <!-- Modal: Bulk Movie Ingest Engine (JSON / CSV) -->
+                <div id="movieBulkIngestModal" class="admin-modal-overlay" style="display: none;">
+                    <div class="admin-modal-dialog" style="max-width: 960px; width: 95vw; max-height: 92vh; display: flex; flex-direction: column;">
+                        <div class="admin-modal-header">
+                            <div>
+                                <h3>Bulk Movie Ingestion Engine</h3>
+                                <span class="text-muted" style="font-size: 0.78rem;">Batch upload theatrical catalogs via JSON or CSV (up to 10MB) with pre-import validation</span>
+                            </div>
+                            <button class="btn-close-modal" data-action="close-bulk-ingest">✕</button>
+                        </div>
+
+                        <div class="admin-modal-body" style="overflow-y: auto; flex: 1; padding: 20px;">
+                            <!-- Tabs: Upload File vs Paste Raw -->
+                            <div class="ingest-tabs-bar" style="display: flex; gap: 10px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 10px; align-items: center; flex-wrap: wrap;">
+                                <button class="chip-btn active" id="btnTabUploadFile" data-action="switch-ingest-tab" data-tab="upload">File Upload (JSON / CSV)</button>
+                                <button class="chip-btn" id="btnTabPasteRaw" data-action="switch-ingest-tab" data-tab="paste">Paste Raw (JSON / CSV)</button>
+                                <div style="margin-left: auto; display: flex; gap: 8px;">
+                                    <button class="btn btn-xs btn-secondary" data-action="download-template-json">JSON Template</button>
+                                    <button class="btn btn-xs btn-secondary" data-action="download-template-csv">CSV Template</button>
+                                </div>
+                            </div>
+
+                            <!-- Panel 1: File Dropzone -->
+                            <div id="ingestUploadPanel">
+                                <div id="ingestDropzone" class="ingest-dropzone" data-action="trigger-file-browse">
+                                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--gold); margin-bottom: 12px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                    <p style="font-weight: 600; font-size: 1.05rem; color: #fff; margin-bottom: 4px;">Drag &amp; drop your .json or .csv catalog file here</p>
+                                    <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 14px;">or click anywhere to browse local filesystem (Max 10MB)</p>
+                                    <input type="file" id="bulkMovieFileInput" accept=".json,.csv,application/json,text/csv" style="display: none;" />
+                                    <button type="button" class="btn btn-secondary btn-sm" style="pointer-events: none;">Browse Files</button>
+                                </div>
+                            </div>
+
+                            <!-- Panel 2: Paste Raw Content -->
+                            <div id="ingestPastePanel" style="display: none;">
+                                <textarea id="rawIngestInput" class="admin-input-rect" rows="8" placeholder="Paste your raw JSON array or CSV content here..." style="width: 100%; font-family: monospace; font-size: 0.825rem;"></textarea>
+                                <button type="button" class="btn btn-secondary btn-sm" data-action="parse-raw-ingest" style="margin-top: 10px;">Parse Data</button>
+                            </div>
+
+                            <!-- Staging Validation & Preview Box (Hidden until parsed) -->
+                            <div id="ingestStagingSection" style="display: none; margin-top: 20px;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                                    <div>
+                                        <h4 style="font-size: 0.95rem; font-weight: 600; color: #fff;">Pre-Import Staging Preview</h4>
+                                        <span class="text-muted" style="font-size: 0.75rem;">Inspect parsed records and validation flags before committing to database</span>
+                                    </div>
+                                    <div class="staging-metrics-bar" id="stagingMetricsBar" style="display: flex; gap: 8px; font-size: 0.78rem;">
+                                        <!-- Rendered dynamically -->
+                                    </div>
+                                </div>
+
+                                <div class="card" style="padding: 0; max-height: 300px; overflow-y: auto; overflow-x: auto; border: 1px solid var(--border);">
+                                    <table class="data-table staging-table" style="font-size: 0.82rem;">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 36px; text-align: center;">
+                                                    <input type="checkbox" id="selectAllStagingCheckbox" checked title="Select / deselect all valid" />
+                                                </th>
+                                                <th>Status</th>
+                                                <th>Key Art</th>
+                                                <th>Film Title</th>
+                                                <th>Year</th>
+                                                <th>Genre</th>
+                                                <th>Runtime</th>
+                                                <th>Screening</th>
+                                                <th>Validation Flags</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="stagingRowsList"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="admin-modal-footer" style="justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                            <button type="button" class="btn btn-secondary" data-action="close-bulk-ingest">Cancel</button>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <span id="stagingReadySummary" style="font-size: 0.825rem; color: var(--muted);">0 ready to import</span>
+                                <button type="button" class="btn btn-primary" id="btnCommitIngest" data-action="commit-bulk-ingest" disabled>
+                                    Import Selected Films
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </section>
 
-            <!-- 2. Seat Locker Section -->
+            <!-- 2. Seat Locker Section (Editorial Cinematic Layout) -->
             <section id="tabSeatLocker" class="admin-tab-pane" data-tab-panel="seats" data-section="seats" style="display: none;">
-                <div class="section-header">
-                    <h2>Seat Locker</h2>
-                </div>
-
-                <div class="card">
-                    <div class="form-grid" style="margin-bottom: 0;">
-                        <div class="form-group">
-                            <label>Select Film</label>
-                            <select id="seatMovieSelect" data-action="change-movie"></select>
+                
+                <!-- Hero Header Banner (Editorial Cinematic Design) -->
+                <div class="seat-hero-banner">
+                    <div class="seat-hero-content">
+                        <div class="seat-hero-kicker">SEAT LOCKER</div>
+                        <h1 class="seat-hero-title">Seat Locker &amp; Capacity Control</h1>
+                        <p class="seat-hero-sub">Manage seats, lock rows, and keep the screening experience smooth.</p>
+                        
+                        <div class="seat-hero-meta">
+                            <div class="hero-meta-pill">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"></path><path d="M3 11v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v2H7v-2a2 2 0 0 0-4 0Z"></path><path d="M5 18v2"></path><path d="M19 18v2"></path></svg>
+                                <span id="heroCapacity">70 seats</span>
+                            </div>
+                            <div class="hero-meta-pill">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                                <span id="heroAuditorium">Auditorium: D Block 3rd Floor</span>
+                            </div>
+                            <div class="hero-meta-pill">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                <span id="heroShowTime">Sep 18, 2026 &bull; 21:00</span>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label>Select Showing Date &amp; Time</label>
-                            <select id="seatShowingSelect" data-action="change-showing"></select>
+                    </div>
+
+                    <!-- Editorial Marquee Visual Card -->
+                    <div class="seat-hero-marquee" id="seatHeroMarquee">
+                        <div class="marquee-frame">
+                            <div class="marquee-sign">
+                                <span>GOOD MOVIES</span>
+                                <span>BETTER PEOPLE</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="card seatmap-box">
-                    <div class="screen-bar"></div>
-                    <div class="seat-grid" id="adminSeatGrid"></div>
-                    <div class="seat-legend">
-                        <div class="legend-item"><span class="legend-dot" style="background: #1c1524; border: 1px solid rgba(168, 85, 247, 0.2);"></span> Available (Click to Lock)</div>
-                        <div class="legend-item"><span class="legend-dot" style="background: rgba(168, 85, 247, 0.5); border: 1px solid #a855f7;"></span> Locked by Admin (Click to Unlock)</div>
-                        <div class="legend-item"><span class="legend-dot" style="background: rgba(200, 70, 104, 0.5); border: 1px solid #c84668;"></span> Booked by Attendee</div>
+                <!-- Selectors & Status Bar -->
+                <div class="seat-selectors-bar">
+                    <div class="seat-selectors-group">
+                        <!-- Film Selector -->
+                        <div class="selector-card film-selector-card">
+                            <label class="selector-label">Select Film</label>
+                            <div class="selector-input-wrap">
+                                <img id="selectedMovieThumb" class="film-thumb-rect" src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800" alt="" onerror="this.src='https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800';" />
+                                <select id="seatMovieSelect" class="admin-select-rect" data-action="change-movie"></select>
+                            </div>
+                        </div>
+
+                        <!-- Showing Selector -->
+                        <div class="selector-card showing-selector-card">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <label class="selector-label" style="margin-bottom: 0;">Select Show Date &amp; Time</label>
+                                <button class="btn-text-action" data-action="open-new-showing-modal" title="Add a new screening schedule">+ New Showing</button>
+                            </div>
+                            <div class="selector-input-wrap">
+                                <svg class="selector-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="0" ry="0"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                <select id="seatShowingSelect" class="admin-select-rect" data-action="change-showing"></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Status & Sales Toggle -->
+                    <div class="seat-sales-status-box">
+                        <div class="sales-live-indicator">
+                            <span class="live-status-dot"></span>
+                            <span id="seatLastUpdated" class="seat-updated-text">Updated 10:20:41 pm</span>
+                        </div>
+                        <button id="seatSalesToggleBtn" class="seat-sales-btn" data-action="toggle-showing-sales" title="Toggle ticket sales for this screening">
+                            Sales: <span id="seatSalesStatusText">OPEN</span>
+                        </button>
                     </div>
                 </div>
+
+                <!-- Main 2-Column Responsive Workspace -->
+                <div class="seat-workspace-grid">
+                    
+                    <!-- Left Column: Cinema Screen & 70-Seat Grid -->
+                    <div class="seat-map-column">
+                        <div class="card seat-map-card">
+                            <!-- Screen Curved Arc & Zoom Controls -->
+                            <div class="screen-header-bar">
+                                <div class="cinema-screen-arc">
+                                    <div class="arc-line"></div>
+                                    <span class="arc-text">CINEMA SCREEN</span>
+                                </div>
+                                <div class="seat-zoom-controls">
+                                    <button type="button" class="zoom-btn" data-action="zoom-in" title="Zoom In for larger touch targets">+</button>
+                                    <button type="button" class="zoom-btn" data-action="zoom-out" title="Zoom Out to fit screen">-</button>
+                                    <button type="button" class="zoom-btn" data-action="zoom-reset" title="Reset View">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Interactive 70-Seat Grid (A-G x 10) -->
+                            <div class="seat-grid-viewport" id="seatGridViewport">
+                                <div class="seat-grid" id="adminSeatGrid"></div>
+                            </div>
+
+                            <!-- Color Legend with Sharp Rectangular Swatches -->
+                            <div class="seat-legend-bar">
+                                <div class="legend-swatch-item">
+                                    <span class="swatch-rect swatch-available"></span>
+                                    <span class="swatch-label">Available</span>
+                                </div>
+                                <div class="legend-swatch-item">
+                                    <span class="swatch-rect swatch-booked"></span>
+                                    <span class="swatch-label">Booked</span>
+                                </div>
+                                <div class="legend-swatch-item">
+                                    <span class="swatch-rect swatch-checked"></span>
+                                    <span class="swatch-label">Checked-in</span>
+                                </div>
+                                <div class="legend-swatch-item">
+                                    <span class="swatch-rect swatch-selected"></span>
+                                    <span class="swatch-label">Selected</span>
+                                </div>
+                                <div class="legend-swatch-item">
+                                    <span class="swatch-rect swatch-locked"></span>
+                                    <span class="swatch-label">Locked</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Capacity, Metrics Quad, Occupancy & Management Controls -->
+                    <div class="seat-control-column">
+                        
+                        <!-- Total Capacity Card -->
+                        <div class="card capacity-card">
+                            <div class="capacity-icon-box">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"></path><path d="M3 11v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v2H7v-2a2 2 0 0 0-4 0Z"></path><path d="M5 18v2"></path><path d="M19 18v2"></path></svg>
+                            </div>
+                            <div>
+                                <div class="capacity-number" id="statTotal">70</div>
+                                <div class="capacity-title">Total Capacity</div>
+                                <div class="capacity-sub">Fixed Layout</div>
+                            </div>
+                        </div>
+
+                        <!-- 2x2 Metrics Quad -->
+                        <div class="seat-metrics-quad">
+                            <div class="metric-card metric-avail">
+                                <div class="metric-val" id="statAvailable">--</div>
+                                <div class="metric-name">Available</div>
+                                <div class="metric-desc">Free to reserve</div>
+                            </div>
+                            <div class="metric-card metric-booked">
+                                <div class="metric-val" id="statBooked">--</div>
+                                <div class="metric-name">Booked</div>
+                                <div class="metric-desc">Student passes</div>
+                            </div>
+                            <div class="metric-card metric-checked">
+                                <div class="metric-val" id="statCheckedIn">--</div>
+                                <div class="metric-name">Checked In</div>
+                                <div class="metric-desc">At the door</div>
+                            </div>
+                            <div class="metric-card metric-locked">
+                                <div class="metric-val" id="statLocked">--</div>
+                                <div class="metric-name">Locked</div>
+                                <div class="metric-desc">Admin holds</div>
+                            </div>
+                        </div>
+
+                        <!-- Occupancy Progress Card -->
+                        <div class="card occupancy-card">
+                            <div class="occupancy-header">
+                                <span class="occupancy-label">Occupancy</span>
+                                <span class="occupancy-percent" id="statOccupancy">--%</span>
+                            </div>
+                            <div class="occupancy-track">
+                                <div class="occupancy-bar" id="occupancyProgressBar" style="width: 0%;"></div>
+                            </div>
+                            <div class="occupancy-footer" id="statHousefullBadge">58 seats remaining</div>
+                        </div>
+
+                        <!-- Seat Management Actions Card -->
+                        <div class="card seat-management-card">
+                            <!-- Seat Search -->
+                            <div class="management-search-box">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-box-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                <input type="text" id="seatSearchInput" class="admin-input-rect" placeholder="Search seat (e.g. C7, G10, or DD-XXXX)" data-action="search-seat-grid" />
+                                <button class="btn-clear-search" data-action="clear-seat-search" title="Clear search">Clear</button>
+                            </div>
+
+                            <!-- Row Select & Status Filter Dropdowns -->
+                            <div class="management-row-selects">
+                                <select id="bulkRowSelect" class="admin-select-rect" data-action="select-row">
+                                    <option value="">Select Row</option>
+                                    <option value="A">Row A (1-10)</option>
+                                    <option value="B">Row B (1-10)</option>
+                                    <option value="C">Row C (1-10)</option>
+                                    <option value="D">Row D (1-10)</option>
+                                    <option value="E">Row E (1-10)</option>
+                                    <option value="F">Row F (1-10)</option>
+                                    <option value="G">Row G (1-10)</option>
+                                </select>
+
+                                <select id="seatFilterSelect" class="admin-select-rect" data-action="select-filter">
+                                    <option value="all">All Seats</option>
+                                    <option value="available">All Available</option>
+                                    <option value="locked">Locked</option>
+                                    <option value="booked">Booked</option>
+                                    <option value="checked-in">Checked In</option>
+                                </select>
+                            </div>
+
+                            <!-- Clear & Invert Buttons -->
+                            <div class="management-btn-row">
+                                <button type="button" class="btn btn-secondary btn-rect-action" data-action="clear-selection">Clear</button>
+                                <button type="button" class="btn btn-secondary btn-rect-action" data-action="invert-selection">Invert</button>
+                            </div>
+
+                            <!-- Primary Action: Lock Selected -->
+                            <button type="button" id="btnLockSelected" class="btn btn-primary btn-lock-primary" data-action="open-lock-modal" disabled>
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;"><rect x="3" y="11" width="18" height="11" rx="0" ry="0"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                <span id="btnLockSelectedText">Lock Selected (0)</span>
+                            </button>
+
+                            <!-- Secondary Actions: Unlock Selected & Unlock All -->
+                            <div class="management-btn-row">
+                                <button type="button" id="btnUnlockSelected" class="btn btn-secondary btn-rect-action" data-action="open-unlock-selected" disabled>
+                                    Unlock Selected
+                                </button>
+                                <button type="button" id="btnUnlockAll" class="btn btn-danger btn-rect-action" data-action="open-unlock-all-modal">
+                                    Unlock All
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Recent Seat Activity Log Table (Audit Trail) -->
+                <div class="card seat-activity-card">
+                    <div class="activity-header">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div class="activity-icon-box">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            </div>
+                            <div>
+                                <h3 class="activity-title">Recent Seat Activity</h3>
+                                <div class="activity-sub">Live logs of seat locks, unlocks and attendance.</div>
+                            </div>
+                        </div>
+                        <button class="btn btn-xs btn-secondary btn-view-all" data-action="refresh-audit">View All</button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="data-table seat-audit-table">
+                            <thead>
+                                <tr>
+                                    <th>TIME</th>
+                                    <th>SEAT</th>
+                                    <th>ACTION</th>
+                                    <th>CATEGORY</th>
+                                    <th>REASON / NOTE</th>
+                                    <th>ADMIN</th>
+                                </tr>
+                            </thead>
+                            <tbody id="seatAuditTableBody">
+                                <tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 24px;">Loading audit logs...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Mobile Sticky Bottom Action Dock (Thumb-Friendly on Small Screens) -->
+                <div id="mobileSeatDock" class="mobile-seat-dock" style="display: none;">
+                    <div class="mobile-dock-info">
+                        <span id="mobileDockCount">0 selected</span>
+                    </div>
+                    <div class="mobile-dock-actions">
+                        <button type="button" class="btn btn-primary btn-sm" data-action="open-lock-modal" id="mobileDockLockBtn">Lock Selected</button>
+                        <button type="button" class="btn btn-secondary btn-sm" data-action="open-unlock-selected" id="mobileDockUnlockBtn">Unlock</button>
+                        <button type="button" class="btn btn-secondary btn-sm" data-action="clear-selection">Clear</button>
+                    </div>
+                </div>
+
+                <!-- Modal: Schedule New Showing -->
+                <div id="newShowingModal" class="admin-modal-overlay" style="display: none;">
+                    <div class="admin-modal-dialog" style="max-width: 500px;">
+                        <div class="admin-modal-header">
+                            <h3>Schedule New Showing</h3>
+                            <button class="btn-close-modal" data-action="close-new-showing-modal">Close</button>
+                        </div>
+                        <form id="newShowingForm">
+                            <div class="admin-modal-body">
+                                <div class="form-group" style="margin-bottom: 14px;">
+                                    <label>Film Title</label>
+                                    <select id="newShowingMovieSelect" class="admin-select-rect" required></select>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 14px;">
+                                    <label>Show Date</label>
+                                    <input type="date" id="newShowingDate" class="admin-input-rect" required />
+                                </div>
+                                <div class="form-group" style="margin-bottom: 14px;">
+                                    <label>Show Time (24h or AM/PM, e.g. 21:00)</label>
+                                    <input type="text" id="newShowingTime" class="admin-input-rect" placeholder="e.g. 21:00" required />
+                                </div>
+                                <div class="form-group" style="margin-bottom: 14px;">
+                                    <label>Hall / Auditorium</label>
+                                    <input type="text" id="newShowingHall" class="admin-input-rect" placeholder="e.g. D Block 3rd Floor" value="D Block 3rd Floor" required />
+                                </div>
+                                <div class="form-group" style="margin-bottom: 14px;">
+                                    <label>Capacity</label>
+                                    <input type="number" id="newShowingCapacity" class="admin-input-rect" value="70" required />
+                                </div>
+                                <div id="newShowingConflictError" style="display: none; color: #f43f5e; font-size: 0.8rem; margin-top: 10px; padding: 8px; background: rgba(244,63,94,0.1); border: 1px solid #f43f5e;"></div>
+                            </div>
+                            <div class="admin-modal-footer">
+                                <button type="button" class="btn btn-secondary" data-action="close-new-showing-modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary" id="btnSubmitNewShowing">Create Showing</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Attendee Side Drawer / Modal (Slide-in, Zero Emojis) -->
+                <div id="seatAttendeeDrawer" class="admin-drawer" style="display: none;">
+                    <div class="drawer-backdrop" data-action="close-attendee-drawer"></div>
+                    <div class="drawer-content">
+                        <div class="drawer-header">
+                            <div>
+                                <span class="badge badge-booked" style="border-radius: 0 !important;">Booked Attendee</span>
+                                <h3 id="drawerSeatTitle" style="margin-top: 6px; font-size: 1.25rem;">Seat --</h3>
+                            </div>
+                            <button class="btn-close-drawer" data-action="close-attendee-drawer">Close</button>
+                        </div>
+                        <div class="drawer-body">
+                            <div class="info-group">
+                                <label>Student Name</label>
+                                <div id="drawerUserName" class="info-value">--</div>
+                            </div>
+                            <div class="info-group">
+                                <label>University USN</label>
+                                <div id="drawerUserUsn" class="info-value font-mono">--</div>
+                            </div>
+                            <div class="info-group">
+                                <label>RVU Email Address</label>
+                                <div id="drawerUserEmail" class="info-value">--</div>
+                            </div>
+                            <div class="info-group">
+                                <label>Booking Reference</label>
+                                <div id="drawerBookingRef" class="info-value font-mono">--</div>
+                            </div>
+                            <div class="info-group">
+                                <label>Check-In Status</label>
+                                <div id="drawerCheckInStatus" class="info-value">--</div>
+                            </div>
+                            <div class="info-group">
+                                <label>Reservation Group Seats</label>
+                                <div id="drawerAllSeats" class="info-value font-mono">--</div>
+                            </div>
+                            <div class="info-group">
+                                <label>Booked At</label>
+                                <div id="drawerBookedAt" class="info-value text-muted" style="font-size: 0.8rem;">--</div>
+                            </div>
+
+                            <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 10px;">
+                                <button id="drawerJumpRosterBtn" class="btn btn-secondary btn-block" data-action="drawer-jump-roster" style="border-radius: 0 !important;">
+                                    Jump to Booking in Roster
+                                </button>
+                                <button id="drawerCancelBookingBtn" class="btn btn-danger btn-block" data-action="drawer-cancel-booking" style="border-radius: 0 !important;">
+                                    Cancel Booking &amp; Free Seats
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal: Lock Reason & Category (Zero Emojis) -->
+                <div id="seatLockModal" class="admin-modal-overlay" style="display: none;">
+                    <div class="admin-modal-dialog">
+                        <div class="admin-modal-header">
+                            <h3 id="lockModalTitle">Lock Selected Seats</h3>
+                            <button class="btn-close-modal" data-action="close-lock-modal">Close</button>
+                        </div>
+                        <form id="seatLockForm">
+                            <div class="admin-modal-body">
+                                <p style="font-size: 0.875rem; color: #c89bb2; margin-bottom: 14px;">
+                                    Locking seats: <strong id="lockModalSeatList" style="color: #f5f3ff; font-family: monospace;">--</strong>
+                                </p>
+                                <div class="form-group" style="margin-bottom: 12px;">
+                                    <label>Lock Category</label>
+                                    <select id="lockCategorySelect" class="admin-select-rect" required>
+                                        <option value="Maintenance / Broken Seat">Maintenance / Broken Seat</option>
+                                        <option value="VIP Hold">VIP Hold</option>
+                                        <option value="Staff &amp; Crew">Staff &amp; Crew</option>
+                                        <option value="Press &amp; Media">Press &amp; Media</option>
+                                        <option value="Wheelchair / Accessibility Companion">Wheelchair / Accessibility Companion</option>
+                                        <option value="Complimentary">Complimentary</option>
+                                        <option value="Other Admin Hold">Other Admin Hold</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 12px;">
+                                    <label>Reason / Note (Optional)</label>
+                                    <input type="text" id="lockNoteInput" class="admin-input-rect" placeholder="e.g. Broken right armrest, do not allocate" />
+                                </div>
+                                <div class="form-group" style="margin-bottom: 12px;">
+                                    <label>Hold Duration</label>
+                                    <select id="lockDurationSelect" class="admin-select-rect">
+                                        <option value="0">Permanent Lock (Manual Unlock Only)</option>
+                                        <option value="1">1 Hour (Auto-unlocks after 1 hr)</option>
+                                        <option value="2">2 Hours</option>
+                                        <option value="4">4 Hours</option>
+                                        <option value="12">12 Hours</option>
+                                        <option value="24">24 Hours</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="admin-modal-footer">
+                                <button type="button" class="btn btn-secondary" data-action="close-lock-modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary" id="btnSubmitLock">Confirm Lock</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Modal: Single / Bulk Unlock Confirmation (Zero Emojis) -->
+                <div id="seatUnlockModal" class="admin-modal-overlay" style="display: none;">
+                    <div class="admin-modal-dialog">
+                        <div class="admin-modal-header">
+                            <h3>Unlock Seat(s)</h3>
+                            <button class="btn-close-modal" data-action="close-unlock-modal">Close</button>
+                        </div>
+                        <div class="admin-modal-body">
+                            <p style="font-size: 0.9rem; color: #f5f3ff; margin-bottom: 10px;">
+                                Are you sure you want to unlock: <strong id="unlockModalSeatList" style="color: #c084fc; font-family: monospace;">--</strong>?
+                            </p>
+                            <div id="unlockDetailsBox" style="background: rgba(14, 10, 20, 0.7); border: 1px solid rgba(168, 85, 247, 0.2); padding: 10px; font-size: 0.8rem; color: #c89bb2; margin-bottom: 14px;">
+                                <!-- Populated dynamically if single seat -->
+                            </div>
+                            <p style="font-size: 0.8rem; color: #a49aa0;">
+                                Unlocking these seats will immediately make them available for customer reservations on the screening page.
+                            </p>
+                        </div>
+                        <div class="admin-modal-footer">
+                            <button type="button" class="btn btn-secondary" data-action="close-unlock-modal">Cancel</button>
+                            <button type="button" class="btn btn-danger" id="btnSubmitUnlock">Unlock Now</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal: Danger Unlock All (Zero Emojis) -->
+                <div id="seatUnlockAllModal" class="admin-modal-overlay" style="display: none;">
+                    <div class="admin-modal-dialog">
+                        <div class="admin-modal-header">
+                            <h3 style="color: #f43f5e;">Danger: Unlock ALL Seats</h3>
+                            <button class="btn-close-modal" data-action="close-unlock-all-modal">Close</button>
+                        </div>
+                        <div class="admin-modal-body">
+                            <p style="font-size: 0.875rem; color: #f5f3ff; margin-bottom: 12px;">
+                                This action will release <strong>ALL currently locked seats</strong> for this showing and make them immediately bookable by attendees.
+                            </p>
+                            <p style="font-size: 0.825rem; color: #fb7185; margin-bottom: 12px;">
+                                Are you sure you want to proceed?
+                            </p>
+                        </div>
+                        <div class="admin-modal-footer">
+                            <button type="button" class="btn btn-secondary" data-action="close-unlock-all-modal">Cancel</button>
+                            <button type="button" class="btn btn-danger" id="btnSubmitUnlockAll">Unlock All Seats</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal: Double-Confirm Cancel Booking (Zero Emojis) -->
+                <div id="seatCancelBookingModal" class="admin-modal-overlay" style="display: none;">
+                    <div class="admin-modal-dialog">
+                        <div class="admin-modal-header">
+                            <h3 style="color: #f43f5e;">Cancel Attendee Booking</h3>
+                            <button class="btn-close-modal" data-action="close-cancel-booking-modal">Close</button>
+                        </div>
+                        <div class="admin-modal-body">
+                            <p style="font-size: 0.9rem; color: #f5f3ff; margin-bottom: 8px;">
+                                Are you sure you want to cancel booking <strong id="cancelModalRef" style="color: #c084fc; font-family: monospace;">--</strong>?
+                            </p>
+                            <p style="font-size: 0.825rem; color: #fb7185; margin-bottom: 12px;">
+                                Attendee: <span id="cancelModalAttendee">--</span><br>
+                                Releasing Seats: <strong id="cancelModalSeats" style="font-family: monospace;">--</strong>
+                            </p>
+                            <p style="font-size: 0.775rem; color: #a49aa0;">
+                                Note: This will permanently cancel the ticket and release the seats back to available status.
+                            </p>
+                        </div>
+                        <div class="admin-modal-footer">
+                            <button type="button" class="btn btn-secondary" data-action="close-cancel-booking-modal">Keep Booking</button>
+                            <button type="button" class="btn btn-danger" id="btnConfirmCancelBooking">Yes, Cancel Booking</button>
+                        </div>
+                    </div>
+                </div>
+
             </section>
 
             <!-- 3. Attendee Bookings Section -->
@@ -283,8 +1017,13 @@
                     <div>
                         <div class="card" style="padding: 16px;">
                             <div id="reader"></div>
-                            <div style="margin-top: 14px; text-align: center;">
+                            <div style="margin-top: 14px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
                                 <button class="btn btn-secondary" data-action="restart-scanner">Restart Camera</button>
+                                <button class="btn btn-secondary" data-action="switch-camera" id="btnSwitchCamera" style="display: none;">Flip Camera</button>
+                                <label class="btn btn-secondary" style="cursor: pointer; margin: 0; display: inline-flex; align-items: center;">
+                                    <span>Upload QR Image</span>
+                                    <input type="file" id="qrImageFileInput" accept="image/*" style="display: none;" />
+                                </label>
                             </div>
                         </div>
 
@@ -292,7 +1031,7 @@
                             <h3 style="font-size: 1.1rem; margin-bottom: 12px;">Manual USN / Ref Lookup</h3>
                             <form id="manualVerifyForm" style="display: flex; gap: 10px;">
                                 <input type="text" id="manualInput" required placeholder="Enter USN (e.g. 1RVU...) or DD-XXXX"
-                                       style="flex: 1; background: var(--bg2); border: 1px solid var(--border); padding: 10px 14px; border-radius: 6px; color: #fff; text-transform: uppercase;" />
+                                       style="flex: 1; background: var(--bg2); border: 1px solid var(--border); padding: 10px 14px; border-radius: 0; color: #fff; text-transform: uppercase;" />
                                 <button type="submit" class="btn btn-primary">Check In</button>
                             </form>
                         </div>
@@ -325,6 +1064,9 @@
             </section>
         </main>
     </div>
+
+    <!-- Global Enterprise Admin Toast Notification Stack -->
+    <div id="adminToastContainer" class="admin-toast-container"></div>
 
     <!-- Protocol Guard & Dynamic Module Injection -->
     <script>

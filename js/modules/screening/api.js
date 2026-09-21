@@ -5,6 +5,51 @@
  */
 
 export const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+export const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+
+export function format12Hour(timeStr) {
+  if (!timeStr) return '7:30 PM';
+  if (/am|pm/i.test(timeStr)) return timeStr.toUpperCase();
+  const parts = timeStr.trim().split(':');
+  if (parts.length < 2) return timeStr;
+  let hours = parseInt(parts[0], 10);
+  const minutes = parts[1].slice(0, 2);
+  if (isNaN(hours)) return timeStr;
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  return `${hours}:${minutes} ${ampm}`;
+}
+
+export function parseHall(hallStr) {
+  if (!hallStr) return { hallLine: 'D Block 4th Floor', roomTag: 'Auditorium' };
+  if (hallStr.includes(' - ')) {
+    const parts = hallStr.split(' - ');
+    return { hallLine: parts[0].trim(), roomTag: parts[1].trim() };
+  }
+  return { hallLine: hallStr.trim(), roomTag: 'Auditorium' };
+}
+
+export function parseShowingDate(dateInput) {
+  let d;
+  if (typeof dateInput === 'string') {
+    const parts = dateInput.split('T')[0].split('-');
+    if (parts.length === 3) {
+      d = new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)));
+    } else {
+      d = new Date(dateInput);
+    }
+  } else {
+    d = new Date(dateInput);
+  }
+  const dayNum = d.getUTCDate ? d.getUTCDate() : d.getDate();
+  const monthIdx = d.getUTCMonth ? d.getUTCMonth() : d.getMonth();
+  const weekdayIdx = d.getUTCDay ? d.getUTCDay() : d.getDay();
+  const weekday = WEEKDAYS[weekdayIdx] || 'THU';
+  const monthStr = MONTHS[monthIdx] ? MONTHS[monthIdx].toUpperCase() : 'SEP';
+  const fullDateStr = `${MONTHS[monthIdx] || 'Sep'} ${dayNum}, ${d.getUTCFullYear ? d.getUTCFullYear() : d.getFullYear()}`;
+  return { date: d, dayNum, monthStr, weekday, fullDateStr };
+}
 
 export const LOCAL_MOVIES = [
   {
@@ -20,6 +65,8 @@ export const LOCAL_MOVIES = [
     hall: 'D Block 3rd Floor',
     blurb: 'A signal lost between stations. A driver follows it past the edge of the mapped city.',
     poster_url: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=800&q=80',
+    quote: 'In the dark of the auditorium, neon is memory made visible.',
+    quote_author: '— A. MOREAU',
     g: 'linear-gradient(150deg,#2b1055 0%,#7597de 60%,#0a0a18 100%)',
     glyph: 'N'
   },
@@ -36,6 +83,8 @@ export const LOCAL_MOVIES = [
     hall: 'D Block 4th Floor',
     blurb: 'An aging projectionist discovers a single frame of unreleased nitrate film tucked into an archival spool.',
     poster_url: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80',
+    quote: '“Cinema is the closest thing we have to time travel.”',
+    quote_author: '— K. TANAKA',
     g: 'linear-gradient(150deg,#4a2c10 0%,#c98a3d 55%,#120b05 100%)',
     glyph: 'R'
   },
@@ -52,6 +101,8 @@ export const LOCAL_MOVIES = [
     hall: 'D Block 3rd Floor',
     blurb: 'Thirty days into a lunar relay rotation, communications cease. The backup antenna begins receiving coordinates from inside the crater.',
     poster_url: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80',
+    quote: 'Between the stars, silence is the only projector.',
+    quote_author: '— E. VOLKOV',
     g: 'linear-gradient(150deg,#042f2e 0%,#14b8a6 55%,#03121a 100%)',
     glyph: 'O'
   }
@@ -62,33 +113,49 @@ export function fallbackShowings() {
   const s1 = new Date(now.getTime() + 86400000 * 3);
   const s2 = new Date(now.getTime() + 86400000 * 10);
   const s3 = new Date(now.getTime() + 86400000 * 17);
+  const p1 = parseShowingDate(s1);
+  const p2 = parseShowingDate(s2);
+  const p3 = parseShowingDate(s3);
+
   return [
     {
       id: 'fallback-1',
-      date: s1,
-      dayNum: s1.getDate(),
-      monthStr: MONTHS[s1.getMonth()].toUpperCase(),
-      fullDateStr: MONTHS[s1.getMonth()] + ' ' + s1.getDate(),
-      time: '21:00',
-      hall: 'D Block 3rd Floor'
+      date: p1.date,
+      dayNum: p1.dayNum,
+      monthStr: p1.monthStr,
+      weekday: p1.weekday,
+      fullDateStr: p1.fullDateStr,
+      time: '19:30',
+      time12h: '7:30 PM',
+      hall: 'D Block 4th Floor',
+      hallLine: 'D Block 4th Floor',
+      roomTag: 'Auditorium'
     },
     {
       id: 'fallback-2',
-      date: s2,
-      dayNum: s2.getDate(),
-      monthStr: MONTHS[s2.getMonth()].toUpperCase(),
-      fullDateStr: MONTHS[s2.getMonth()] + ' ' + s2.getDate(),
+      date: p2.date,
+      dayNum: p2.dayNum,
+      monthStr: p2.monthStr,
+      weekday: p2.weekday,
+      fullDateStr: p2.fullDateStr,
       time: '21:00',
-      hall: 'D Block 3rd Floor'
+      time12h: '9:00 PM',
+      hall: 'D Block 4th Floor',
+      hallLine: 'D Block 4th Floor',
+      roomTag: 'Auditorium'
     },
     {
       id: 'fallback-3',
-      date: s3,
-      dayNum: s3.getDate(),
-      monthStr: MONTHS[s3.getMonth()].toUpperCase(),
-      fullDateStr: MONTHS[s3.getMonth()] + ' ' + s3.getDate(),
+      date: p3.date,
+      dayNum: p3.dayNum,
+      monthStr: p3.monthStr,
+      weekday: p3.weekday,
+      fullDateStr: p3.fullDateStr,
       time: '21:00',
-      hall: 'D Block 3rd Floor'
+      time12h: '9:00 PM',
+      hall: 'D Block 4th Floor',
+      hallLine: 'D Block 4th Floor',
+      roomTag: 'Auditorium'
     }
   ];
 }
@@ -100,26 +167,31 @@ export async function fetchMovies() {
     const list = await res.json();
     if (!list || !list.length) return LOCAL_MOVIES;
 
-    return list.map(m => ({
-      id: m.id,
-      title: (m.title || '').toUpperCase(),
-      rawTitle: m.title || '',
-      dir: 'Dir. ' + (m.director || 'Unknown'),
-      rawDir: m.director || '',
-      genre: (m.genre || 'CINEMA').toUpperCase(),
-      runtime: m.runtime || '2H',
-      year: m.year || 2024,
-      rating: m.rating || 'A',
-      hall: m.hall || 'D Block 3rd Floor',
-      blurb: m.blurb || '',
-      poster_url: m.poster_url || '',
-      g: (m.genre || '').toLowerCase().includes('sci')
-        ? 'linear-gradient(150deg,#2b1055 0%,#7597de 60%,#0a0a18 100%)'
-        : (m.genre || '').toLowerCase().includes('drama')
-        ? 'linear-gradient(150deg,#4a2c10 0%,#c98a3d 55%,#120b05 100%)'
-        : 'linear-gradient(150deg,#042f2e 0%,#14b8a6 55%,#03121a 100%)',
-      glyph: (m.title || 'D').charAt(0).toUpperCase()
-    }));
+    return list.map(m => {
+      const defaultQuote = m.director ? `— ${m.director}` : 'DayDreamers Film Society';
+      return {
+        id: m.id,
+        title: (m.title || '').toUpperCase(),
+        rawTitle: m.title || '',
+        dir: 'Dir. ' + (m.director || 'Unknown'),
+        rawDir: m.director || '',
+        genre: (m.genre || 'CINEMA').toUpperCase(),
+        runtime: m.runtime || '2H',
+        year: m.year || 2024,
+        rating: m.rating || 'A',
+        hall: m.hall || 'D Block 4th Floor',
+        blurb: m.blurb || '',
+        poster_url: m.poster_url || '',
+        quote: m.quote || (m.title === 'The Last Reel' ? '“Cinema is the closest thing we have to time travel.”' : ''),
+        quote_author: m.quote_author || (m.title === 'The Last Reel' ? '— K. TANAKA' : (m.director ? `— ${m.director.toUpperCase()}` : '')),
+        g: (m.genre || '').toLowerCase().includes('sci')
+          ? 'linear-gradient(150deg,#2b1055 0%,#7597de 60%,#0a0a18 100%)'
+          : (m.genre || '').toLowerCase().includes('drama')
+          ? 'linear-gradient(150deg,#4a2c10 0%,#c98a3d 55%,#120b05 100%)'
+          : 'linear-gradient(150deg,#042f2e 0%,#14b8a6 55%,#03121a 100%)',
+        glyph: (m.title || 'D').charAt(0).toUpperCase()
+      };
+    });
   } catch (err) {
     console.warn('Error loading films from API, falling back to local list:', err);
     return LOCAL_MOVIES;
@@ -135,20 +207,22 @@ export async function fetchShowings(movieId) {
     if (!list || !list.length) return fallbackShowings();
 
     return list.map(s => {
-      const d = new Date(s.show_date);
-      const dayNum = d.getUTCDate ? d.getUTCDate() : d.getDate();
-      const monthIdx = d.getMonth();
-      const monthStr = MONTHS[monthIdx] ? MONTHS[monthIdx].toUpperCase() : 'JAN';
-      const fullDateStr = (MONTHS[monthIdx] || 'Jan') + ' ' + dayNum + ', ' + d.getFullYear();
+      const parsed = parseShowingDate(s.show_date);
+      const hallInfo = parseHall(s.hall);
+      const timeStr = s.show_time || '19:30';
 
       return {
         id: s.id,
-        date: d,
-        dayNum: dayNum,
-        monthStr: monthStr,
-        fullDateStr: fullDateStr,
-        time: s.show_time || '21:00',
-        hall: s.hall || 'D Block 3rd Floor'
+        date: parsed.date,
+        dayNum: parsed.dayNum,
+        monthStr: parsed.monthStr,
+        weekday: parsed.weekday,
+        fullDateStr: parsed.fullDateStr,
+        time: timeStr,
+        time12h: format12Hour(timeStr),
+        hall: s.hall || 'D Block 4th Floor',
+        hallLine: hallInfo.hallLine,
+        roomTag: hallInfo.roomTag
       };
     });
   } catch (err) {

@@ -1,24 +1,9 @@
 <!doctype html>
 <html lang="en">
 <head>
-<script>history.scrollRestoration = 'manual'; window.scrollTo(0, 0);</script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Daydreamers Box Office, Select Film and Reserve Seats</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
-<link rel="preconnect" href="https://esm.sh" crossorigin />
-<link rel="preconnect" href="https://miroleon.github.io" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Heebo:wght@200;400;500;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@200;300;400;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
-<link rel="prefetch" href="index.html" as="document" />
-<link rel="prerender" href="index.html" />
-<link rel="preload" href="/fonts/Gilroy-Thin.woff2" as="font" type="font/woff2" crossorigin />
-<link rel="preload" href="/fonts/Gilroy-UltraLight.woff2" as="font" type="font/woff2" crossorigin />
-<link rel="preload" href="/textures/menu-glass-normal.jpeg" as="image" />
-<link rel="modulepreload" href="/js/vendor/three.module.js" />
-
-<!-- Local Import Map for Three.js (Offline Development) -->
+<!-- Local Import Map for Three.js (Offline Development) - MUST BE FIRST BEFORE ANY MODULE SCRIPTS OR PRELOADS -->
 <script type="importmap">
 {
   "imports": {
@@ -27,6 +12,40 @@
   }
 }
 </script>
+<script>
+if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
+window.scrollTo(0, 0);
+window.addEventListener('pageshow', function() { window.scrollTo(0, 0); });
+window.addEventListener('error', function(e) {
+  fetch('/api/client-error', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'error', message: e.message, filename: e.filename, lineno: e.lineno, colno: e.colno, stack: e.error ? e.error.stack : null })
+  }).catch(function(){});
+});
+window.addEventListener('unhandledrejection', function(e) {
+  fetch('/api/client-error', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'unhandledrejection', reason: String(e.reason), stack: e.reason ? e.reason.stack : null })
+  }).catch(function(){});
+});
+</script>
+<title>Daydreamers Box Office, Select Film and Reserve Seats</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+<link rel="preconnect" href="https://esm.sh" crossorigin />
+<link rel="preconnect" href="https://miroleon.github.io" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600&family=Heebo:wght@200;300;400;500;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="prefetch" href="index.html" as="document" />
+<link rel="prefetch" href="contact.html" as="document" />
+<link rel="prerender" href="index.html" />
+<link rel="preload" href="/fonts/Gilroy-Thin.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/fonts/Gilroy-UltraLight.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/textures/menu-glass-normal.jpeg" as="image" />
+<link rel="modulepreload" href="/js/vendor/three.module.js" />
+<link rel="modulepreload" href="/js/modules/contact/main.js" />
 
 <link rel="stylesheet" href="/css/base.css?v=fresh3" />
 <link rel="stylesheet" href="/css/components/sweep-wall.css?v=fresh3" />
@@ -35,6 +54,7 @@
 <link rel="stylesheet" href="/css/burger-menu/burger-menu.css?v=fresh3" />
 <link id="pageStyleHome" rel="stylesheet" href="/css/pages/home.css?v=fresh3" disabled />
 <link id="pageStyleScreening" rel="stylesheet" href="/css/pages/screening.css?v=fresh3" />
+<link id="pageStyleContact" rel="stylesheet" href="/css/pages/contact.css?v=fresh3" disabled />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script>try{if(sessionStorage.getItem('wallEnter')==='1')document.documentElement.classList.add('wall-entering');}catch(e){}</script>
 </head>
@@ -50,13 +70,19 @@
       <path d="M24.5 4.5c.5 2.3 1.2 3 3.5 3.5-2.3.5-3 1.2-3.5 3.5-.5-2.3-1.2-3-3.5-3.5 2.3-.5 3-1.2 3.5-3.5Z" fill="var(--gold)"/>
     </svg><span>DAYDREAMERS</span>
   </a>
-  <button class="site-header-button burger-toggle" id="burgerToggle" aria-expanded="false" aria-controls="site-menu" aria-label="Toggle menu" data-cursor="MENU">
-    <span class="u-visually-hidden">Toggle menu</span>
-    <span class="button-bar button-bar--1"></span>
-    <span class="button-bar button-bar--2"></span>
-    <span class="button-bar button-bar--3"></span>
-  </button>
+  <div class="header-controls">
+    <button class="site-header-button burger-toggle" id="burgerToggle" aria-expanded="false" aria-controls="site-menu" aria-label="Toggle menu" data-cursor="MENU">
+      <span class="u-visually-hidden">Toggle menu</span>
+      <span class="button-bar button-bar--1"></span>
+      <span class="button-bar button-bar--2"></span>
+      <span class="button-bar button-bar--3"></span>
+    </button>
+  </div>
 </header>
+
+<!-- Fixed Viewport Overlay for Fullscreen Nitrate Inversion Lens -->
+<div id="nitrateLensOverlay" class="nitrate-lens-overlay" aria-hidden="true" hidden></div>
+
 
 <!-- Persistent Fullscreen Menu System (Phase 2) -->
 <div class="site-menu-back" aria-hidden="true">
@@ -71,6 +97,7 @@
       <li class="site-menu-item"><a href="index.html#gallery" data-nav data-cursor="GO">Past Events</a></li>
       <li class="site-menu-item"><a href="index.html#about" data-nav data-cursor="GO">About Us</a></li>
       <li class="site-menu-item"><a href="index.html#join" data-nav data-cursor="GO">Join Us</a></li>
+      <li class="site-menu-item"><a href="contact.html" data-nav data-cursor="GO">Contact Us</a></li>
     </ul>
     <div class="site-menu-footer">
       <div class="site-menu-tagline">Daydreamers Film Society</div>
@@ -79,6 +106,16 @@
           <li><a href="mailto:hello@daydreamers.club" data-cursor="OPEN">Email</a></li>
           <li><a href="admin.html" data-cursor="OPEN" data-no-router="true">Admin</a></li>
           <li><a href="screening.html#booking" data-cursor="GO">Reserve</a></li>
+          <li>
+            <button class="menu-camera-icon-btn" id="menuCameraBtn" aria-label="Toggle Nitrate Inversion Lens" title="Toggle Nitrate Inversion Lens" data-cursor="CAMERA">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+                <line x1="12" y1="11" x2="12" y2="15"/>
+                <line x1="10" y1="13" x2="14" y2="13"/>
+              </svg>
+            </button>
+          </li>
         </ul>
       </div>
     </div>
@@ -94,44 +131,51 @@
 <div id="vignette"></div>
 <div id="tip" aria-hidden="true"><b></b><i></i></div>
 <main id="bookingView" data-router-view="screening">
-<section class="hero-section" id="details">
-    <div class="hero-grid">
-      <!-- 1. Left: Poster Frame -->
-      <div class="hero-poster-frame">
-        <div class="hero-poster" id="detPoster">
-          <img id="detPosterImg" class="hero-poster-img" src="" alt="Movie Poster" style="display:none;" />
-          <div class="stripes"></div>
-          <div class="glyph" id="detGlyph">D</div>
-          <div class="poster-tag" id="detTag">Movie Poster</div>
-        </div>
-      </div>
+<section class="cinema-hero-stage" id="details">
+  <!-- Widescreen Cinematic Backdrop Plate -->
+  <img class="stage-backdrop" src="/assets/hero-arch-bg.webp" alt="Cinematic auditorium entrance with neon arch" loading="eager" />
 
-      <!-- 2. Center: Movie Information -->
-      <div class="hero-info">
-        <div class="hero-eyebrow" id="detHall">D BLOCK / 3RD FLOOR</div>
-        <h1 class="hero-title" id="detTitle">Neon Reverie</h1>
-        <div class="hero-director" id="detDir">— DIR. A. MOREAU</div>
-        <div class="hero-meta" id="detMeta">SCI-FI &nbsp;|&nbsp; 2H 14M &nbsp;|&nbsp; 2024 &nbsp;|&nbsp; A</div>
-        <p class="hero-blurb" id="detBlurb">A signal lost between stations. A driver follows it past the edge of the mapped city.</p>
-        <div class="hero-actions">
-          <a class="btn-solid reserve-seats-btn" id="heroReserveBtn" href="#booking" data-action="reserve-seats" data-cursor="SELECT">Reserve Seats</a>
-          <a class="btn-line" href="#venue" data-cursor="GO">View Venue</a>
-        </div>
-      </div>
+  <div class="stage-content">
+    <!-- 1. Left: Framed Movie Poster -->
+    <div class="stage-poster" id="detPoster">
+      <img id="detPosterImg" class="stage-poster-img" src="/assets/poster-the-last-reel.webp" alt="Movie Poster" />
+      <div class="stripes" style="display:none;"></div>
+      <div class="glyph" id="detGlyph" style="display:none;">D</div>
+      <div class="poster-tag" id="detTag" style="display:none;">Movie Poster</div>
+    </div>
 
-      <!-- 3. Right: Next Show & Date Carousel -->
-      <div class="hero-next-card">
-        <div class="next-label">NEXT SHOW</div>
-        <div class="next-time" id="dateShowtime">21:00</div>
-        <div class="next-divider"></div>
-        <div class="next-carousel">
-          <button class="carousel-arrow" id="prevDateBtn" aria-label="Previous date" data-cursor="PREV">&lt;</button>
-          <div class="date-cards-scroll" id="datePills"></div>
-          <button class="carousel-arrow" id="nextDateBtn" aria-label="Next date" data-cursor="NEXT">&gt;</button>
-        </div>
+    <!-- 2. Center: Movie Editorial Information -->
+    <div class="stage-info">
+      <div class="hero-eyebrow" id="detHall">D BLOCK 4TH FLOOR</div>
+      <h1 class="hero-title" id="detTitle">The Last Reel</h1>
+      <div class="hero-meta-row" id="detMeta">
+        <span id="detGenre">DRAMA</span>
+        <span class="bullet">|</span>
+        <span id="detRuntime">1H 52M</span>
+        <span class="bullet">|</span>
+        <span id="detYear">2023</span>
+        <span class="bullet">|</span>
+        <span id="detRating">UA</span>
+      </div>
+      <p class="hero-synopsis" id="detBlurb">An aging projectionist discovers a single frame of unreleased nitrate film tucked into an archival spool.</p>
+      <div class="hero-actions">
+        <a class="btn-reserve-pill reserve-seats-btn" id="heroReserveBtn" href="#booking" data-action="reserve-seats" data-cursor="SELECT">RESERVE SEATS</a>
+        <a class="btn-venue-link" id="heroVenueBtn" href="#venue" data-cursor="GO">VIEW VENUE</a>
       </div>
     </div>
-  </section>
+
+    <!-- 3. Far Right: Floating Editorial Date & 12-Hour Showtime -->
+    <div class="stage-schedule" id="heroSchedule" data-cursor="NEXT" title="Click to cycle showtimes">
+      <span class="sched-weekday" id="dateWeekday">FRI</span>
+      <b class="sched-day" id="dateDay">18</b>
+      <span class="sched-month" id="dateMonth">SEP</span>
+      <div class="sched-divider"></div>
+      <div class="sched-time" id="dateShowtime">
+        7:30 <span class="sched-ampm">PM</span>
+      </div>
+    </div>
+  </div>
+</section>
 
   <div class="hero-separator"></div>
 
@@ -139,9 +183,9 @@
     <div class="bill-header">
       <div class="bill-title-wrap">
         <div class="bill-tag">CURRENT BILL</div>
-        <h2 class="bill-title">Now <i>Screening</i></h2>
+        <h2 class="bill-title">Screening <i>Next</i></h2>
       </div>
-      <p class="bill-desc">Club events are limited to a few titles each month. Select Reserve Seats on any title to load it in the box office below.</p>
+      <p class="bill-desc">Club events are limited to a few titles each month. Select a title to preview it above. Click Reserve Seats only when ready to book.</p>
     </div>
     <div class="movies-grid" id="moviesGrid"></div>
     <div class="movies-empty" id="moviesEmpty" hidden>No films are listed right now. Please check back for the next club announcement.</div>
@@ -236,49 +280,268 @@
   <div class="ticket" id="ticket">
     <button class="t-close modal-close" id="modalClose" data-action="close-modal" data-cursor="CLOSE" aria-label="Close modal">&times;</button>
     
-    <!-- Step 1: Attendee Information Form -->
-    <div id="bookingFormStep">
-      <div class="t-top">
-        <div class="bebas">DAYDREAMERS</div>
-        <p id="modalFormSubtitle">Complete Reservation &amp; Pass</p>
+    <!-- Stepper Progress Header -->
+    <div class="modal-stepper" id="modalStepper">
+      <div class="step-indicator active" data-step="1">
+        <span class="step-num">1</span>
+        <span class="step-label">Confirm</span>
       </div>
-      <div class="modal-form-wrap" style="padding: 24px 28px 28px;">
-        <div class="form-preview" style="margin-bottom: 20px;">
-          <div><span>Film</span><b id="formFilm">Neon Reverie</b></div>
-          <div><span>Showing</span><b id="formShowing">18 Sep | 21:00</b></div>
-          <div><span>Seats</span><b id="formSeats" style="color: var(--gold);">C4, C5</b></div>
-        </div>
-        <form id="attendeeForm">
-          <div id="attendeesContainer">
-            <!-- Dynamically populated attendee inputs based on picked seats -->
-          </div>
-          <div id="bkError" class="modal-error" style="display: none; margin-top: 14px; padding: 10px 14px; background: rgba(255,80,110,0.15); border: 1px solid rgba(255,80,110,0.4); color: #ff8fa3; font-size: 12px; line-height: 1.4;"></div>
-          <button type="submit" id="bkSubmitBtn" class="btn-solid" style="width: 100%; margin-top: 18px; justify-content: center; cursor: pointer; padding: 14px 20px;">
-            Confirm &amp; Generate Ticket Pass
-          </button>
-        </form>
+      <div class="step-line"></div>
+      <div class="step-indicator" data-step="2">
+        <span class="step-num">2</span>
+        <span class="step-label">Details</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step-indicator" data-step="3">
+        <span class="step-num">3</span>
+        <span class="step-label">Verify</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step-indicator" data-step="4">
+        <span class="step-num">4</span>
+        <span class="step-label">Pass</span>
       </div>
     </div>
 
-    <!-- Step 2: Confirmed Cryptographic Ticket Pass(es) -->
-    <div id="ticketSuccessStep" style="display: none;">
-      <div class="t-top">
-        <div class="bebas">DAYDREAMERS</div>
-        <p id="successPassTitle">Official Admission Pass, Admit One</p>
+    <!-- Step 1: Show & Seat Confirmation -->
+    <div class="modal-step" id="stepConfirmation">
+      <div class="step-head">
+        <span class="step-eyebrow">STEP 1 OF 4</span>
+        <h3 class="step-title">Show &amp; Seat Confirmation</h3>
+        <p class="step-sub">Please review your screening reservation details before continuing.</p>
       </div>
-      <div id="passesList" class="passes-container" style="padding: 20px 24px 10px;">
-        <!-- Single or Multi Passes rendered here -->
+
+      <div class="step1-card">
+        <div class="step1-poster-wrap">
+          <img id="confPosterImg" src="/assets/poster-the-last-reel.webp" alt="Movie Poster" />
+        </div>
+        <div class="step1-info">
+          <h4 id="confMovieTitle" class="step1-movie-title">The Last Reel</h4>
+          <div class="step1-meta-row">
+            <span id="confDate">Fri, 18 Sep</span>
+            <span class="step-dot">&bull;</span>
+            <span id="confTime">7:30 PM</span>
+          </div>
+          <div class="step1-hall-row" id="confHall">D Block 4th Floor Auditorium</div>
+          <div class="step1-seat-badge-wrap">
+            <span class="step1-seat-badge" id="confSeatsBadge">Seat G10</span>
+          </div>
+        </div>
       </div>
-      <div class="ticket-footer-note" style="padding: 10px 24px; font-size: 11px; color: var(--muted); text-align: center; line-height: 1.4;">
-        Cryptographic QR token verified. A copy has been dispatched to each attendee's RVU email. Present the QR at the door scanner.
-      </div>
-      <div style="display: flex; gap: 10px; padding: 12px 24px 24px;">
-        <button id="donePassBtn" class="btn-solid" style="flex: 1; font-size: 11px; padding: 12px 10px; cursor: pointer;">Done</button>
+
+      <div class="step-actions-row">
+        <button type="button" class="btn-step-outline" id="btnChangeSeats">Change Seats</button>
+        <button type="button" class="btn-step-primary" id="btnGoToStep2">Continue to Attendee Details &rarr;</button>
       </div>
     </div>
-  </div>
+
+    <!-- Step 2: Attendee Details -->
+    <div class="modal-step" id="stepDetails" style="display: none;">
+      <div class="step-head">
+        <span class="step-eyebrow">STEP 2 OF 4</span>
+        <h3 class="step-title">Attendee Details</h3>
+        <p class="step-sub" id="detailsStepSubtitle">Enter student information for this reservation.</p>
+      </div>
+
+      <form id="stepDetailsForm">
+        <!-- Attendee Cards (Dynamic for 1 or multi seats) -->
+        <div id="attendeesListContainer" class="attendees-list-container">
+          <!-- Injected via JS -->
+        </div>
+
+        <!-- Single Primary Email for ticket delivery -->
+        <div class="primary-email-card">
+          <label for="primaryDeliveryEmail">Ticket Delivery Email Address *</label>
+          <p class="email-note">All ticket passes for this booking will be shared to this official student email.</p>
+          <input type="email" id="primaryDeliveryEmail" required placeholder="student@rvu.edu.in" pattern=".+@(blr\.)?rvu\.edu\.in$" title="Must end with @rvu.edu.in or @blr.rvu.edu.in" />
+        </div>
+
+        <!-- Collapsed Additional Info Section -->
+        <details class="additional-info-accordion" id="extraInfoAccordion">
+          <summary class="accordion-summary">
+            <span>Additional Information (Optional)</span>
+            <span class="accordion-arrow">&#9662;</span>
+          </summary>
+          <div class="accordion-body">
+            <div class="extra-field-row">
+              <div class="f-group">
+                <label for="extraBatch">Batch / Semester</label>
+                <input type="text" id="extraBatch" placeholder="e.g. 2024–2028 (Sem 3)" />
+              </div>
+              <div class="f-group">
+                <label for="extraYear">Academic Year</label>
+                <input type="text" id="extraYear" placeholder="e.g. 2nd Year" />
+              </div>
+            </div>
+            <div class="f-group" style="margin-top: 10px;">
+              <label for="extraDept">School / Department</label>
+              <input type="text" id="extraDept" placeholder="e.g. School of Computer Science &amp; Engineering" />
+            </div>
+          </div>
+        </details>
+
+        <div id="step2Error" class="modal-step-error" style="display: none;"></div>
+
+        <div class="step-actions-row">
+          <button type="button" class="btn-step-outline" id="btnBackToStep1">&larr; Back</button>
+          <button type="submit" class="btn-step-primary" id="btnGoToStep3">Proceed to Verification &rarr;</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Step 3: Identity Verification (OTP) -->
+    <div class="modal-step" id="stepVerification" style="display: none;">
+      <div class="step-head">
+        <span class="step-eyebrow">STEP 3 OF 4</span>
+        <h3 class="step-title">Identity Verification</h3>
+        <p class="step-sub">A 4-digit verification code is required to confirm student identity.</p>
+      </div>
+
+      <div class="otp-card">
+        <div class="otp-icon-wrap">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <div class="otp-destination">
+          Verifying destination: <strong id="otpDestEmail">student@rvu.edu.in</strong>
+        </div>
+        <div class="otp-hint-badge">Placeholder Mode: Enter code <strong>0000</strong> to verify</div>
+
+        <div class="otp-input-wrap">
+          <input type="text" id="otpCodeInput" maxlength="4" placeholder="0000" autocomplete="one-time-code" />
+        </div>
+        <div id="otpStatusMsg" class="otp-status-msg" style="display:none;"></div>
+      </div>
+
+      <div id="step3Error" class="modal-step-error" style="display: none;"></div>
+
+      <div class="step-actions-row">
+        <button type="button" class="btn-step-outline" id="btnBackToStep2">&larr; Back</button>
+        <button type="button" class="btn-step-primary" id="btnConfirmAndBook">Confirm &amp; Issue Ticket Pass</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Confirmation & Real Ticket Pass -->
+    <div class="modal-step" id="stepTicket" style="display: none;">
+      <div class="step-head">
+        <span class="step-eyebrow">STEP 4 OF 4 &bull; OFFICIAL PASS</span>
+        <h3 class="step-title" id="step4Title">Reservation Confirmed</h3>
+        <p class="step-sub">Your official admission pass has been issued and sent to your email.</p>
+      </div>
+
+      <div id="passesList" class="passes-container">
+        <!-- Single or Multi Passes rendered here -->
+      </div>
+
+      <div class="ticket-footer-note">
+        Present the scannable pass at the auditorium door. A copy has been dispatched to your RVU email.
+      </div>
+
+      <div class="step-actions-row" style="margin-top: 18px;">
+        <button type="button" class="btn-step-primary" id="donePassBtn" style="width: 100%;">Done</button>
+      </div>
+    </div>
+
 </div>
 </div>
+</div>
+
+<script>
+  (function() {
+    try {
+      var p = new URLSearchParams(window.location.search);
+      var s = p.get('test_step');
+      document.title = 'TEST_STEP_IS_' + s;
+      if (s) {
+        var modal = document.getElementById('modal');
+        if (modal) {
+          modal.classList.add('open');
+          var stepNum = parseInt(s, 10);
+          var indicators = document.querySelectorAll('#modalStepper .step-indicator');
+          indicators.forEach(function(ind) {
+            var st = parseInt(ind.getAttribute('data-step'), 10);
+            ind.classList.remove('active', 'completed');
+            if (st === stepNum) ind.classList.add('active');
+            else if (st < stepNum) ind.classList.add('completed');
+          });
+          var s1 = document.getElementById('stepConfirmation'); if (s1) s1.style.display = (stepNum === 1 ? 'block' : 'none');
+          var s2 = document.getElementById('stepDetails'); if (s2) s2.style.display = (stepNum === 2 ? 'block' : 'none');
+          var s3 = document.getElementById('stepVerification'); if (s3) s3.style.display = (stepNum === 3 ? 'block' : 'none');
+          var s4 = document.getElementById('stepTicket'); if (s4) s4.style.display = (stepNum === 4 ? 'block' : 'none');
+
+          var isGroup = p.get('mode') === 'group';
+          if (stepNum === 1) {
+            var badge = document.getElementById('confSeatsBadge');
+            if (badge) badge.textContent = isGroup ? 'D8 · D9 · D10 · G10' : 'Seat G10';
+          }
+          if (stepNum === 2) {
+            var container = document.getElementById('attendeesListContainer');
+            var seats = isGroup ? ['D8', 'D9', 'D10', 'G10'] : ['G10'];
+            var detailsSub = document.getElementById('detailsStepSubtitle');
+            if (detailsSub) detailsSub.textContent = isGroup ? 'Group Reservation (4 Seats) • 1 Shared Ticket Delivery Email' : 'Individual Reservation (1 Seat)';
+            var html = '';
+            var names = ['Alistair Moreau', 'Elena Rostova', 'Marcus Vance', 'Kaelen Voss'];
+            var usns = ['1RVU24CSE045', '1RVU24CSE078', '1RVU24CSE102', '1RVU24CSE150'];
+            seats.forEach(function(st, i) {
+              html += '<div class="attendee-card">' +
+                '<div class="attendee-head"><span class="attendee-title">' + (isGroup ? 'Attendee #' + (i+1) : 'Attendee Information') + '</span><span class="attendee-seat-badge">Seat ' + st + '</span></div>' +
+                '<div class="attendee-row"><div class="f-group"><label>Full Name *</label><input type="text" class="att-name-input" value="' + names[i] + '"/></div>' +
+                '<div class="f-group"><label>University Serial Number (USN) *</label><input type="text" class="att-usn-input" style="text-transform: uppercase;" value="' + usns[i] + '"/></div></div></div>';
+            });
+            if (container) container.innerHTML = html;
+            var emailInp = document.getElementById('primaryDeliveryEmail');
+            if (emailInp) emailInp.value = 'moreau.alistair@rvu.edu.in';
+            var acc = document.getElementById('extraInfoAccordion');
+            if (acc) acc.open = true;
+            var bInp = document.getElementById('extraBatch'); if (bInp) bInp.value = '2024–2028 (Sem 4)';
+            var yInp = document.getElementById('extraYear'); if (yInp) yInp.value = '2nd Year';
+            var dInp = document.getElementById('extraDept'); if (dInp) dInp.value = 'Computer Science & Engineering';
+          }
+          if (stepNum === 3) {
+            var dEmail = document.getElementById('otpDestEmail');
+            if (dEmail) dEmail.textContent = 'moreau.alistair@rvu.edu.in';
+            var otpInp = document.getElementById('otpCodeInput');
+            if (otpInp) otpInp.value = '0000';
+            var otpMsg = document.getElementById('otpStatusMsg');
+            if (otpMsg) {
+              otpMsg.style.display = 'block';
+              otpMsg.className = 'otp-status-msg success';
+              otpMsg.textContent = '✓ Passcode verified. Ready to issue ticket pass.';
+            }
+          }
+          if (stepNum === 4) {
+            var tContainer = document.getElementById('passesList');
+            if (tContainer) {
+              tContainer.innerHTML = '<div class="single-pass-card">' +
+                '<div class="pass-card-top">' +
+                  '<div class="pass-brand">DAYDREAMERS • ADMIT ONE</div>' +
+                  '<div class="pass-ref-code">DD-7821</div>' +
+                '</div>' +
+                '<div class="pass-card-body">' +
+                  '<div class="pass-row"><span class="pass-label">Film</span><strong class="pass-val">The Last Reel</strong></div>' +
+                  '<div class="pass-row"><span class="pass-label">Attendee</span><strong class="pass-val">Alistair Moreau</strong></div>' +
+                  '<div class="pass-row"><span class="pass-label">USN</span><strong class="pass-val usn-val">1RVU24CSE045</strong></div>' +
+                  '<div class="pass-row"><span class="pass-label">Screening</span><strong class="pass-val">18 Sep 2026 | 7:30 PM</strong></div>' +
+                  '<div class="pass-row"><span class="pass-label">Auditorium</span><strong class="pass-val">D Block 4th Floor Auditorium</strong></div>' +
+                  '<div class="pass-row"><span class="pass-label">Seat</span><strong class="pass-val seat-highlight">Seat G10</strong></div>' +
+                '</div>' +
+                '<div class="pass-qr-wrap">' +
+                  '<svg xmlns="http://www.w3.org/2000/svg" width="130" height="130" viewBox="0 0 130 130" class="pass-qr-img"><rect width="130" height="130" fill="white"/><rect x="10" y="10" width="30" height="30" fill="black"/><rect x="15" y="15" width="20" height="20" fill="white"/><rect x="90" y="10" width="30" height="30" fill="black"/><rect x="95" y="15" width="20" height="20" fill="white"/><rect x="10" y="90" width="30" height="30" fill="black"/><rect x="15" y="95" width="20" height="20" fill="white"/><rect x="45" y="45" width="40" height="40" fill="black"/><text x="50%" y="95" text-anchor="middle" font-size="9" fill="black" font-weight="bold">DD-7821</text></svg>' +
+                  '<span class="pass-qr-hint">Door Check-in Pass</span>' +
+                '</div>' +
+                '<div class="pass-download-wrap">' +
+                  '<a href="#" class="btn-step-outline pass-download-btn">Download Pass [DD-7821]</a>' +
+                '</div>' +
+              '</div>';
+            }
+          }
+        }
+      }
+    } catch(e) {}
+  })();
+</script>
 
 <!-- Protocol Guard & Dynamic Module Injection -->
 <script>

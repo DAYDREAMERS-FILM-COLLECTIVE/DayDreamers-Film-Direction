@@ -16,6 +16,7 @@ import {
 
 import { initHome, destroyHome } from '../modules/home/main.js';
 import { initScreening, destroyScreening } from '../modules/screening/main.js';
+import { initContact, destroyContact } from '../modules/contact/main.js';
 
 const pageCache = new Map();
 let isNavigating = false;
@@ -78,6 +79,9 @@ function getViewFromUrl(urlStr) {
     if (path.endsWith('/screening.html') || path.endsWith('/screening')) {
       return 'screening';
     }
+    if (path.endsWith('/contact.html') || path.endsWith('/contact')) {
+      return 'contact';
+    }
     if (path === '/' || path.endsWith('/index.html') || path.endsWith('/index') || path.endsWith('/')) {
       return 'home';
     }
@@ -93,14 +97,11 @@ function getViewFromUrl(urlStr) {
 function switchPageStylesheet(targetView) {
   const homeStyle = document.getElementById('pageStyleHome');
   const screeningStyle = document.getElementById('pageStyleScreening');
+  const contactStyle = document.getElementById('pageStyleContact');
 
-  if (targetView === 'home') {
-    if (homeStyle) homeStyle.disabled = false;
-    if (screeningStyle) screeningStyle.disabled = true;
-  } else if (targetView === 'screening') {
-    if (homeStyle) homeStyle.disabled = true;
-    if (screeningStyle) screeningStyle.disabled = false;
-  }
+  if (homeStyle) homeStyle.disabled = (targetView !== 'home');
+  if (screeningStyle) screeningStyle.disabled = (targetView !== 'screening');
+  if (contactStyle) contactStyle.disabled = (targetView !== 'contact');
 }
 
 /**
@@ -152,7 +153,7 @@ export async function navigateTo(targetUrl, replace = false, fromMenu = false) {
   }
 
   // Pre-fetch target HTML in parallel while curtain is sweeping
-  const targetFile = targetView === 'screening' ? 'screening.html' : 'index.html';
+  const targetFile = targetView === 'screening' ? 'screening.html' : (targetView === 'contact' ? 'contact.html' : 'index.html');
   const fetchPromise = fetchTargetPage(targetFile);
 
   // Wait 800ms until screen is 100% blanketed by the solid curtain
@@ -164,6 +165,8 @@ export async function navigateTo(targetUrl, replace = false, fromMenu = false) {
   // 1. Teardown active view
   if (currentView === 'screening') {
     try { destroyScreening(); } catch (_) {}
+  } else if (currentView === 'contact') {
+    try { destroyContact(); } catch (_) {}
   } else {
     try { destroyHome(); } catch (_) {}
   }
@@ -199,6 +202,8 @@ export async function navigateTo(targetUrl, replace = false, fromMenu = false) {
     try { initHome(); } catch (e) { console.error('[Router] initHome error:', e); }
   } else if (targetView === 'screening') {
     try { initScreening(); } catch (e) { console.error('[Router] initScreening error:', e); }
+  } else if (targetView === 'contact') {
+    try { initContact(); } catch (e) { console.error('[Router] initContact error:', e); }
   }
 
   // 7. Scroll to top or target hash
@@ -243,7 +248,7 @@ export function initRouter() {
 
   // Cache current initial page wrapper
   const curView = getViewFromUrl(window.location.href);
-  const curFile = curView === 'screening' ? 'screening.html' : 'index.html';
+  const curFile = curView === 'screening' ? 'screening.html' : (curView === 'contact' ? 'contact.html' : 'index.html');
   const wrapper = document.getElementById('routerWrapper');
   if (wrapper) {
     pageCache.set(curFile, {
@@ -252,9 +257,27 @@ export function initRouter() {
     });
   }
 
-  // Speculatively preload the opposite page into cache
-  const oppositeFile = curView === 'screening' ? 'index.html' : 'screening.html';
-  prefetch(oppositeFile);
+  // Speculatively preload the other pages into cache
+  if (curView !== 'screening') prefetch('screening.html');
+  if (curView !== 'home') prefetch('index.html');
+  if (curView !== 'contact') prefetch('contact.html');
+
+  // High-performance warm-up of screening page assets and data
+  if (curView !== 'screening') {
+    fetch('/api/movies').catch(() => {});
+    const warmScreening = () => {
+      import('../modules/screening/main.js').catch(() => {});
+      const img = new Image();
+      img.src = '/assets/hero-arch-bg.webp';
+      const pImg = new Image();
+      pImg.src = '/assets/poster-the-last-reel.webp';
+    };
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(warmScreening, { timeout: 1500 });
+    } else {
+      setTimeout(warmScreening, 800);
+    }
+  }
 
   // Intercept standard internal links
   document.addEventListener('click', (e) => {

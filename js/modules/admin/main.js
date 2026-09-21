@@ -20,7 +20,32 @@ import {
   renderFilmCatalogue,
   toggleAddMovieForm,
   deleteMovie,
-  handleAddMovieSubmit
+  handleAddMovieSubmit,
+  initMovies,
+  toggleMovieScreeningState,
+  bulkUpdateScreeningState,
+  bulkDeleteMovies,
+  clearMovieSelection,
+  toggleSelectAllMovies,
+  toggleMovieSelection,
+  toggleStagingSelection,
+  toggleSelectAllStaging,
+  setMovieSearch,
+  clearMovieSearch,
+  setMovieStatusFilter,
+  setMovieGenreFilter,
+  setMovieYearRange,
+  setMovieSort,
+  resetAllFilters,
+  nextMoviePage,
+  prevMoviePage,
+  openBulkIngestModal,
+  closeBulkIngestModal,
+  switchIngestTab,
+  parseRawPastedData,
+  commitBulkIngest,
+  downloadTemplateJson,
+  downloadTemplateCsv
 } from './movies.js';
 
 import {
@@ -29,7 +54,32 @@ import {
   populateSeats,
   onSeatMovieChange,
   onSeatShowingChange,
-  toggleSeatLock
+  toggleSeatLock,
+  handleSeatClick,
+  selectRow,
+  selectAllAvailable,
+  invertSelection,
+  clearSelection,
+  setFilter,
+  setSearchQuery,
+  zoomIn,
+  zoomOut,
+  zoomReset,
+  openNewShowingModal,
+  closeNewShowingModal,
+  handleNewShowingSubmit,
+  openLockModal,
+  closeLockModal,
+  openUnlockModal,
+  closeUnlockModal,
+  openUnlockAllModal,
+  closeUnlockAllModal,
+  closeAttendeeDrawer,
+  closeCancelBookingModal,
+  toggleShowingSales,
+  loadSeatAuditLog,
+  startPolling,
+  stopPolling
 } from './seat-locker.js';
 
 import {
@@ -43,6 +93,8 @@ import {
   startQrScanner,
   stopQrScanner,
   restartScanner,
+  switchCamera,
+  handleFileScan,
   resetScanView,
   handleManualLookupSubmit
 } from './qr-scanner.js';
@@ -79,6 +131,10 @@ export function switchTab(target) {
   if (currentSection === 'scanner' && sectionKey !== 'scanner') {
     stopQrScanner();
   }
+  // Stop seat polling if leaving seats view
+  if (currentSection === 'seats' && sectionKey !== 'seats') {
+    stopPolling();
+  }
   currentSection = sectionKey;
 
   // 1. Update button active states
@@ -107,12 +163,15 @@ export function switchTab(target) {
 
   // 3. Trigger Panel-Specific Renderers on Switch
   if (sectionKey === 'movies') {
-    if (typeof renderFilmCatalogue === 'function') {
+    if (typeof initMovies === 'function') {
+      initMovies();
+    } else if (typeof renderFilmCatalogue === 'function') {
       renderFilmCatalogue();
     } else {
       loadMovies();
     }
   } else if (sectionKey === 'seats') {
+    startPolling();
     if (typeof renderSeatLockerGrid === 'function') {
       renderSeatLockerGrid();
     } else if (typeof populateSeats === 'function') {
@@ -120,7 +179,8 @@ export function switchTab(target) {
     } else {
       initSeatLocker();
     }
-  } else if (sectionKey === 'bookings') {
+  }
+ else if (sectionKey === 'bookings') {
     if (typeof loadBookingsRoster === 'function') {
       loadBookingsRoster();
     } else if (typeof fetchBookings === 'function') {
@@ -161,6 +221,11 @@ function bindEventDelegation() {
         || tabBtn.getAttribute('data-section')
         || tabBtn.getAttribute('href')?.replace('#', '');
       if (target) {
+        // Auto-close drawer only on mobile overlay (<900px); keep docked nav open on desktop
+        const vnavToggle = document.getElementById('vnavToggle');
+        if (vnavToggle && vnavToggle.checked && window.innerWidth < 900) {
+          vnavToggle.checked = false;
+        }
         switchTab(target);
         return;
       }
@@ -174,6 +239,86 @@ function bindEventDelegation() {
       return;
     }
 
+    // Bulk Ingest Modal Open/Close/Tabs
+    if (e.target.closest('[data-action="open-bulk-ingest"]')) {
+      e.preventDefault();
+      openBulkIngestModal();
+      return;
+    }
+    if (e.target.closest('[data-action="close-bulk-ingest"]')) {
+      e.preventDefault();
+      closeBulkIngestModal();
+      return;
+    }
+    const tabSwitchBtn = e.target.closest('[data-action="switch-ingest-tab"]');
+    if (tabSwitchBtn) {
+      e.preventDefault();
+      const targetTab = tabSwitchBtn.getAttribute('data-target-tab');
+      if (targetTab) switchIngestTab(targetTab);
+      return;
+    }
+    if (e.target.closest('[data-action="download-template-json"]')) {
+      e.preventDefault();
+      downloadTemplateJson();
+      return;
+    }
+    if (e.target.closest('[data-action="download-template-csv"]')) {
+      e.preventDefault();
+      downloadTemplateCsv();
+      return;
+    }
+    if (e.target.closest('[data-action="parse-raw-ingest"]')) {
+      e.preventDefault();
+      parseRawPastedData();
+      return;
+    }
+    if (e.target.closest('[data-action="commit-bulk-ingest"]')) {
+      e.preventDefault();
+      commitBulkIngest();
+      return;
+    }
+
+    // Movie Bulk Actions Toolbar
+    if (e.target.closest('[data-action="bulk-mark-active"]')) {
+      e.preventDefault();
+      bulkUpdateScreeningState(true);
+      return;
+    }
+    if (e.target.closest('[data-action="bulk-mark-archived"]')) {
+      e.preventDefault();
+      bulkUpdateScreeningState(false);
+      return;
+    }
+    if (e.target.closest('[data-action="bulk-delete-movies"]')) {
+      e.preventDefault();
+      bulkDeleteMovies();
+      return;
+    }
+    if (e.target.closest('[data-action="clear-movie-selection"]')) {
+      e.preventDefault();
+      clearMovieSelection();
+      return;
+    }
+    if (e.target.closest('[data-action="clear-movie-search"]')) {
+      e.preventDefault();
+      clearMovieSearch();
+      return;
+    }
+    if (e.target.closest('[data-action="reset-movie-filters"]')) {
+      e.preventDefault();
+      resetAllFilters();
+      return;
+    }
+
+    // Movie Status Filter Chips
+    const movieChipBtn = e.target.closest('#movieStatusChips .chip-btn');
+    if (movieChipBtn) {
+      e.preventDefault();
+      const status = movieChipBtn.getAttribute('data-status');
+      if (status) setMovieStatusFilter(status);
+      return;
+    }
+
     // Delete Movie
     const deleteBtn = e.target.closest('[data-action="delete-movie"]');
     if (deleteBtn) {
@@ -183,13 +328,145 @@ function bindEventDelegation() {
       return;
     }
 
-    // Toggle Seat Lock / Unlock
-    const seatBtn = e.target.closest('[data-action="toggle-seat"]');
-    if (seatBtn && !seatBtn.disabled) {
+    // Inspect Seat / Selection / Attendee Details
+    const seatBtn = e.target.closest('[data-action="inspect-seat"], [data-action="toggle-seat"], .admin-seat');
+    if (seatBtn && seatBtn.closest('#adminSeatGrid')) {
       e.preventDefault();
       const seatId = seatBtn.getAttribute('data-seat-id');
-      const action = seatBtn.getAttribute('data-seat-action');
-      toggleSeatLock(seatId, action);
+      handleSeatClick(seatId);
+      return;
+    }
+
+    // Filter Chips
+    const chipBtn = e.target.closest('#seatFilterChips .chip-btn, [data-filter]');
+    if (chipBtn && chipBtn.closest('#tabSeatLocker')) {
+      e.preventDefault();
+      const filter = chipBtn.getAttribute('data-filter');
+      setFilter(filter);
+      return;
+    }
+
+    // Selection shortcuts
+    if (e.target.closest('[data-action="select-all-available"]')) {
+      e.preventDefault();
+      selectAllAvailable();
+      return;
+    }
+    if (e.target.closest('[data-action="invert-selection"]')) {
+      e.preventDefault();
+      invertSelection();
+      return;
+    }
+    if (e.target.closest('[data-action="clear-selection"]')) {
+      e.preventDefault();
+      clearSelection();
+      return;
+    }
+    if (e.target.closest('[data-action="clear-seat-search"]')) {
+      e.preventDefault();
+      const sInput = document.getElementById('seatSearchInput');
+      if (sInput) sInput.value = '';
+      setSearchQuery('');
+      return;
+    }
+
+    // Showing Sales Toggle & Refresh
+    if (e.target.closest('[data-action="toggle-showing-sales"]')) {
+      e.preventDefault();
+      toggleShowingSales();
+      return;
+    }
+    if (e.target.closest('[data-action="refresh-seats"]')) {
+      e.preventDefault();
+      onSeatShowingChange();
+      return;
+    }
+    if (e.target.closest('[data-action="refresh-audit"]')) {
+      e.preventDefault();
+      loadSeatAuditLog();
+      return;
+    }
+
+    // Modals open/close
+    if (e.target.closest('[data-action="open-lock-modal"]')) {
+      e.preventDefault();
+      openLockModal();
+      return;
+    }
+    if (e.target.closest('[data-action="close-lock-modal"]')) {
+      e.preventDefault();
+      closeLockModal();
+      return;
+    }
+    if (e.target.closest('[data-action="open-unlock-selected"]')) {
+      e.preventDefault();
+      openUnlockModal();
+      return;
+    }
+    if (e.target.closest('[data-action="close-unlock-modal"]')) {
+      e.preventDefault();
+      closeUnlockModal();
+      return;
+    }
+    if (e.target.closest('[data-action="open-unlock-all-modal"]')) {
+      e.preventDefault();
+      openUnlockAllModal();
+      return;
+    }
+    if (e.target.closest('[data-action="close-unlock-all-modal"]')) {
+      e.preventDefault();
+      closeUnlockAllModal();
+      return;
+    }
+    if (e.target.closest('[data-action="close-attendee-drawer"]')) {
+      e.preventDefault();
+      closeAttendeeDrawer();
+      return;
+    }
+    if (e.target.closest('[data-action="close-cancel-booking-modal"]')) {
+      e.preventDefault();
+      closeCancelBookingModal();
+      return;
+    }
+
+    // Movie Pagination
+    if (e.target.closest('[data-action="next-movie-page"]')) {
+      e.preventDefault();
+      nextMoviePage();
+      return;
+    }
+    if (e.target.closest('[data-action="prev-movie-page"]')) {
+      e.preventDefault();
+      prevMoviePage();
+      return;
+    }
+
+    // New Showing Modal
+    if (e.target.closest('[data-action="open-new-showing-modal"]')) {
+      e.preventDefault();
+      openNewShowingModal();
+      return;
+    }
+    if (e.target.closest('[data-action="close-new-showing-modal"]')) {
+      e.preventDefault();
+      closeNewShowingModal();
+      return;
+    }
+
+    // Zoom Controls
+    if (e.target.closest('[data-action="zoom-in"]')) {
+      e.preventDefault();
+      zoomIn();
+      return;
+    }
+    if (e.target.closest('[data-action="zoom-out"]')) {
+      e.preventDefault();
+      zoomOut();
+      return;
+    }
+    if (e.target.closest('[data-action="zoom-reset"]')) {
+      e.preventDefault();
+      zoomReset();
       return;
     }
 
@@ -198,6 +475,14 @@ function bindEventDelegation() {
     if (restartBtn) {
       e.preventDefault();
       restartScanner();
+      return;
+    }
+
+    // Flip / Switch Camera
+    const switchCamBtn = e.target.closest('[data-action="switch-camera"]');
+    if (switchCamBtn) {
+      e.preventDefault();
+      switchCamera();
       return;
     }
 
@@ -229,17 +514,56 @@ function bindEventDelegation() {
 
   // 2. Change delegation
   document.addEventListener('change', (e) => {
-    if (e.target.matches('#seatMovieSelect') || e.target.closest('[data-action="change-movie"]')) {
+    // Movies / Catalogue
+    if (e.target.matches('#selectAllMoviesCheckbox')) {
+      toggleSelectAllMovies(e.target.checked);
+    } else if (e.target.matches('.movie-row-checkbox')) {
+      toggleMovieSelection(e.target.dataset.movieId, e.target.checked);
+    } else if (e.target.matches('.screening-toggle-input')) {
+      toggleMovieScreeningState(e.target.dataset.movieId, e.target.checked);
+    } else if (e.target.matches('#selectAllStagingCheckbox')) {
+      toggleSelectAllStaging(e.target.checked);
+    } else if (e.target.matches('.staging-row-checkbox')) {
+      toggleStagingSelection(parseInt(e.target.dataset.index, 10), e.target.checked);
+    } else if (e.target.matches('#movieGenreFilter')) {
+      setMovieGenreFilter(e.target.value);
+    } else if (e.target.matches('#movieSortSelect')) {
+      setMovieSort(e.target.value);
+    }
+    // Seat Locker
+    else if (e.target.matches('#seatMovieSelect') || e.target.closest('[data-action="change-movie"]')) {
       onSeatMovieChange();
     } else if (e.target.matches('#seatShowingSelect') || e.target.closest('[data-action="change-showing"]')) {
       onSeatShowingChange();
+    } else if (e.target.matches('#bulkRowSelect') || e.target.closest('[data-action="select-row"]')) {
+      selectRow(e.target.value);
+    } else if (e.target.matches('#seatFilterSelect') || e.target.closest('[data-action="select-filter"]')) {
+      setFilter(e.target.value);
+    }
+    // QR Image File Scan
+    else if (e.target.matches('#qrImageFileInput')) {
+      if (e.target.files && e.target.files[0]) {
+        handleFileScan(e.target.files[0]);
+      }
     }
   });
 
-  // 3. Search input delegation
+  // 3. Search & Range input delegation
   document.addEventListener('input', (e) => {
-    if (e.target.matches('#bookingSearchInput') || e.target.closest('[data-action="search-bookings"]')) {
+    // Movies Search & Filters
+    if (e.target.matches('#movieSearchInput') || e.target.closest('[data-action="search-movies"]')) {
+      setMovieSearch(e.target.value);
+    } else if (e.target.matches('#movieYearMin') || e.target.matches('#movieYearMax')) {
+      setMovieYearRange(
+        document.getElementById('movieYearMin')?.value,
+        document.getElementById('movieYearMax')?.value
+      );
+    }
+    // Bookings & Seat Locker Search
+    else if (e.target.matches('#bookingSearchInput') || e.target.closest('[data-action="search-bookings"]')) {
       loadBookings(e.target.value);
+    } else if (e.target.matches('#seatSearchInput') || e.target.closest('[data-action="search-seat-grid"]')) {
+      setSearchQuery(e.target.value);
     }
   });
 
@@ -247,6 +571,11 @@ function bindEventDelegation() {
   const newMovieForm = document.getElementById('newMovieForm');
   if (newMovieForm) {
     newMovieForm.addEventListener('submit', handleAddMovieSubmit);
+  }
+
+  const newShowingForm = document.getElementById('newShowingForm');
+  if (newShowingForm) {
+    newShowingForm.addEventListener('submit', handleNewShowingSubmit);
   }
 
   const manualVerifyForm = document.getElementById('manualVerifyForm');
@@ -260,9 +589,42 @@ function bindEventDelegation() {
   });
 }
 
+export async function pollDatabaseHealth() {
+  const pill = document.getElementById('adminDbStatus');
+  if (!pill) return;
+  const dot = pill.querySelector('.db-pill-dot');
+  const label = pill.querySelector('.db-pill-label');
+
+  try {
+    const res = await fetch('/api/health');
+    const data = await res.json();
+    if (res.ok && data.database === 'connected') {
+      if (dot) dot.className = 'db-pill-dot connected';
+      if (label) label.textContent = `DB: Online (${data.latencyMs || 0}ms)`;
+      pill.title = `Supabase PostgreSQL Connected (Latency: ${data.latencyMs || 0}ms)`;
+    } else {
+      if (dot) dot.className = 'db-pill-dot disconnected';
+      if (label) label.textContent = 'DB: Error';
+      pill.title = data.error || 'Database connection error';
+    }
+  } catch (err) {
+    if (dot) dot.className = 'db-pill-dot disconnected';
+    if (label) label.textContent = 'DB: Offline';
+    pill.title = err.message || 'Server unreachable';
+  }
+}
+
 export async function bootstrap() {
   bindEventDelegation();
   initAuth();
+  pollDatabaseHealth();
+  setInterval(pollDatabaseHealth, 20000);
+
+  // Docked nav starts open on desktop, closed on mobile overlay
+  const vnavToggle = document.getElementById('vnavToggle');
+  if (vnavToggle) {
+    vnavToggle.checked = window.innerWidth >= 900;
+  }
 
   const authenticated = await checkExistingAuth();
   if (authenticated) {
@@ -280,17 +642,30 @@ if (typeof window !== 'undefined') {
   window.showSection = switchTab;
   window.toggleAddMovieForm = toggleAddMovieForm;
   window.restartScanner = restartScanner;
+  window.switchCamera = switchCamera;
+  window.handleFileScan = handleFileScan;
   window.resetScanView = resetScanView;
   window.adminApp = {
     switchTab,
     switchAdminTab,
     showSection: switchTab,
     loadMovies,
+    initMovies,
+    openBulkIngestModal,
+    closeBulkIngestModal,
+    toggleMovieScreeningState,
+    bulkUpdateScreeningState,
+    bulkDeleteMovies,
+    pollDatabaseHealth,
     initSeatLocker,
     renderSeatLockerGrid,
     loadBookings,
     loadBookingsRoster,
     startQrScanner,
+    stopQrScanner,
+    restartScanner,
+    switchCamera,
+    handleFileScan,
     verifyPasskey,
     lockDashboard
   };
