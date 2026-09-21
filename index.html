@@ -17,13 +17,12 @@
             href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&family=Heebo:wght@200;400;500;700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700&family=Plus+Jakarta+Sans:wght@200;300;400;700;800&family=Inter:wght@300;400;500;600&family=Bebas+Neue&display=swap"
             rel="stylesheet"
         />
-        <link rel="prefetch" href="screening.html" as="document" />
-        <link rel="preload" href="/fonts/Gilroy-Thin.woff2" as="font" type="font/woff2" crossorigin />
-        <link rel="preload" href="/fonts/Gilroy-UltraLight.woff2" as="font" type="font/woff2" crossorigin />
-        <link rel="preload" href="/textures/menu-glass-normal.jpeg" as="image" />
-        <link rel="modulepreload" href="/js/vendor/three.module.js" />
-
-        <!-- Local Import Map for Three.js (Offline Development) -->
+        <!-- Local Import Map for Three.js (Offline Development) - MUST BE FIRST BEFORE ANY MODULE SCRIPTS OR PRELOADS -->
+        <script>
+        if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
+        window.scrollTo(0, 0);
+        window.addEventListener('pageshow', function() { window.scrollTo(0, 0); });
+        </script>
         <script type="importmap">
         {
           "imports": {
@@ -33,6 +32,18 @@
         }
         </script>
 
+        <link rel="prefetch" href="/screening.html" as="document" />
+        <link rel="prefetch" href="/contact.html" as="document" />
+        <link rel="preload" href="/assets/hero-arch-bg.webp" as="image" />
+        <link rel="preload" href="/assets/poster-the-last-reel.webp" as="image" />
+        <link rel="modulepreload" href="/js/modules/screening/main.js" />
+        <link rel="modulepreload" href="/js/modules/contact/main.js" />
+        <link rel="modulepreload" href="/js/modules/three/inversion-lens.js" />
+        <link rel="preload" href="/fonts/Gilroy-Thin.woff2" as="font" type="font/woff2" crossorigin />
+        <link rel="preload" href="/fonts/Gilroy-UltraLight.woff2" as="font" type="font/woff2" crossorigin />
+        <link rel="preload" href="/textures/menu-glass-normal.jpeg" as="image" />
+        <link rel="modulepreload" href="/js/vendor/three.module.js" />
+
         <link rel="stylesheet" href="/css/base.css" />
         <link rel="stylesheet" href="/css/components/sweep-wall.css" />
         <link rel="stylesheet" href="/css/components/cursor.css" />
@@ -40,6 +51,7 @@
         <link rel="stylesheet" href="/css/burger-menu/burger-menu.css" />
         <link id="pageStyleHome" rel="stylesheet" href="/css/pages/home.css" />
         <link id="pageStyleScreening" rel="stylesheet" href="/css/pages/screening.css" disabled />
+        <link id="pageStyleContact" rel="stylesheet" href="/css/pages/contact.css" disabled />
         <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
         <script>try{if(sessionStorage.getItem('wallEnter')==='1')document.documentElement.classList.add('wall-entering');}catch(e){}</script>
     </head>
@@ -73,6 +85,7 @@
                     <li class="site-menu-item"><a href="index.html#gallery" data-nav data-cursor="GO">Past Events</a></li>
                     <li class="site-menu-item"><a href="index.html#about" data-nav data-cursor="GO">About Us</a></li>
                     <li class="site-menu-item"><a href="index.html#join" data-nav data-cursor="GO">Join Us</a></li>
+                    <li class="site-menu-item"><a href="contact.html" data-nav data-cursor="GO">Contact Us</a></li>
                 </ul>
                 <div class="site-menu-footer">
                     <div class="site-menu-tagline">Daydreamers Film Society</div>
@@ -81,11 +94,24 @@
                             <li><a href="mailto:hello@daydreamers.club" data-cursor="OPEN">Email</a></li>
                             <li><a href="admin.html" data-cursor="OPEN" data-no-router="true">Admin</a></li>
                             <li><a href="screening.html#booking" data-cursor="GO">Reserve</a></li>
+                            <li>
+                                <button class="menu-camera-icon-btn" id="menuCameraBtn" aria-label="Toggle Nitrate Inversion Lens" title="Toggle Nitrate Inversion Lens" data-cursor="CAMERA">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                                        <circle cx="12" cy="13" r="4"/>
+                                        <line x1="12" y1="11" x2="12" y2="15"/>
+                                        <line x1="10" y1="13" x2="14" y2="13"/>
+                                    </svg>
+                                </button>
+                            </li>
                         </ul>
                     </div>
                 </div>
             </div>
         </nav>
+
+        <!-- Fixed Viewport Overlay for Fullscreen Nitrate Inversion Lens -->
+        <div id="nitrateLensOverlay" class="nitrate-lens-overlay" aria-hidden="true" hidden></div>
 
         <!-- Persistent Site Loader Curtain (Phase 3) -->
         <div class="site-loader" id="siteLoader" aria-hidden="true"></div>

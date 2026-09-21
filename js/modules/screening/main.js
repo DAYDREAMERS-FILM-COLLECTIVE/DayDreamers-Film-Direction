@@ -16,9 +16,13 @@ import {
 
 import { fetchMovies, fetchShowings } from './api.js';
 import { initSeatmap, enable2DFallback, rebuildSeatsAnimated } from './seatmap.js';
-import { initBookingModal } from './booking-modal.js';
+import { initBookingModal, openBookingModal, setStep, renderTicketSuccess } from './booking-modal.js';
 import { initScrubShowcase, destroyScrubShowcase } from './scrub-showcase.js';
+import { InversionLens } from '../three/inversion-lens.js';
+import { secretStory } from './secret-story.js';
 
+let heroLens = null;
+let globalNitrateLens = null;
 let revealObserver = null;
 if (typeof window !== 'undefined' && window.location.hash !== '#booking') {
   window.scrollTo(0, 0);
@@ -114,6 +118,21 @@ export function paintDetails(m) {
     poster.style.setProperty('--pg', m.g);
   }
 
+  // Initialize or update WebGL Fluid Inversion Lens safely
+  if (poster) {
+    try {
+      if (!heroLens) {
+        heroLens = new InversionLens(poster);
+      }
+      if (heroLens) {
+        heroLens.setTexture(m.poster_url);
+      }
+    } catch (err) {
+      console.warn('[Screening] InversionLens error:', err);
+      heroLens = null;
+    }
+  }
+
   const glyphEl = document.getElementById('detGlyph');
   if (glyphEl) glyphEl.textContent = m.glyph;
 
@@ -127,7 +146,17 @@ export function paintDetails(m) {
   if (dirEl) dirEl.textContent = '— ' + (m.dir || '').toUpperCase();
 
   const metaEl = document.getElementById('detMeta');
-  if (metaEl) metaEl.textContent = `${m.genre}  |  ${m.runtime}  |  ${m.year}  |  ${m.rating}`;
+  if (metaEl) {
+    metaEl.innerHTML = `
+      <span id="detGenre">${(m.genre || 'Drama').toUpperCase()}</span>
+      <span class="bullet">|</span>
+      <span id="detRuntime">${(m.runtime || '2H').toUpperCase()}</span>
+      <span class="bullet">|</span>
+      <span id="detYear">${m.year || 2024}</span>
+      <span class="bullet">|</span>
+      <span id="detRating">${(m.rating || 'UA').toUpperCase()}</span>
+    `;
+  }
 
   const blurbEl = document.getElementById('detBlurb');
   if (blurbEl) blurbEl.textContent = m.blurb || '';
@@ -138,16 +167,49 @@ export function updateShowingLabels() {
   const s = getActiveShowing();
   if (!s || !state.selectedMovie) return;
 
-  const showtimeEl = document.getElementById('dateShowtime');
-  if (showtimeEl) showtimeEl.textContent = s.time;
+  const m = state.selectedMovie;
+  const time12 = s.time12h || s.time || '7:30 PM';
 
+  const weekdayEl = document.getElementById('dateWeekday');
+  if (weekdayEl) weekdayEl.textContent = s.weekday || 'FRI';
+
+  const dayEl = document.getElementById('dateDay');
+  if (dayEl) dayEl.textContent = s.dayNum || '18';
+
+  const monthEl = document.getElementById('dateMonth');
+  if (monthEl) monthEl.textContent = s.monthStr || 'SEP';
+
+  const showtimeEl = document.getElementById('dateShowtime');
+  if (showtimeEl) {
+    if (time12.includes(' ')) {
+      const [numTime, ampm] = time12.split(' ');
+      showtimeEl.innerHTML = `${numTime} <span class="sched-ampm">${ampm}</span>`;
+    } else {
+      showtimeEl.textContent = time12;
+    }
+  }
+
+  // Interactive schedule click to cycle showings
+  const heroSched = document.getElementById('heroSchedule');
+  if (heroSched && !heroSched.dataset.bound) {
+    heroSched.dataset.bound = 'true';
+    heroSched.addEventListener('click', () => {
+      const total = state.currentShowings.length;
+      if (total > 1) {
+        state.selectedShowingIdx = (state.selectedShowingIdx + 1) % total;
+        updateShowingLabels();
+      }
+    });
+  }
+
+  // Booking Drawer sync
   const movieMetaEl = document.getElementById('bkMovieMeta');
   if (movieMetaEl) {
-    movieMetaEl.textContent = `${state.selectedMovie.rawTitle || state.selectedMovie.title}, ${state.selectedMovie.dir}, ${s.fullDateStr}, ${s.time}, ${s.hall}`;
+    movieMetaEl.textContent = `${m.rawTitle || m.title}, ${m.dir}, ${s.fullDateStr}, ${time12}, ${s.hall}`;
   }
 
   const sumFilm = document.getElementById('sumFilm');
-  if (sumFilm) sumFilm.textContent = state.selectedMovie.rawTitle || state.selectedMovie.title;
+  if (sumFilm) sumFilm.textContent = m.rawTitle || m.title;
 
   const sumHall = document.getElementById('sumHall');
   if (sumHall) sumHall.textContent = s.hall;
@@ -156,7 +218,7 @@ export function updateShowingLabels() {
   if (sumDate) sumDate.textContent = s.fullDateStr;
 
   const sumShowtime = document.getElementById('sumShowtime');
-  if (sumShowtime) sumShowtime.textContent = s.time;
+  if (sumShowtime) sumShowtime.textContent = time12;
 }
 
 export function renderDates() {
@@ -170,8 +232,14 @@ export function renderDates() {
     const b = document.createElement('div');
     b.className = 'hero-date-card' + (i === state.selectedShowingIdx ? ' active' : '');
     b.setAttribute('data-cursor', 'DATE');
-    b.setAttribute('aria-label', 'Screening date ' + s.fullDateStr);
-    b.innerHTML = `<b>${s.dayNum}</b><span>${s.monthStr}</span>`;
+    b.setAttribute('role', 'radio');
+    b.setAttribute('aria-checked', i === state.selectedShowingIdx ? 'true' : 'false');
+    b.setAttribute('aria-label', `Screening date ${s.weekday || ''} ${s.dayNum} ${s.monthStr}`);
+    b.innerHTML = `
+      <span class="date-weekday">${s.weekday || 'THU'}</span>
+      <b class="date-day">${s.dayNum}</b>
+      <span class="date-month">${s.monthStr}</span>
+    `;
     b.addEventListener('click', () => {
       if (state.selectedShowingIdx === i) return;
       setSelectedShowingIdx(i);
@@ -182,10 +250,29 @@ export function renderDates() {
   });
 }
 
+let selectSeq = 0;
+
 export async function selectMovie(id, scroll = false) {
+  const mySeq = ++selectSeq;
   const state = getState();
   const m = state.movies.find(item => item.id === id);
   if (!m) return;
+
+  // Fast path: already showing this film — just refresh ring + scroll if asked.
+  if (state.selectedMovie && state.selectedMovie.id === id && state.currentShowings.length) {
+    document.querySelectorAll('.movie-card-row').forEach(c => {
+      if (c.getAttribute('data-id') === m.id) {
+        c.classList.add('selected-ring');
+      } else {
+        c.classList.remove('selected-ring');
+      }
+    });
+    updateShowingLabels();
+    if (scroll) {
+      slowScrollToBooking();
+    }
+    return;
+  }
 
   setSelectedMovie(m);
   paintDetails(m);
@@ -200,6 +287,8 @@ export async function selectMovie(id, scroll = false) {
   });
 
   const showings = await fetchShowings(m.id);
+  // Drop stale responses when user clicks A then B quickly.
+  if (mySeq !== selectSeq) return;
   setCurrentShowings(showings, 0);
 
   renderDates();
@@ -255,14 +344,38 @@ export function renderMovies(list) {
     bottomArea.className = 'movie-card-bottom';
     bottomArea.innerHTML = `
       <span class="movie-card-time">${m.runtime} &bull; ${m.hall}</span>
-      <span class="movie-card-btn">RESERVE SEATS &rarr;</span>
     `;
+
+    const reserveBtn = document.createElement('button');
+    reserveBtn.type = 'button';
+    reserveBtn.className = 'movie-card-btn';
+    reserveBtn.setAttribute('data-action', 'reserve-movie');
+    reserveBtn.setAttribute('data-id', m.id);
+    reserveBtn.setAttribute('aria-label', `Reserve seats for ${m.rawTitle || m.title}`);
+    reserveBtn.textContent = 'RESERVE SEATS \u2192';
+    reserveBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      selectMovie(m.id, true);
+    });
+    bottomArea.appendChild(reserveBtn);
 
     card.appendChild(topArea);
     card.appendChild(bottomArea);
 
+    // Card body = preview only, no scroll. Reserve button = select + scroll.
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('role', 'button');
+    card.setAttribute('aria-label', `Preview ${m.rawTitle || m.title}`);
     card.addEventListener('click', () => {
-      selectMovie(m.id, true);
+      selectMovie(m.id, false);
+    });
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        // Ignore when focus is on the reserve button itself (button handles it).
+        if (e.target && e.target.closest && e.target.closest('.movie-card-btn')) return;
+        e.preventDefault();
+        selectMovie(m.id, false);
+      }
     });
 
     grid.appendChild(card);
@@ -350,6 +463,44 @@ export async function initScreening() {
   initBookingModal();
   initScrubShowcase();
 
+  // Initialize Secret Story & Archival Camera Lens
+  try {
+    secretStory.init();
+    secretStory.onToggle((active) => {
+      const overlay = document.getElementById('nitrateLensOverlay');
+      if (!overlay) return;
+
+      if (active) {
+        overlay.hidden = false;
+        if (!globalNitrateLens) {
+          try {
+            globalNitrateLens = new InversionLens(overlay, {
+              mode: 'viewport',
+              maskRadius: 0.22,
+              maskSpeed: 0.8,
+              turbulenceIntensity: 0.25,
+              onPointerUpdate: (x, y, radiusPx) => {
+                secretStory.checkProximity(x, y, radiusPx);
+              }
+            });
+          } catch (err) {
+            console.warn('[Screening] Global InversionLens init caught:', err);
+          }
+        }
+        if (globalNitrateLens) {
+          globalNitrateLens.activate();
+        }
+      } else {
+        if (globalNitrateLens) {
+          globalNitrateLens.deactivate();
+        }
+        overlay.hidden = true;
+      }
+    });
+  } catch (err) {
+    console.warn('[Screening] SecretStory init caught:', err);
+  }
+
   const movies = await fetchMovies();
   setMovies(movies);
   renderMovies(movies);
@@ -363,6 +514,14 @@ export async function initScreening() {
 }
 
 export function destroyScreening() {
+  if (globalNitrateLens) {
+    try { globalNitrateLens.destroy(); } catch (_) {}
+    globalNitrateLens = null;
+  }
+  if (heroLens) {
+    try { heroLens.destroy(); } catch (_) {}
+    heroLens = null;
+  }
   if (revealObserver) {
     try { revealObserver.disconnect(); } catch (e) {}
     revealObserver = null;
@@ -374,6 +533,8 @@ if (typeof window !== 'undefined') {
   window.slowScrollToBooking = slowScrollToBooking;
   window.initScreening = initScreening;
   window.destroyScreening = destroyScreening;
+  window.__getHeroLens = () => heroLens;
+  window.secretStory = secretStory;
 }
 
 // Auto-boot on DOM readiness only if screening view elements are present in DOM
