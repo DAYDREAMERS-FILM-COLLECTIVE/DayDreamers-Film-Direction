@@ -4,18 +4,18 @@ root: .
 file: CODEBASE_METADATA.md
 generated: 2026-09-18
 audience: [humans, ai-agents]
-entry_points: [index.html, screening.html, admin.html, menu.html]
+entry_points: [index.html, screening.html, contact.html, admin.html]
 backend_entry: server/index.js
 api_entry: server/app.js
 serverless_entry: netlify/functions/api.js
 run: ["npm install", "npm start"]
-urls: ["http://localhost:3000/", "http://localhost:3000/screening.html", "http://localhost:3000/admin.html"]
+urls: ["http://localhost:3000/", "http://localhost:3000/screening.html", "http://localhost:3000/contact.html", "http://localhost:3000/admin.html"]
 status: full-reference
 ---
 
 # CODEBASE_METADATA — Daydreamers Film Society
 
-> Single reference for humans and AI agents. Live implementation is vanilla HTML + modular ES JS + Express + Supabase Postgres. `src/` is a **reference-only** React-Native/TS mirror and is **not** part of the build.
+> Single reference for humans and AI agents. Live implementation is vanilla HTML + modular ES JS + Express + Supabase Postgres. `specs/mobile/` (formerly `src/`) is a **reference-only** React-Native/TS mirror and is **not** part of the build.
 
 ## 1. Overview
 

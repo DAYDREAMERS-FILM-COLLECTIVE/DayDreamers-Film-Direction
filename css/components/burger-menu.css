@@ -1,0 +1,756 @@
+/* ==========================================================================
+   Daydreamers Burger Menu System
+   css/burger-menu/burger-menu.css
+   Phase 1: 60fps GPU Compositor Toggle Button Animation
+   Phase 2: Persistent Fullscreen Room, 1600ms Wipe Curtain, & Staggered Cascade
+   Phase 3: Persistent Shell SPA Router Curtain (.site-loader)
+   Color Palette: Screening Deep Midnight Plum & Rosé Gold
+   ========================================================================== */
+
+:root {
+    /* Screening Cinema Palette Tokens */
+    --menu-bg: #1a0b17; /* Screening Deep Midnight Plum */
+    --menu-panel: #3a1f33; /* Screening Rich Plum Panel */
+    --menu-muted: rgba(200, 155, 178, 0.75); /* Dusty Rosé Plum Idle */
+    --menu-ghost: rgba(200, 155, 178, 0.22); /* 10px Counter Lavender/Plum Ghost */
+    --menu-foot: rgba(200, 155, 178, 0.55); /* Sub-navigation & Taglines */
+    --menu-cream: #f2e9ed; /* Screening Luminous Cream White */
+    --menu-accent: #c89bb2; /* Rosé Gold Accent */
+    --menu-border: rgba(109, 59, 86, 0.45); /* Deep Plum Border */
+
+    /* Adaptive Burger Menu Button Tokens */
+    --burger-bar-color: #FFFFFF;
+}
+
+/* Accessible screen-reader utility */
+.u-visually-hidden {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+/* ==========================================================================
+   Section 1 — Toggle Button (Phase 1)
+   ========================================================================== */
+
+/* 1. Toggle Button Container (Pure minimalist lines, zero background shape) */
+#burgerToggle,
+.site-header-button,
+.burger-toggle {
+    position: fixed !important;
+    top: 2rem !important;
+    right: 2.5rem !important;
+    left: auto !important;
+    z-index: 1001 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 44px !important;
+    height: 44px !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    padding: 0 !important;
+    cursor: pointer !important;
+    box-sizing: border-box !important;
+    pointer-events: auto !important;
+    -webkit-tap-highlight-color: transparent !important;
+    transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+/* Daydreamers logo pinned independently top-left */
+.screening-header .logo,
+.site-header .logo,
+.brand-logo {
+    position: fixed !important;
+    top: 2rem !important;
+    left: 2.5rem !important;
+    right: auto !important;
+    z-index: 1000 !important;
+    pointer-events: auto !important;
+}
+
+/* Header wrapper collapse */
+.screening-header,
+.site-header.header {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 0 !important;
+    padding: 0 !important;
+    pointer-events: none !important;
+    border: none !important;
+    background: transparent !important;
+    z-index: 1001 !important;
+}
+
+.screening-header .logo,
+.site-header .logo,
+.brand-logo,
+.burger-toggle,
+#burgerToggle {
+    pointer-events: auto !important;
+}
+
+.site-header-button:focus-visible,
+.burger-toggle:focus-visible {
+    outline: 2px solid var(--menu-accent, #c89bb2);
+    outline-offset: 4px;
+}
+
+/* 2. Three Absolute Bars (26x2px centered lines, zero reflow) */
+.site-header-button .button-bar,
+.burger-toggle .button-bar,
+.button-bar {
+    position: absolute !important;
+    top: 50% !important;
+    left: 9px !important;
+    right: 9px !important;
+    height: 2px !important;
+    margin: -1px 0 0 0 !important;
+    background-color: var(--burger-bar-color, #FFFFFF) !important;
+    border-radius: 1px !important;
+    pointer-events: none;
+    transition:
+        transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1),
+        opacity 0.3s cubic-bezier(0.165, 0.84, 0.44, 1),
+        background-color 0.35s ease;
+}
+
+/* -------------------------------------------------------------
+   Page-Adaptive & Theme Visibility Rules
+   Screening / Home (Dark Cinema): Pure White Bars
+   Contact (Light Editorial): Pure Deep Ink Bars
+   Menu Open: Always Pure White Bars on Midnight Plum
+   ------------------------------------------------------------- */
+
+/* Dark Pages: Screening and Home Hero */
+body[data-page="screening"] #burgerToggle .button-bar,
+body[data-page="home"] #burgerToggle .button-bar {
+    background-color: #FFFFFF !important;
+}
+
+/* Light Pages: Contact */
+body[data-page="contact"] #burgerToggle .button-bar {
+    background-color: #111111 !important;
+}
+
+/* Ensure bars are ALWAYS pure white when menu curtain or menu modal is open */
+body.menu-active .button-bar,
+body.menu-open .button-bar,
+.site-header-button.is-active .button-bar,
+.burger-toggle.is-active .button-bar {
+    background-color: #FFFFFF !important;
+}
+
+/* 3. Rest Offsets */
+.button-bar--1 {
+    transform: translateY(-6px);
+}
+
+.button-bar--2 {
+    transform: scaleX(0.85);
+    transform-origin: 100% 50%; /* Anchored to right edge */
+}
+
+.button-bar--3 {
+    transform: translateY(6px);
+}
+
+/* 4. Hover Micro-Interaction: Middle bar smoothly grows leftward */
+@media (hover: hover) and (pointer: fine) {
+    .site-header-button:hover .button-bar--2,
+    .burger-toggle:hover .button-bar--2 {
+        transform: scaleX(1);
+    }
+}
+
+/* 5. Open -> X Formation */
+.site-header-button.is-active,
+.burger-toggle.is-active {
+    transform: rotate(-180deg);
+    z-index: 1002 !important;
+}
+
+.site-header-button.is-active .button-bar--1,
+.burger-toggle.is-active .button-bar--1 {
+    transform: rotate(45deg);
+}
+
+.site-header-button.is-active .button-bar--2,
+.burger-toggle.is-active .button-bar--2 {
+    opacity: 0;
+}
+
+.site-header-button.is-active .button-bar--3,
+.burger-toggle.is-active .button-bar--3 {
+    transform: rotate(-45deg);
+}
+
+/* Containing block neutralization: backdrop-filter on header creates a trap for fixed/z-index children */
+body.menu-running .site-header,
+body.menu-active .site-header,
+body.menu-open .site-header,
+body.menu-running .header,
+body.menu-active .header,
+body.menu-open .header,
+body.menu-running .site-header.scrolled,
+body.menu-active .site-header.scrolled,
+body.menu-open .site-header.scrolled {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background-color: transparent !important;
+    border-bottom-color: transparent !important;
+}
+
+/* ==========================================================================
+   Section 2 — Inside Page: Wipe Curtain & Room Container (Phase 2)
+   ========================================================================== */
+
+/* Mobile viewport lock and URL-bar jump prevention */
+body.menu-open,
+body.lock-scroll {
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* 1. Backdrop Layer: Fullscreen dark plum atmosphere */
+.site-menu-back {
+    position: fixed;
+    inset: 0;
+    background: var(--menu-bg, #1a0b17);
+    z-index: 990;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0s;
+    overflow: hidden;
+}
+
+.menu-open .site-menu-back,
+.menu-close .site-menu-back {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* 3D Liquid Glass Canvas Layer */
+.menu-glass-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: auto;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.menu-open .menu-glass-canvas {
+    opacity: 1;
+}
+
+/* 2. Solid Curtain Wipe: 1.6s Hard-drive cubic-bezier in Screening Rich Plum */
+.site-menu-panel {
+    position: fixed;
+    inset: 0;
+    background: var(--menu-panel, #3a1f33) !important;
+    opacity: 1 !important;
+    border-right: 2px solid rgba(200, 155, 178, 0.4);
+    box-shadow: none !important;
+    transform: translateX(-100%);
+    pointer-events: none;
+    z-index: 999;
+    will-change: transform;
+}
+
+body.menu-running .site-menu-panel {
+    animation: wipe 1.6s cubic-bezier(0.86, 0, 0.07, 1) 1;
+}
+
+@keyframes wipe {
+    0% {
+        transform: translateX(-100%);
+    }
+    50% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* 3. Room Container: Fixed persistent layer */
+.site-menu {
+    position: fixed;
+    inset: 0;
+    height: 100vh;
+    height: calc(var(--vh, 1vh) * 100);
+    z-index: 995;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0s;
+    box-sizing: border-box;
+}
+
+.menu-open .site-menu,
+.menu-close .site-menu {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.menu-close .site-menu {
+    pointer-events: none;
+}
+
+/* Center framing: 45px gutters with editorial vertical centering */
+.site-menu .center {
+    position: relative;
+    z-index: 10;
+    height: 100%;
+    width: 100%;
+    max-width: 100%;
+    padding: 0 45px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-sizing: border-box;
+    pointer-events: auto;
+}
+
+/* 4. Content Entrance — Staggered Rise Cascade */
+.site-menu-item,
+.site-menu-footer .site-menu-tagline,
+.site-menu-content img,
+.site-menu-content ul {
+    opacity: 0;
+    transform: translateY(40px);
+}
+
+.menu-open .site-menu-item,
+.menu-open .site-menu-footer .site-menu-tagline,
+.menu-open .site-menu-content img,
+.menu-open .site-menu-content ul {
+    animation: rise 0.5s cubic-bezier(0.165, 0.84, 0.44, 1) both;
+}
+
+@keyframes rise {
+    from {
+        transform: translateY(40px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* 50ms incremental steps */
+.site-menu-item:nth-child(1) {
+    animation-delay: 0.3s;
+}
+.site-menu-item:nth-child(2) {
+    animation-delay: 0.35s;
+}
+.site-menu-item:nth-child(3) {
+    animation-delay: 0.4s;
+}
+.site-menu-item:nth-child(4) {
+    animation-delay: 0.45s;
+}
+.site-menu-item:nth-child(5) {
+    animation-delay: 0.5s;
+}
+.site-menu-footer .site-menu-tagline {
+    animation-delay: 0.55s;
+}
+.site-menu-content ul {
+    animation-delay: 0.6s;
+}
+
+/* Asymmetric Close: No exit animation; curtain covers teardown */
+.menu-close .site-menu-item,
+.menu-close .site-menu-footer .site-menu-tagline,
+.menu-close .site-menu-content img,
+.menu-close .site-menu-content ul {
+    transform: none !important;
+    opacity: 1 !important;
+    animation: none !important;
+}
+
+/* ==========================================================================
+   Section 3 — Layout, Typography & Optical Counter System
+   ========================================================================== */
+
+/* Main Navigation List: Dogstudio ListRow — fixed 119px indent, 15px top */
+.site-menu-list {
+    margin: 15px 0 0 7.4375rem;
+    padding: 0;
+    list-style: none;
+    counter-reset: b;
+}
+
+.site-menu-item {
+    position: relative;
+    margin: 0;
+    padding: 0;
+}
+
+/* Links: Dogstudio ListRow sizing — Gilroy UltraLight 200, 45px/41px/-0.9px desktop */
+.site-menu-item a {
+    display: inline-block;
+    padding: 10px 0;
+    position: relative;
+    font-family: 'Gilroy', 'Heebo', -apple-system, sans-serif;
+    font-weight: 200;
+    font-style: normal;
+    font-size: 2.8125rem;
+    line-height: 2.5625rem;
+    letter-spacing: -0.9px;
+    color: var(--menu-muted);
+    text-decoration: none;
+    transition: color 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.site-menu-item a:hover,
+.site-menu-item a:focus-visible {
+    color: var(--menu-cream, #f2e9ed);
+}
+
+/* Numbers: Dogstudio 01-05 sizing — 10px/700/9.2px +3.6px, 47px gap left, 20px top */
+.site-menu-item a::before {
+    content: '0' counter(b);
+    counter-increment: b;
+    position: absolute;
+    top: 20px;
+    right: calc(100% + 47px);
+    font-family: 'Gilroy', 'Heebo', 'Plus Jakarta Sans', -apple-system, sans-serif;
+    font-weight: 200;
+    font-size: 10px;
+    line-height: 9.2px;
+    letter-spacing: 3.6px;
+    color: var(--menu-ghost);
+    pointer-events: none;
+    transition: color 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.site-menu-item a:hover::before,
+.site-menu-item a:focus-visible::before {
+    color: var(--menu-cream, #f2e9ed);
+}
+
+/* "You Are Here" Active Page Indicator */
+.site-menu-item.is-current a,
+.site-menu-item a[aria-current='page'] {
+    color: var(--menu-cream, #f2e9ed) !important;
+    cursor: default;
+}
+
+.site-menu-item.is-current a::before,
+.site-menu-item a[aria-current='page']::before {
+    color: var(--menu-cream, #f2e9ed) !important;
+}
+
+.site-menu-item.is-current a:hover,
+.site-menu-item a[aria-current='page']:hover {
+    color: var(--menu-cream, #f2e9ed) !important;
+}
+
+.site-menu-item.is-current a:hover::before,
+.site-menu-item a[aria-current='page']:hover::before {
+    color: var(--menu-cream, #f2e9ed) !important;
+}
+
+/* Pinned Footer: Left/right split (Showreel removed) */
+.site-menu-footer {
+    position: absolute;
+    left: 45px;
+    right: 45px;
+    bottom: 45px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    pointer-events: none;
+    box-sizing: border-box;
+}
+
+.site-menu-footer a,
+.site-menu-footer ul {
+    pointer-events: auto;
+}
+
+/* Footer Tagline */
+.site-menu-footer .site-menu-tagline {
+    font-family: 'Gilroy', 'Heebo', -apple-system, sans-serif;
+    font-weight: 200;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--menu-foot);
+    margin: 0;
+}
+
+/* Menu Content Right Block */
+.site-menu-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.site-menu-content img {
+    width: 52px;
+    height: auto;
+    margin-left: auto;
+    margin-bottom: 24px;
+    display: block;
+}
+
+/* Socials: Gilroy 200, 11px with / separators */
+.site-menu-content ul {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-family: 'Gilroy', 'Heebo', -apple-system, sans-serif;
+    font-weight: 200;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--menu-foot);
+}
+
+.site-menu-content ul li + li::before {
+    content: '/';
+    margin: 0 10px;
+    color: var(--menu-ghost);
+}
+
+.site-menu-content ul li a {
+    color: var(--menu-foot);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.site-menu-content ul li a:hover,
+.site-menu-content ul li a:focus-visible {
+    color: var(--menu-cream, #f2e9ed);
+}
+
+/* Boxless Camera Icon Button in Burger Menu */
+.site-menu-content ul li .menu-camera-icon-btn,
+.menu-camera-icon-btn {
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    padding: 2px 4px !important;
+    margin: 0 !important;
+    color: var(--menu-foot, #a88698);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    vertical-align: middle;
+    transition: color 0.25s ease, transform 0.25s ease, filter 0.25s ease;
+}
+
+.site-menu-content ul li .menu-camera-icon-btn svg,
+.menu-camera-icon-btn svg {
+    display: block;
+    width: 17px;
+    height: 17px;
+}
+
+.site-menu-content ul li .menu-camera-icon-btn:hover,
+.menu-camera-icon-btn:hover {
+    color: var(--gold, #C89BB2) !important;
+    transform: scale(1.18);
+}
+
+.site-menu-content ul li .menu-camera-icon-btn.is-active,
+.menu-camera-icon-btn.is-active {
+    color: #FFFFFF !important;
+    filter: drop-shadow(0 0 6px rgba(200, 155, 178, 0.85));
+}
+
+@media (max-width: 1024px) {
+    .menu-camera-icon-btn,
+    .site-menu-content ul li:has(.menu-camera-icon-btn) {
+        display: none !important;
+    }
+}
+
+/* ==========================================================================
+   Section 4 — Responsive Breakpoints
+   ========================================================================== */
+
+/* >= 1601px (2xl): Dogstudio large tier — 60px/55px/-1.2px, 183px indent */
+@media (min-width: 1601px) {
+    .site-menu-list {
+        margin-left: 11.4375rem;
+    }
+    .site-menu-item a {
+        padding: 0.8125rem 0;
+        font-size: 3.75rem;
+        line-height: 3.4375rem;
+        letter-spacing: -1.2px;
+    }
+}
+
+/* <= 815px: Vertical scroll room, stacked footer, numbers hidden (Dogstudio mobile/tablet) */
+@media (max-width: 815px) {
+    .site-menu .center {
+        display: block;
+        height: 100%;
+        padding: 50vh 30px 100px 30px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .site-menu-list {
+        margin-top: 0;
+        margin-left: 0;
+    }
+    .site-menu-item a::before {
+        display: none;
+    }
+    .site-menu-footer {
+        position: relative;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        margin-top: 48px;
+        padding-bottom: 24px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+    }
+    .site-menu-content {
+        align-items: flex-start;
+    }
+}
+
+/* <= 571px: Dogstudio small tier — 40px/37px/-0.8px + circular touchable socials */
+@media (max-width: 571px) {
+    .site-menu-item a {
+        font-size: 2.5rem;
+        line-height: 2.3125rem;
+        letter-spacing: -0.8px;
+    }
+    .site-menu-content ul {
+        gap: 12px;
+    }
+    .site-menu-content ul li + li::before {
+        display: none;
+    }
+    .site-menu-content ul li a {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        min-width: 32px;
+        height: 32px;
+        padding: 0 10px;
+        border: 1px solid var(--menu-border);
+        border-radius: 16px;
+    }
+}
+
+/* Reduced Motion Override */
+@media (prefers-reduced-motion: reduce) {
+    body.menu-running .site-menu-panel,
+    .site-loader,
+    .menu-open .site-menu-item,
+    .menu-open .site-menu-footer .site-menu-tagline,
+    .menu-open .site-menu-content img,
+    .menu-open .site-menu-content ul {
+        animation: none !important;
+        transition: none !important;
+        transform: none !important;
+    }
+    .site-menu,
+    .site-menu-back {
+        transition: opacity 0.2s ease !important;
+    }
+}
+
+/* ==========================================================================
+   Section 5 — Persistent Shell Router & Wipe Curtain (.site-loader) (Phase 3)
+   ========================================================================== */
+
+.site-loader {
+    position: fixed;
+    inset: 0;
+    background: var(--menu-panel, #3a1f33) !important;
+    opacity: 1 !important;
+    border-right: 2px solid rgba(200, 155, 178, 0.4);
+    box-shadow: none !important;
+    transform: translateX(-100%);
+    pointer-events: none !important;
+    z-index: 1000;
+    will-change: transform;
+}
+
+body.loader-running .site-loader {
+    animation: wipe 1.6s cubic-bezier(0.86, 0, 0.07, 1) 1;
+    pointer-events: none !important;
+}
+
+/* Synchronous zero-latency arrival hold */
+.wall-entering .site-menu-panel,
+.wall-entering .site-loader,
+.wall-entering .sweep-wall {
+    transform: translateX(0) !important;
+    pointer-events: none !important;
+}
+
+@keyframes sweepOut {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.wall-exiting .site-menu-panel,
+.wall-exiting .site-loader,
+.wall-exiting .sweep-wall {
+    animation: sweepOut 0.8s cubic-bezier(0.86, 0, 0.07, 1) forwards !important;
+    pointer-events: none !important;
+}
+
+/* ==========================================================================
+   Pointer-Event Traps & Interactive Layer Elevation
+   ========================================================================== */
+.site-loader,
+.wall-entering,
+.wall-exiting,
+.nav-overlay:not(.is-open),
+.site-menu:not(.active),
+.sweep-wall:not(.active),
+#vignette,
+#grain,
+#star-canvas,
+canvas#menuGlass {
+    pointer-events: none !important;
+}
+
+body.menu-open .site-menu,
+body.menu-open .site-menu-panel {
+    pointer-events: auto !important;
+}
+
+body.menu-open .site-menu a,
+body.menu-open .site-menu button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}

@@ -36,12 +36,13 @@ dist-ssr
 # Temporary and archive files
 temp/
 archive/
+playground/
 
-# Markdown and text files (preserve README.md and project reference docs)
+# Markdown and text files (preserve README.md, docs, and specs)
 *.md
 !README.md
-!CODEBASE_METADATA.md
-!WEBSITE_ACTUAL_ISSUES.md
-!WEBSITE_POTENTIAL_RISKS.md
+!docs/**/*.md
+!docs/*.md
+!specs/**/*.md
 *.txt
 

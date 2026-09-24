@@ -32,19 +32,32 @@
 
 ```text
 .
-├── admin.html          # Admin CMS, seat locker, roster, and live door scanner
-├── fonts/              # Self-hosted typography (Gilroy Thin & UltraLight)
 ├── index.html          # Society landing page and past exhibitions
-├── menu.html           # Standalone overlay menu view
-├── package.json        # Dependencies and startup scripts
 ├── screening.html      # Main film bill, schedule carousel, and seat reservation
-├── textures/           # WebGL and noise textures for visual atmosphere
-└── server/
-    ├── crypto.js       # HMAC-SHA256 signature generator and token verification
-    ├── db.js           # PostgreSQL connection pool with Supabase SSL handling
-    ├── email.js        # Resend dispatch service with QR ticket attachments
-    ├── index.js        # Express REST API endpoints and static file server
-    └── schema.sql      # Supabase PostgreSQL DDL migration schema
+├── contact.html        # Contact inquiries, legal policies, and FAQ
+├── admin.html          # Admin CMS, seat locker, roster, and live door scanner
+├── assets/             # Media assets (images, 3D models, textures, frame sequences)
+│   └── textures/       # Consolidated textures and noise maps
+├── css/                # Stylesheets (base, components, page-scoped)
+│   ├── components/     # Reusable components (burger-menu, sweep-wall, cursor, footer)
+│   └── pages/          # Scoped page styles (home, screening, contact, admin)
+├── js/                 # Modular ES frontend architecture
+│   ├── core/           # Routing, custom cursor, transitions
+│   ├── modules/        # Domain features (screening, contact, home, admin, three)
+│   └── vendor/         # Bundled offline libraries (Three.js, html5-qrcode)
+├── server/             # Express REST API backend
+│   ├── app.js          # REST API endpoints & static middleware
+│   ├── crypto.js       # HMAC-SHA256 signature generator and token verification
+│   ├── db.js           # PostgreSQL connection pool with Supabase SSL handling
+│   ├── email.js        # Resend dispatch service with QR ticket attachments
+│   ├── index.js        # Server bootstrapper
+│   └── schema.sql      # Supabase PostgreSQL DDL migration schema
+├── docs/               # Architecture, issue logs, and technical specifications
+│   ├── CODEBASE_METADATA.md
+│   ├── WEBSITE_ACTUAL_ISSUES.md
+│   └── WEBSITE_POTENTIAL_RISKS.md
+├── playground/         # Isolated test workbenches and prototypes
+└── specs/mobile/       # React-Native/TypeScript architecture reference (not built)
 ```
 
 ---
