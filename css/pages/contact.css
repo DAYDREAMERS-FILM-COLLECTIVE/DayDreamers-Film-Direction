@@ -1,25 +1,73 @@
-/* css/pages/contact.css - Dedicated Contact, Legal Notices & FAQ Page (Daydreamers Theme) */
+/* css/pages/contact.css - Warm Light Editorial Cinematic Makeover (Alabaster Paper / Celluloid Print) */
 
 :root {
-  --contact-bg: #140812;
-  --contact-card-bg: rgba(34, 16, 31, 0.75);
-  --contact-card-border: rgba(214, 154, 185, 0.22);
-  --contact-sidebar-bg: rgba(26, 12, 24, 0.85);
-  --contact-active-bg: rgba(214, 154, 185, 0.15);
-  --contact-text-primary: #F2E9ED;
-  --contact-text-muted: #A88698;
-  --contact-accent: #D495B1;
-  --contact-input-bg: rgba(18, 7, 16, 0.7);
-  --contact-input-border: rgba(214, 154, 185, 0.28);
+  --contact-bg: #F5F2EB;
+  --contact-card-bg: rgba(255, 255, 255, 0.84);
+  --contact-card-border: rgba(20, 22, 28, 0.08);
+  --contact-card-border-glow: rgba(20, 22, 28, 0.14);
+  --contact-sidebar-bg: rgba(255, 255, 255, 0.88);
+  --contact-active-bg: rgba(20, 22, 28, 0.07);
+  --contact-text-primary: #151619;
+  --contact-text-secondary: #3C424E;
+  --contact-text-muted: #646A78;
+  --contact-text-dim: #8E95A5;
+  --contact-accent-ink: #151619;
+  --contact-input-bg: rgba(255, 255, 255, 0.94);
+  --contact-input-border: rgba(20, 22, 28, 0.15);
+  --contact-input-focus-border: #151619;
+  --contact-glass-blur: 24px;
 }
 
 body[data-page="contact"] {
+  --burger-bar-color: #111111;
+  --brand-color: #151619;
   background-color: var(--contact-bg);
   color: var(--contact-text-primary);
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
-/* Persistent Header Styles */
+/* -------------------------------------------------------------
+   1. 3D WebGL Background & Warm Paper Vignette Overlays
+   ------------------------------------------------------------- */
+.contact-view {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.contact-webgl-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.contact-webgl-bg canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.contact-ambient-vignette {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 1;
+  background: 
+    radial-gradient(ellipse 95% 80% at 50% 40%, rgba(245, 242, 235, 0.0) 0%, rgba(245, 242, 235, 0.2) 65%, rgba(245, 242, 235, 0.6) 100%);
+}
+
+/* -------------------------------------------------------------
+   2. Header & Branding Preserved (Adapts to Dark Ink on Light Canvas)
+   ------------------------------------------------------------- */
 .screening-header,
 .site-header {
   position: fixed !important;
@@ -43,7 +91,7 @@ a#brandLink {
   left: 2.5rem !important;
   right: auto !important;
   z-index: 1000 !important;
-  color: #f7ede8 !important;
+  color: var(--brand-color, #151619) !important;
   text-decoration: none !important;
   font-family: 'DM Mono', monospace;
   font-size: 0.9rem;
@@ -53,6 +101,13 @@ a#brandLink {
   display: inline-flex;
   align-items: center;
   gap: 0.7rem;
+  transition: color 0.4s ease;
+}
+
+.brand-logo .mark-svg path,
+.brand .mark-svg path {
+  fill: #151619 !important;
+  transition: fill 0.4s ease;
 }
 
 .brand-logo .mark-svg,
@@ -77,40 +132,92 @@ a#brandLink {
   align-items: center !important;
   width: 44px !important;
   height: 44px !important;
-  background: transparent !important;
-  border: none !important;
   padding: 0 !important;
   cursor: pointer;
   box-sizing: border-box;
 }
 
+/* Burger lines on Light Contact Page handled by burger-menu.css */
+
+/* When menu opens, bars smoothly transition to white */
+body.menu-active #burgerToggle .button-bar,
+body.menu-open #burgerToggle .button-bar,
+#burgerToggle.is-active .button-bar {
+  background-color: #FFFFFF !important;
+}
+
+body.menu-active .brand-logo,
+body.menu-active a#brandLink,
+body.menu-open .brand-logo,
+body.menu-open a#brandLink {
+  color: #FFFFFF !important;
+}
+
+body.menu-active .brand-logo .mark-svg path,
+body.menu-open .brand-logo .mark-svg path {
+  fill: #FFFFFF !important;
+}
+
+/* -------------------------------------------------------------
+   3. Page Wrapper & Clean Editorial Header
+   ------------------------------------------------------------- */
 .contact-page-wrapper {
-  max-width: 1280px;
+  position: relative;
+  z-index: 2;
+  max-width: 1320px;
   margin: 0 auto;
-  padding: 120px 24px 80px;
+  padding: 130px 32px 100px;
   box-sizing: border-box;
 }
 
-.contact-top-eyebrow {
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-  font-size: 28px;
-  font-weight: 300;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--contact-text-primary);
-  margin-bottom: 28px;
-  opacity: 0.92;
+.contact-hero-header {
+  margin-bottom: 38px;
 }
 
-/* Two-column layout matching reference */
+.contact-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  color: var(--contact-text-muted);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: inline-block;
+}
+
+.contact-hero-title {
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  font-size: clamp(2.4rem, 4vw, 3.4rem);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  color: var(--contact-text-primary);
+  margin: 0 0 10px 0;
+}
+
+.contact-hero-sub {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: clamp(0.95rem, 1.15vw, 1.05rem);
+  font-weight: 400;
+  line-height: 1.65;
+  color: var(--contact-text-muted);
+  max-width: 680px;
+  margin: 0;
+}
+
+/* -------------------------------------------------------------
+   4. Grid Layout (Sidebar + Main Panel)
+   ------------------------------------------------------------- */
 .contact-layout-grid {
   display: grid;
-  grid-template-columns: 290px 1fr;
-  gap: 24px;
+  grid-template-columns: 300px 1fr;
+  gap: 28px;
   align-items: start;
 }
 
-/* --- Left Sidebar --- */
+/* -------------------------------------------------------------
+   5. Left Sidebar (Pearl Glass Navigation)
+   ------------------------------------------------------------- */
 .contact-sidebar {
   display: flex;
   flex-direction: column;
@@ -120,19 +227,38 @@ a#brandLink {
 .sidebar-nav-card {
   background: var(--contact-sidebar-bg);
   border: 1px solid var(--contact-card-border);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 24px 20px;
   box-sizing: border-box;
+  -webkit-backdrop-filter: blur(var(--contact-glass-blur));
+  backdrop-filter: blur(var(--contact-glass-blur));
+  box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.05);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.sidebar-nav-card:hover {
+  border-color: rgba(20, 22, 28, 0.16);
+  box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.08);
 }
 
 .sidebar-group-title {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 13.5px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: var(--contact-accent);
-  text-transform: capitalize;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  color: var(--contact-text-muted);
+  text-transform: uppercase;
   margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar-group-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(20, 22, 28, 0.08);
 }
 
 .sidebar-nav-list {
@@ -147,9 +273,9 @@ a#brandLink {
 .sidebar-nav-btn {
   width: 100%;
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   text-align: left;
-  padding: 10px 14px;
+  padding: 11px 14px;
   border-radius: 8px;
   font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
   font-size: 13.5px;
@@ -158,32 +284,39 @@ a#brandLink {
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 10px;
-  transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+  gap: 12px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
 }
 
 .sidebar-nav-btn:hover {
-  background: rgba(214, 154, 185, 0.08);
+  background: rgba(20, 22, 28, 0.04);
   color: var(--contact-text-primary);
+  transform: translateX(3px);
 }
 
 .sidebar-nav-btn.active {
   background: var(--contact-active-bg);
-  color: #FFFFFF;
-  font-weight: 500;
+  border-color: rgba(20, 22, 28, 0.14);
+  color: var(--contact-text-primary);
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .sidebar-nav-btn svg {
   flex-shrink: 0;
-  color: var(--contact-accent);
+  color: var(--contact-text-primary);
+  opacity: 0.8;
 }
 
-/* FAQ Subcategories (visible when FAQ tab is active) */
+/* FAQ Subcategories */
 .faq-category-nav {
   display: none;
   flex-direction: column;
   gap: 6px;
   margin-top: 10px;
+  padding-left: 12px;
+  border-left: 1px solid rgba(20, 22, 28, 0.08);
 }
 
 .faq-category-nav.visible {
@@ -194,9 +327,9 @@ a#brandLink {
   background: transparent;
   border: 1px solid transparent;
   border-radius: 6px;
-  padding: 8px 12px;
+  padding: 7px 11px;
   font-size: 12.5px;
-  color: var(--contact-text-muted);
+  color: var(--contact-text-dim);
   text-align: left;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -204,64 +337,84 @@ a#brandLink {
 
 .faq-cat-btn:hover {
   color: var(--contact-text-primary);
-  background: rgba(214, 154, 185, 0.06);
+  background: rgba(20, 22, 28, 0.04);
 }
 
 .faq-cat-btn.active {
-  background: rgba(214, 154, 185, 0.15);
-  color: var(--contact-accent);
-  border-color: rgba(214, 154, 185, 0.3);
+  background: rgba(20, 22, 28, 0.08);
+  color: var(--contact-text-primary);
+  border-color: rgba(20, 22, 28, 0.16);
+  font-weight: 500;
 }
 
-/* --- Right Main Panel --- */
+/* -------------------------------------------------------------
+   6. Right Main Panel (Pearl Glassmorphic Stage)
+   ------------------------------------------------------------- */
 .contact-main-panel {
   background: var(--contact-card-bg);
   border: 1px solid var(--contact-card-border);
-  border-radius: 16px;
-  padding: 44px 40px;
-  min-height: 520px;
+  border-radius: 18px;
+  padding: 48px 46px;
+  min-height: 540px;
   box-sizing: border-box;
   position: relative;
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  -webkit-backdrop-filter: blur(var(--contact-glass-blur));
+  backdrop-filter: blur(var(--contact-glass-blur));
+  box-shadow: 0 20px 48px -10px rgba(0, 0, 0, 0.07);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .panel-view {
   display: none;
+  animation: fadeInPanel 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .panel-view.active {
   display: block;
 }
 
+@keyframes fadeInPanel {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .panel-header-title {
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 24px;
+  font-size: 2rem;
   font-weight: 600;
+  letter-spacing: -0.02em;
   color: var(--contact-text-primary);
-  margin-bottom: 12px;
+  margin: 0 0 10px 0;
 }
 
 .panel-header-sub {
-  font-size: 13.5px;
-  line-height: 1.65;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.7;
   color: var(--contact-text-muted);
   max-width: 680px;
-  margin-bottom: 32px;
+  margin: 0 0 32px 0;
 }
 
-/* Contact Form */
+/* -------------------------------------------------------------
+   7. Form Inputs & Actions
+   ------------------------------------------------------------- */
 .contact-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 22px;
 }
 
 .form-row-2col {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 18px;
+  gap: 20px;
 }
 
 .form-input-group {
@@ -275,33 +428,41 @@ a#brandLink {
   width: 100%;
   background: var(--contact-input-bg);
   border: 1px solid var(--contact-input-border);
-  border-radius: 8px;
-  padding: 14px 16px;
+  border-radius: 10px;
+  padding: 15px 18px;
   font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
   font-size: 13.5px;
   color: var(--contact-text-primary);
   box-sizing: border-box;
   outline: none;
-  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  transition: all 0.22s ease;
+}
+
+.form-input-group input::placeholder,
+.form-input-group textarea::placeholder {
+  color: var(--contact-text-dim);
+  font-weight: 400;
 }
 
 .form-input-group input:focus,
 .form-input-group textarea:focus {
-  border-color: var(--contact-accent);
-  box-shadow: 0 0 0 2px rgba(214, 154, 185, 0.15);
+  border-color: var(--contact-input-focus-border);
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(20, 22, 28, 0.08);
 }
 
 .form-input-group textarea {
   resize: vertical;
-  min-height: 140px;
+  min-height: 145px;
 }
 
 .char-counter {
   align-self: flex-end;
   font-size: 11px;
-  color: var(--contact-text-muted);
-  margin-top: 6px;
-  font-family: monospace;
+  color: var(--contact-text-dim);
+  margin-top: 7px;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.04em;
 }
 
 .form-checkbox-row {
@@ -316,60 +477,67 @@ a#brandLink {
 .form-checkbox-row input[type="checkbox"] {
   width: 17px;
   height: 17px;
-  accent-color: var(--contact-accent);
+  accent-color: var(--contact-text-primary);
   cursor: pointer;
 }
 
 .form-checkbox-row a {
-  color: var(--contact-accent);
+  color: var(--contact-text-primary);
   text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.2s ease;
 }
 
 .form-actions-row {
   display: flex;
-  gap: 14px;
+  gap: 16px;
   margin-top: 10px;
 }
 
 .btn-contact-send {
-  background: var(--contact-accent);
-  color: #1A0B17;
-  border: none;
-  border-radius: 28px;
-  padding: 13px 42px;
+  background: #151619;
+  color: #FFFFFF;
+  border: 1px solid #151619;
+  border-radius: 999px;
+  padding: 13px 44px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 13.5px;
   font-weight: 600;
   letter-spacing: 0.03em;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(20, 22, 28, 0.18);
 }
 
 .btn-contact-send:hover {
-  background: #E5A8C3;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(214, 154, 185, 0.35);
+  background: #2a2c33;
+  border-color: #2a2c33;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(20, 22, 28, 0.25);
 }
 
 .btn-contact-cancel {
   background: transparent;
-  color: var(--contact-text-primary);
+  color: var(--contact-text-muted);
   border: 1px solid var(--contact-card-border);
-  border-radius: 28px;
+  border-radius: 999px;
   padding: 13px 36px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 13.5px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all 0.2s ease;
 }
 
 .btn-contact-cancel:hover {
-  border-color: var(--contact-accent);
-  color: var(--contact-accent);
+  border-color: rgba(20, 22, 28, 0.25);
+  color: var(--contact-text-primary);
+  background: rgba(20, 22, 28, 0.03);
 }
 
 .contact-alert-msg {
-  padding: 12px 16px;
-  border-radius: 8px;
+  padding: 14px 18px;
+  border-radius: 10px;
   font-size: 13px;
   display: none;
   margin-top: 14px;
@@ -377,19 +545,21 @@ a#brandLink {
 
 .contact-alert-msg.success {
   display: block;
-  background: rgba(46, 125, 50, 0.15);
-  border: 1px solid rgba(76, 175, 80, 0.4);
-  color: #81C784;
+  background: rgba(46, 125, 50, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.35);
+  color: #2e7d32;
 }
 
 .contact-alert-msg.error {
   display: block;
-  background: rgba(198, 40, 40, 0.15);
-  border: 1px solid rgba(239, 83, 80, 0.4);
-  color: #EF9A9A;
+  background: rgba(198, 40, 40, 0.1);
+  border: 1px solid rgba(239, 83, 80, 0.35);
+  color: #c62828;
 }
 
-/* --- FAQ Accordion View (Matching Reference) --- */
+/* -------------------------------------------------------------
+   8. FAQ Accordion View
+   ------------------------------------------------------------- */
 .faq-list {
   display: flex;
   flex-direction: column;
@@ -397,9 +567,10 @@ a#brandLink {
 }
 
 .faq-item {
-  border-bottom: 1px solid rgba(214, 154, 185, 0.18);
-  padding: 20px 0;
+  border-bottom: 1px solid rgba(20, 22, 28, 0.08);
+  padding: 22px 0;
   cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 .faq-question {
@@ -409,82 +580,126 @@ a#brandLink {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 15px;
   font-weight: 600;
-  color: #FFFFFF;
+  color: var(--contact-text-primary);
   line-height: 1.4;
   gap: 16px;
 }
 
 .faq-arrow {
-  color: var(--contact-accent);
-  font-size: 16px;
-  transition: transform 0.25s ease;
+  color: var(--contact-text-muted);
+  font-size: 15px;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
 }
 
 .faq-item.open .faq-arrow {
   transform: rotate(180deg);
+  color: var(--contact-text-primary);
 }
 
 .faq-answer {
   display: none;
-  font-size: 13.5px;
-  line-height: 1.7;
+  font-size: 14px;
+  line-height: 1.75;
   color: var(--contact-text-muted);
-  margin-top: 12px;
+  margin-top: 14px;
 }
 
 .faq-item.open .faq-answer {
   display: block;
+  animation: fadeInPanel 0.25s ease forwards;
 }
 
 .faq-load-more-wrap {
   display: flex;
   justify-content: center;
-  margin-top: 30px;
+  margin-top: 32px;
 }
 
 .btn-faq-load-more {
   background: transparent;
-  border: none;
-  color: var(--contact-accent);
-  font-size: 13.5px;
-  font-weight: 500;
+  border: 1px solid rgba(20, 22, 28, 0.2);
+  border-radius: 999px;
+  color: var(--contact-text-secondary);
+  font-family: 'DM Mono', monospace;
+  font-size: 12.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   cursor: pointer;
-  padding: 8px 16px;
-  transition: color 0.2s ease;
+  padding: 10px 24px;
+  transition: all 0.2s ease;
 }
 
 .btn-faq-load-more:hover {
-  color: #FFFFFF;
-  text-decoration: underline;
+  background: rgba(20, 22, 28, 0.05);
+  color: var(--contact-text-primary);
+  border-color: rgba(20, 22, 28, 0.4);
 }
 
-/* --- Legal Notices Prose View --- */
+/* -------------------------------------------------------------
+   9. Legal Notices Prose View
+   ------------------------------------------------------------- */
 .legal-content-body {
-  font-size: 14px;
-  line-height: 1.8;
+  font-size: 14.5px;
+  line-height: 1.85;
   color: var(--contact-text-muted);
 }
 
 .legal-content-body h3 {
-  color: #FFFFFF;
-  font-size: 17px;
-  margin-top: 24px;
-  margin-bottom: 10px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: var(--contact-text-primary);
+  font-size: 16.5px;
+  font-weight: 600;
+  margin-top: 26px;
+  margin-bottom: 12px;
+  letter-spacing: -0.01em;
 }
 
 .legal-content-body p {
   margin-bottom: 16px;
 }
 
-/* --- Responsive Breakpoints --- */
-@media (max-width: 960px) {
+/* -------------------------------------------------------------
+   10. Multi-Tier Responsive Layouts
+   ------------------------------------------------------------- */
+@media (max-width: 1080px) {
+  .contact-layout-grid {
+    grid-template-columns: 260px 1fr;
+    gap: 22px;
+  }
+  .contact-main-panel {
+    padding: 38px 30px;
+  }
+}
+
+@media (max-width: 860px) {
+  .contact-page-wrapper {
+    padding: 100px 20px 70px;
+  }
   .contact-layout-grid {
     grid-template-columns: 1fr;
+    gap: 24px;
   }
   .form-row-2col {
     grid-template-columns: 1fr;
   }
   .contact-main-panel {
-    padding: 30px 24px;
+    padding: 32px 22px;
+  }
+  .sidebar-nav-card {
+    padding: 18px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .contact-hero-title {
+    font-size: 2.1rem;
+  }
+  .form-actions-row {
+    flex-direction: column;
+  }
+  .btn-contact-send,
+  .btn-contact-cancel {
+    width: 100%;
+    text-align: center;
   }
 }

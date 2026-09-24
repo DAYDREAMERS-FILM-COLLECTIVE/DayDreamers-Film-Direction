@@ -87,72 +87,76 @@
     z-index: 2;
   }
 
-  /* 1. Left: Poster Card */
+  /* 1. Left Zone: Framed Poster Card (Standard 27:40 Theatrical Ratio, Sharp Editorial Corners) */
   .stage-poster {
     position: absolute;
-    left: 11.63%;
+    left: 8.5%;
     top: 14.95%;
-    width: 15.34%;
-    height: 68.59%;
-    border-radius: 18px;
+    width: clamp(215px, 15.5vw, 255px);
+    aspect-ratio: 27 / 40;
+    height: auto;
+    border-radius: 0;
     overflow: hidden;
     box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
-    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid rgba(214, 154, 185, 0.28);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
     background: #1A0B17;
   }
 
   .stage-poster:hover {
-    transform: scale(1.02);
+    transform: translateY(-4px) scale(1.015);
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.95);
   }
 
   .stage-poster-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 18px;
-    border: 1px solid rgba(214, 154, 185, 0.3);
+    border-radius: 0;
     display: block;
   }
 
-  /* 2. Center: Information Cluster */
+  /* 2. Center Zone: Editorial Information & Actions */
   .stage-info {
     position: absolute;
-    left: 29.85%;
-    top: 25.5%;
-    max-width: 32%;
+    left: 31%;
+    top: 14.95%;
+    width: 38%;
+    max-width: 500px;
     display: flex;
     flex-direction: column;
+    justify-content: flex-start;
   }
 
   .hero-eyebrow {
     font-family: var(--font-ui);
     font-size: clamp(9px, 0.72vw, 11px);
-    font-weight: 500;
-    letter-spacing: 0.28em;
+    font-weight: 600;
+    letter-spacing: 0.3em;
     text-transform: uppercase;
     color: #A47D93;
-    margin-bottom: clamp(10px, 1.4vw, 18px);
+    margin-bottom: clamp(10px, 1.2vw, 16px);
   }
 
   .hero-title {
     font-family: var(--font-serif);
-    font-size: clamp(38px, 4.4vw, 68px);
+    font-size: clamp(40px, 4.4vw, 70px);
     font-weight: 400;
     color: #F8F4F1;
     letter-spacing: -0.015em;
-    line-height: 1;
-    margin-bottom: clamp(10px, 1.2vw, 18px);
-    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
+    line-height: 1.02;
+    margin-bottom: clamp(12px, 1.2vw, 18px);
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.75);
   }
 
   .hero-meta-row {
     font-family: var(--font-ui);
     font-size: clamp(8.5px, 0.68vw, 10.5px);
     font-weight: 600;
-    letter-spacing: 0.22em;
+    letter-spacing: 0.24em;
     text-transform: uppercase;
     color: #8E687F;
-    margin-bottom: clamp(12px, 1.4vw, 20px);
+    margin-bottom: clamp(14px, 1.5vw, 22px);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -164,18 +168,18 @@
 
   .hero-synopsis {
     font-family: var(--font-body);
-    font-size: clamp(11.5px, 0.9vw, 14px);
+    font-size: clamp(12px, 0.92vw, 14.5px);
     font-weight: 300;
-    line-height: 1.55;
+    line-height: 1.6;
     color: #B59EAD;
-    max-width: 440px;
-    margin-bottom: clamp(20px, 2.5vw, 36px);
+    max-width: 460px;
+    margin-bottom: clamp(24px, 2.8vw, 38px);
   }
 
   .hero-actions {
     display: flex;
     align-items: center;
-    gap: clamp(16px, 2vw, 28px);
+    gap: clamp(14px, 1.8vw, 24px);
   }
 
   /* Sharp Rectangular Button - No Rounded Corners, No Neon Glow */
@@ -212,120 +216,227 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 14px 28px;
+    padding: 13px 30px;
     border-radius: 0;
     background: transparent;
     border: 1px solid rgba(214, 154, 185, 0.4);
-    color: #F5EFEB;
+    color: #F8F4F1;
     font-family: var(--font-ui);
     font-size: 11px;
     font-weight: 600;
-    letter-spacing: 0.25em;
+    letter-spacing: 0.22em;
     text-transform: uppercase;
     text-decoration: none;
     cursor: pointer;
+    box-shadow: none;
     transition: all 0.25s ease;
   }
 
   .btn-venue-link:hover {
     border-color: #D495B1;
-    color: #D495B1;
-    background: rgba(214, 154, 185, 0.1);
+    color: #FFFFFF;
+    background: rgba(214, 154, 185, 0.08);
     transform: translateY(-1px);
+    box-shadow: none;
   }
 
-  /* 3. Far Right: High-Contrast Floating Editorial Date & Time */
+  /* 3. Right Zone: Dedicated Cinema Signage (Comfortably lowered in right wall negative space) */
   .stage-schedule {
     position: absolute;
-    left: 86.77%;
-    top: 38%;
-    transform: translateX(-50%);
+    right: 7.5%;
+    top: 36%;
+    width: auto;
+    min-width: 140px;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
+    align-items: flex-start;
     user-select: none;
+    z-index: 10;
     cursor: pointer;
-    transition: transform 0.2s ease, opacity 0.2s ease;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: transform 0.25s ease, opacity 0.25s ease, background 0.25s ease;
   }
 
   .stage-schedule:hover {
-    opacity: 0.9;
-    transform: translateX(-50%) translateY(-2px);
+    transform: translateY(-2px);
+    background: rgba(214, 154, 185, 0.05);
   }
 
   .sched-weekday {
     font-family: var(--font-ui);
     font-size: 11px;
     font-weight: 600;
-    letter-spacing: 0.3em;
+    letter-spacing: 0.35em;
     text-transform: uppercase;
     color: #D495B1;
-    line-height: 1;
-    margin-bottom: 6px;
-    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+    margin-bottom: 2px;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.9);
   }
 
   .sched-day {
     font-family: var(--font-serif);
-    font-size: clamp(48px, 4.4vw, 66px);
+    font-size: clamp(52px, 4.6vw, 72px);
     font-weight: 400;
-    line-height: 0.92;
     color: #FFFFFF;
+    line-height: 0.92;
     letter-spacing: -0.02em;
-    text-shadow: 0 2px 16px rgba(0, 0, 0, 0.9);
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.95);
   }
 
   .sched-month {
     font-family: var(--font-ui);
     font-size: 11px;
     font-weight: 600;
-    letter-spacing: 0.3em;
+    letter-spacing: 0.38em;
     text-transform: uppercase;
     color: #D495B1;
-    line-height: 1;
-    margin-top: 6px;
+    margin-top: 4px;
     margin-bottom: 14px;
-    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.9);
   }
 
   .sched-divider {
-    width: clamp(28px, 2.5vw, 42px);
+    width: clamp(34px, 3vw, 54px);
     height: 1.5px;
-    background: rgba(214, 154, 185, 0.55);
+    background: rgba(214, 154, 185, 0.6);
     margin: 2px 0 14px;
   }
 
   .sched-time {
     font-family: var(--font-serif);
-    font-size: clamp(22px, 1.8vw, 26px);
+    font-size: clamp(24px, 2vw, 30px);
     font-weight: 400;
     color: #FFFFFF;
     display: inline-flex;
     align-items: baseline;
-    gap: 5px;
+    gap: 6px;
     letter-spacing: 0.01em;
-    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.9);
+    text-shadow: 0 2px 16px rgba(0, 0, 0, 0.95);
   }
 
   .sched-ampm {
     font-family: var(--font-ui);
     font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.16em;
+    font-weight: 700;
+    letter-spacing: 0.2em;
     color: #D495B1;
   }
 
-  /* Responsive Mobile Layout */
-  @media (max-width: 840px) {
+  .sched-hint {
+    font-family: var(--font-ui);
+    font-size: 8.5px;
+    font-weight: 600;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: rgba(214, 154, 185, 0.45);
+    margin-top: 14px;
+    transition: color 0.2s ease;
+  }
+
+  .stage-schedule:hover .sched-hint {
+    color: #D495B1;
+  }
+
+  /* 1. Medium Desktop & Laptop (992px - 1199px) */
+  @media (min-width: 992px) and (max-width: 1199px) {
+    .cinema-hero-stage {
+      min-height: 480px;
+      margin: 64px auto 20px;
+    }
+    .stage-poster {
+      left: 6%;
+      top: 14.95%;
+      width: clamp(190px, 17vw, 225px);
+      aspect-ratio: 27 / 40;
+      height: auto;
+      border-radius: 0;
+    }
+    .stage-info {
+      left: 28%;
+      top: 15%;
+      width: 42%;
+      max-width: 440px;
+    }
+    .hero-title {
+      font-size: clamp(34px, 3.6vw, 48px);
+      margin-bottom: 12px;
+    }
+    .hero-synopsis {
+      font-size: 12.5px;
+      margin-bottom: 22px;
+    }
+    .btn-reserve-solid,
+    .btn-venue-link {
+      padding: 12px 22px;
+      font-size: 10px;
+    }
+    .stage-schedule {
+      right: 5%;
+      top: 34%;
+    }
+  }
+
+  /* 2. Tablet Landscape / Small Laptop (769px - 991px) */
+  @media (min-width: 769px) and (max-width: 991px) {
+    .cinema-hero-stage {
+      min-height: 440px;
+      margin: 60px auto 20px;
+    }
+    .stage-poster {
+      left: 4.5%;
+      top: 14.95%;
+      width: clamp(165px, 18vw, 195px);
+      aspect-ratio: 27 / 40;
+      height: auto;
+      border-radius: 0;
+    }
+    .stage-info {
+      left: 26%;
+      top: 14.95%;
+      width: 46%;
+      max-width: 400px;
+    }
+    .hero-title {
+      font-size: clamp(30px, 3.8vw, 42px);
+      margin-bottom: 10px;
+    }
+    .hero-synopsis {
+      font-size: 12px;
+      margin-bottom: 18px;
+      line-height: 1.5;
+    }
+    .btn-reserve-solid,
+    .btn-venue-link {
+      padding: 11px 20px;
+      font-size: 9.5px;
+    }
+    .stage-schedule {
+      right: 3.5%;
+      top: 32%;
+    }
+  }
+
+  /* 3. Mobile & Portrait Tablet (<= 768px) */
+  @media (max-width: 768px) {
     .cinema-hero-stage {
       aspect-ratio: auto;
       min-height: auto;
       border-radius: 0;
-      padding: 48px 24px;
+      margin: 80px auto 24px;
+      padding: 36px 20px 44px;
+      position: relative;
+      overflow: hidden;
     }
     .stage-backdrop {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
+      object-position: 78% center;
+      opacity: 0.5;
+      filter: brightness(0.85);
     }
     .stage-content {
       position: relative;
@@ -333,34 +444,67 @@
       flex-direction: column;
       align-items: center;
       text-align: center;
+      width: 100%;
+      max-width: 520px;
+      margin: 0 auto;
     }
     .stage-poster {
       position: relative;
       left: auto;
       top: auto;
-      width: 170px;
-      height: 250px;
-      margin-bottom: 28px;
+      width: clamp(160px, 48vw, 205px);
+      aspect-ratio: 27 / 40;
+      height: auto;
+      border-radius: 0;
+      margin: 0 auto 28px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
     }
     .stage-info {
       position: relative;
       left: auto;
       top: auto;
+      width: 100%;
       max-width: 100%;
       align-items: center;
-      margin-bottom: 32px;
+      margin-bottom: 28px;
+    }
+    .hero-title {
+      font-size: clamp(34px, 7.5vw, 48px);
     }
     .hero-meta-row {
       justify-content: center;
     }
+    .hero-synopsis {
+      font-size: 13.5px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+      text-align: center;
+    }
     .hero-actions {
       justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .btn-reserve-solid,
+    .btn-venue-link {
+      padding: 13px 26px;
+      font-size: 10.5px;
     }
     .stage-schedule {
       position: relative;
       left: auto;
       top: auto;
+      right: auto;
       transform: none;
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 28px;
+      border: 1px solid rgba(214, 154, 185, 0.25);
+      background: rgba(16, 5, 14, 0.65);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
     }
   }
 </style>
@@ -417,6 +561,7 @@
         <div class="sched-time">
           7:30 <span class="sched-ampm">PM</span>
         </div>
+        <span class="sched-hint">CYCLE TIME ↻</span>
       </div>
     </div>
   </main>

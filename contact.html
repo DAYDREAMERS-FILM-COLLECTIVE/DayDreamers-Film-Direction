@@ -7,7 +7,7 @@
   
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&family=Heebo:wght@200;400;500;700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700&family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&family=Inter:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&family=Heebo:wght@200;400;500;700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700&family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&family=Inter:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet" />
 
   <script>
     if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
@@ -80,7 +80,6 @@
         <li class="site-menu-item"><a href="screening.html" data-nav data-cursor="GO">Screening</a></li>
         <li class="site-menu-item"><a href="index.html#gallery" data-nav data-cursor="GO">Past Events</a></li>
         <li class="site-menu-item"><a href="index.html#about" data-nav data-cursor="GO">About Us</a></li>
-        <li class="site-menu-item"><a href="index.html#join" data-nav data-cursor="GO">Join Us</a></li>
         <li class="site-menu-item"><a href="contact.html" data-nav data-cursor="GO">Contact Us</a></li>
       </ul>
       <div class="site-menu-footer">
@@ -112,10 +111,20 @@
   <!-- Router Wrapper -->
   <div id="routerWrapper" data-router-wrapper>
     <main data-router-view="contact" class="contact-view">
+      <!-- 3D WebGL Torus Knot Ribbon Flight Stage -->
+      <div class="contact-webgl-bg" id="contactWebglBg" aria-hidden="true"></div>
+      <div class="contact-ambient-vignette" aria-hidden="true"></div>
+
       <div class="contact-page-wrapper" id="contactPageWrapper">
         
-        <!-- Top Eyebrow -->
-        <h1 class="contact-top-eyebrow" id="contactTopEyebrow">HELLO THERE</h1>
+        <!-- Clean Editorial Header -->
+        <header class="contact-hero-header">
+          <div class="contact-eyebrow">Daydreamers Film Society</div>
+          <h1 class="contact-hero-title">Contact Us</h1>
+          <p class="contact-hero-sub">
+            Inquiries, student film screener submissions, festival passes, and archival restoration dialogues.
+          </p>
+        </header>
 
         <!-- Two-Column Grid -->
         <div class="contact-layout-grid">
@@ -339,11 +348,6 @@
       </div>
     </main>
   </div>
-
-  <footer class="footer" role="contentinfo">
-    <div class="f-logo">DAYDREAMERS</div>
-    <p>An initiative of The Daydreamers Society. Screened by members, for members.</p>
-  </footer>
 
   <script type="module" src="/js/core/cursor.js"></script>
   <script type="module" src="/js/modules/burger-menu/burger-menu.js"></script>
