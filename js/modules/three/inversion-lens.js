@@ -295,7 +295,7 @@ export class InversionLens {
 
     // 2. Initial texture
     let initialTexture = null;
-    let imageAspect = 3 / 4.4;
+    let imageAspect = 27 / 40;
 
     if (!isViewport) {
       const imgEl = this.container.querySelector('img');
@@ -381,7 +381,7 @@ export class InversionLens {
     this.canvas.style.height = '100%';
     this.canvas.style.zIndex = isViewport ? '998' : '2';
     this.canvas.style.pointerEvents = 'none';
-    this.canvas.style.borderRadius = isViewport ? '0' : 'inherit';
+    this.canvas.style.borderRadius = '0';
 
     if (!isViewport) {
       this.container.style.position = 'relative';
@@ -650,7 +650,7 @@ export class InversionLens {
         console.warn('[InversionLens] Fallback active for texture:', err);
         const fallback = createFallbackTexture();
         this.uniforms.u_texture.value = fallback;
-        this.uniforms.u_imageAspect.value = 3 / 4.4;
+        this.uniforms.u_imageAspect.value = 27 / 40;
         this.requestRender();
       }
     );

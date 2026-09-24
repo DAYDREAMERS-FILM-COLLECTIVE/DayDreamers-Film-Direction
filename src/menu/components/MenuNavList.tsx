@@ -22,7 +22,7 @@ const NAV_ITEMS: NavItem[] = [
   { number: '02', label: 'Screening', route: 'screening' },
   { number: '03', label: 'Past Events', route: 'home', anchor: '#gallery' },
   { number: '04', label: 'About Us', route: 'home', anchor: '#about' },
-  { number: '05', label: 'Join Us', route: 'home', anchor: '#join' }
+  { number: '05', label: 'Contact Us', route: 'contact' }
 ];
 
 interface MenuNavListProps {

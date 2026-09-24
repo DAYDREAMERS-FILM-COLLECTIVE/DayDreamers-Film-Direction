@@ -82,7 +82,7 @@ export const LOCAL_MOVIES = [
     rating: 'UA',
     hall: 'D Block 4th Floor',
     blurb: 'An aging projectionist discovers a single frame of unreleased nitrate film tucked into an archival spool.',
-    poster_url: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80',
+    poster_url: '/assets/poster-the-last-reel.webp',
     quote: '“Cinema is the closest thing we have to time travel.”',
     quote_author: '— K. TANAKA',
     g: 'linear-gradient(150deg,#4a2c10 0%,#c98a3d 55%,#120b05 100%)',

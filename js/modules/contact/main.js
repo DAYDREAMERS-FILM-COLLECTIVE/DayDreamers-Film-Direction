@@ -1,15 +1,17 @@
 /**
  * js/modules/contact/main.js
  * Dedicated Controller for Contact, Legal Notices, & FAQ experience.
- * Inspired by GESKE layout in Daydreamers Cinema visual aesthetic.
+ * Powered by dynamic 3D WebGL Torus Knot Ribbon Flight background.
  */
+
+import { initContactRibbon, destroyContactRibbon } from '../three/contact-ribbon.js';
 
 let isInitialized = false;
 
 const LEGAL_TEXTS = {
   imprint: {
-    title: 'Imprint // Legal Notice',
-    sub: 'Information in accordance with student club governance & RV University guidelines.',
+    title: 'Imprint: Legal Notice',
+    sub: 'Information in accordance with student club governance and RV University guidelines.',
     html: `
       <div class="legal-content-body">
         <h3>Daydreamers Film Society</h3>
@@ -20,7 +22,7 @@ const LEGAL_TEXTS = {
         <h3>Editorial & Club Direction</h3>
         <p><strong>Student Convenor:</strong> Alistair Moreau (Daydreamers Society)</p>
         <p><strong>Faculty Advisory:</strong> Prof. K. Tanaka, Department of Cinema & Media Studies</p>
-        <p><strong>Electronic Contact:</strong> <a href="mailto:hello@daydreamers.club" style="color: var(--contact-accent);">hello@daydreamers.club</a></p>
+        <p><strong>Electronic Contact:</strong> <a href="mailto:hello@daydreamers.club" style="color: var(--contact-accent-cool); text-decoration: underline;">hello@daydreamers.club</a></p>
 
         <h3>Purpose & Operations</h3>
         <p>Daydreamers screens educational, non-commercial, public-domain, student-submitted, and curated festival cinema exclusively for enrolled students, faculty, and invited cinephiles.</p>
@@ -76,7 +78,17 @@ const LEGAL_TEXTS = {
 };
 
 export function initContact() {
-  const topEyebrow = document.getElementById('contactTopEyebrow');
+  // 1. Mount 3D WebGL Torus Ribbon Background
+  const webglContainer = document.getElementById('contactWebglBg');
+  if (webglContainer) {
+    try {
+      initContactRibbon(webglContainer);
+    } catch (e) {
+      console.warn('[Contact] WebGL ribbon initialization failed:', e);
+    }
+  }
+
+  // 2. View Switching Logic
   const panelContact = document.getElementById('panelContact');
   const panelFaq = document.getElementById('panelFaq');
   const panelLegal = document.getElementById('panelLegal');
@@ -96,18 +108,15 @@ export function initContact() {
     if (faqCategoryNav) faqCategoryNav.classList.remove('visible');
 
     if (viewType === 'contact') {
-      if (topEyebrow) topEyebrow.textContent = 'HELLO THERE';
       if (panelContact) panelContact.classList.add('active');
       const b = document.getElementById('navBtnContact');
       if (b) b.classList.add('active');
     } else if (viewType === 'faq') {
-      if (topEyebrow) topEyebrow.textContent = 'FAQ';
       if (panelFaq) panelFaq.classList.add('active');
       if (faqCategoryNav) faqCategoryNav.classList.add('visible');
       const b = document.getElementById('navBtnFaq');
       if (b) b.classList.add('active');
     } else if (viewType === 'legal') {
-      if (topEyebrow) topEyebrow.textContent = 'LEGAL NOTICES';
       if (panelLegal) panelLegal.classList.add('active');
       const b = document.getElementById(`navBtn_${subKey}`);
       if (b) b.classList.add('active');
@@ -133,6 +142,24 @@ export function initContact() {
     });
   });
 
+  // Handle in-form links to legal terms
+  const linkTerms = document.getElementById('linkTermsInForm');
+  const linkPrivacy = document.getElementById('linkPrivacyInForm');
+  if (linkTerms) {
+    linkTerms.addEventListener('click', (e) => {
+      e.preventDefault();
+      setView('legal', 'terms');
+      try { history.replaceState(null, '', '#terms'); } catch (_) {}
+    });
+  }
+  if (linkPrivacy) {
+    linkPrivacy.addEventListener('click', (e) => {
+      e.preventDefault();
+      setView('legal', 'privacy');
+      try { history.replaceState(null, '', '#privacy'); } catch (_) {}
+    });
+  }
+
   // Handle initial hash routing (e.g. contact.html#faq, contact.html#terms)
   const initialHash = (window.location.hash || '').replace('#', '').toLowerCase();
   if (initialHash === 'faq') {
@@ -149,9 +176,9 @@ export function initContact() {
       const len = msgInput.value.length;
       counterEl.textContent = `[${len} / 255] characters`;
       if (len > 255) {
-        counterEl.style.color = '#EF9A9A';
+        counterEl.style.color = '#ef9a9a';
       } else {
-        counterEl.style.color = 'var(--contact-text-muted)';
+        counterEl.style.color = 'var(--contact-text-dim)';
       }
     });
   }
@@ -225,7 +252,7 @@ export function initContact() {
         const data = await res.json();
         if (res.ok && data.ok) {
           if (alertMsg) {
-            alertMsg.textContent = data.message || 'Thank you! Your message has been received by Daydreamers Film Society.';
+            alertMsg.textContent = data.message || 'Thank you! Your transmission has reached Daydreamers Film Society.';
             alertMsg.classList.add('success');
           }
           contactForm.reset();
@@ -292,7 +319,7 @@ export function initContact() {
 }
 
 export function destroyContact() {
-  // Teardown any pending listeners
+  destroyContactRibbon();
 }
 
 // Auto-boot on direct landing

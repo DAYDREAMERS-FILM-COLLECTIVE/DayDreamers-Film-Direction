@@ -102,6 +102,10 @@ function switchPageStylesheet(targetView) {
   if (homeStyle) homeStyle.disabled = (targetView !== 'home');
   if (screeningStyle) screeningStyle.disabled = (targetView !== 'screening');
   if (contactStyle) contactStyle.disabled = (targetView !== 'contact');
+
+  if (targetView && document.body) {
+    document.body.setAttribute('data-page', targetView);
+  }
 }
 
 /**

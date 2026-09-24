@@ -17,6 +17,9 @@
     --menu-cream: #f2e9ed; /* Screening Luminous Cream White */
     --menu-accent: #c89bb2; /* Rosé Gold Accent */
     --menu-border: rgba(109, 59, 86, 0.45); /* Deep Plum Border */
+
+    /* Adaptive Burger Menu Button Tokens */
+    --burger-bar-color: #FFFFFF;
 }
 
 /* Accessible screen-reader utility */
@@ -36,7 +39,7 @@
    Section 1 — Toggle Button (Phase 1)
    ========================================================================== */
 
-/* 1. Toggle Button Container (Pinned fixed positioning to eliminate layout shifts) */
+/* 1. Toggle Button Container (Pure minimalist lines, zero background shape) */
 #burgerToggle,
 .site-header-button,
 .burger-toggle {
@@ -53,11 +56,15 @@
     height: 44px !important;
     background: transparent !important;
     border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     padding: 0 !important;
-    cursor: pointer;
-    box-sizing: border-box;
+    cursor: pointer !important;
+    box-sizing: border-box !important;
     pointer-events: auto !important;
-    -webkit-tap-highlight-color: transparent;
+    -webkit-tap-highlight-color: transparent !important;
     transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
@@ -102,23 +109,49 @@
     outline-offset: 4px;
 }
 
-/* 2. Three Absolute Bars (20x2px centered lines, zero reflow) */
+/* 2. Three Absolute Bars (26x2px centered lines, zero reflow) */
 .site-header-button .button-bar,
 .burger-toggle .button-bar,
 .button-bar {
     position: absolute !important;
     top: 50% !important;
-    left: 6px !important;
-    right: 6px !important;
+    left: 9px !important;
+    right: 9px !important;
     height: 2px !important;
     margin: -1px 0 0 0 !important;
-    background-color: var(--menu-cream, #f2e9ed);
-    border-radius: 1px;
+    background-color: var(--burger-bar-color, #FFFFFF) !important;
+    border-radius: 1px !important;
     pointer-events: none;
     transition:
         transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1),
         opacity 0.3s cubic-bezier(0.165, 0.84, 0.44, 1),
-        background-color 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+        background-color 0.35s ease;
+}
+
+/* -------------------------------------------------------------
+   Page-Adaptive & Theme Visibility Rules
+   Screening / Home (Dark Cinema): Pure White Bars
+   Contact (Light Editorial): Pure Deep Ink Bars
+   Menu Open: Always Pure White Bars on Midnight Plum
+   ------------------------------------------------------------- */
+
+/* Dark Pages: Screening and Home Hero */
+body[data-page="screening"] #burgerToggle .button-bar,
+body[data-page="home"] #burgerToggle .button-bar {
+    background-color: #FFFFFF !important;
+}
+
+/* Light Pages: Contact */
+body[data-page="contact"] #burgerToggle .button-bar {
+    background-color: #111111 !important;
+}
+
+/* Ensure bars are ALWAYS pure white when menu curtain or menu modal is open */
+body.menu-active .button-bar,
+body.menu-open .button-bar,
+.site-header-button.is-active .button-bar,
+.burger-toggle.is-active .button-bar {
+    background-color: #FFFFFF !important;
 }
 
 /* 3. Rest Offsets */
@@ -127,7 +160,7 @@
 }
 
 .button-bar--2 {
-    transform: scaleX(0.8);
+    transform: scaleX(0.85);
     transform-origin: 100% 50%; /* Anchored to right edge */
 }
 
@@ -163,12 +196,6 @@
 .site-header-button.is-active .button-bar--3,
 .burger-toggle.is-active .button-bar--3 {
     transform: rotate(-45deg);
-}
-
-/* 6. Theme Cross-Fade */
-body.menu-active .button-bar,
-body.menu-open .button-bar {
-    background-color: var(--menu-cream, #f2e9ed);
 }
 
 /* Containing block neutralization: backdrop-filter on header creates a trap for fixed/z-index children */
@@ -239,7 +266,7 @@ body.lock-scroll {
     background: var(--menu-panel, #3a1f33) !important;
     opacity: 1 !important;
     border-right: 2px solid rgba(200, 155, 178, 0.4);
-    box-shadow: 25px 0 60px rgba(0, 0, 0, 0.85);
+    box-shadow: none !important;
     transform: translateX(-100%);
     pointer-events: none;
     z-index: 999;
@@ -378,12 +405,12 @@ body.menu-running .site-menu-panel {
     padding: 0;
 }
 
-/* Links: Dogstudio ListRow sizing — Heebo Extralight 200, 45px/41px/-0.9px desktop */
+/* Links: Dogstudio ListRow sizing — Gilroy UltraLight 200, 45px/41px/-0.9px desktop */
 .site-menu-item a {
     display: inline-block;
     padding: 10px 0;
     position: relative;
-    font-family: 'Heebo', Helvetica, Arial, sans-serif;
+    font-family: 'Gilroy', 'Heebo', -apple-system, sans-serif;
     font-weight: 200;
     font-style: normal;
     font-size: 2.8125rem;
@@ -406,8 +433,8 @@ body.menu-running .site-menu-panel {
     position: absolute;
     top: 20px;
     right: calc(100% + 47px);
-    font-family: 'Heebo', 'Plus Jakarta Sans', Helvetica, Arial, sans-serif;
-    font-weight: 700;
+    font-family: 'Gilroy', 'Heebo', 'Plus Jakarta Sans', -apple-system, sans-serif;
+    font-weight: 200;
     font-size: 10px;
     line-height: 9.2px;
     letter-spacing: 3.6px;
@@ -463,8 +490,8 @@ body.menu-running .site-menu-panel {
 
 /* Footer Tagline */
 .site-menu-footer .site-menu-tagline {
-    font-family: 'Heebo', Helvetica, Arial, sans-serif;
-    font-weight: 400;
+    font-family: 'Gilroy', 'Heebo', -apple-system, sans-serif;
+    font-weight: 200;
     font-size: 11px;
     letter-spacing: 0.18em;
     text-transform: uppercase;
@@ -487,15 +514,15 @@ body.menu-running .site-menu-panel {
     display: block;
 }
 
-/* Socials: Heebo Regular 400, 11px with / separators */
+/* Socials: Gilroy 200, 11px with / separators */
 .site-menu-content ul {
     display: flex;
     align-items: center;
     list-style: none;
     margin: 0;
     padding: 0;
-    font-family: 'Heebo', Helvetica, Arial, sans-serif;
-    font-weight: 400;
+    font-family: 'Gilroy', 'Heebo', -apple-system, sans-serif;
+    font-weight: 200;
     font-size: 11px;
     letter-spacing: 0.08em;
     color: var(--menu-foot);
@@ -665,7 +692,7 @@ body.menu-running .site-menu-panel {
     background: var(--menu-panel, #3a1f33) !important;
     opacity: 1 !important;
     border-right: 2px solid rgba(200, 155, 178, 0.4);
-    box-shadow: 25px 0 60px rgba(0, 0, 0, 0.85);
+    box-shadow: none !important;
     transform: translateX(-100%);
     pointer-events: none !important;
     z-index: 1000;

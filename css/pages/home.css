@@ -98,7 +98,7 @@
                 z-index: 999;
                 pointer-events: none;
                 border-right: 2px solid rgba(200, 155, 178, 0.4);
-                box-shadow: 25px 0 60px rgba(0, 0, 0, 0.85);
+                box-shadow: none !important;
                 will-change: transform;
             }
             body.menu-open {
