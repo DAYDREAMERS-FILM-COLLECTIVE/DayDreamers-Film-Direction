@@ -27,16 +27,30 @@ An interactive cinema screening and seat reservation platform with cryptographic
 - **Admin Door Scanner & CMS**: Integrated camera QR scanner (`html5-qrcode`) and manual USN/passcode lookup with duplicate entry detection, live seat locker for holds, film catalogue CRUD, and roster CSV export.
 - **Vanilla ES Module Architecture**: Zero-framework client built on native ES modules, local Three.js r160 vendor (`js/vendor/three.module.js`), protocol-guarded module loading, and FOUC-guarded admin authentication gates.
 
----
-
 ## Tech Stack
 
 | Layer | Technologies |
 | :--- | :--- |
 | **Frontend** | HTML5, Vanilla CSS3, Vanilla JavaScript (ES Modules), Three.js r160 (vendored), html5-qrcode 2.3.8 (vendored) |
-| **Backend & API** | Node.js (>= 18, ESM), Express 4, `serverless-http`, CORS, `dotenv` |
+| **Backend & API** | Node.js (>= 18, ESM), Express 4, CORS, `dotenv` |
 | **Database & Security** | PostgreSQL 8 via `pg` Pool (Supabase SSL), HMAC-SHA256 (`crypto`), `qrcode`, Resend 3 |
-| **Hosting & Deploy** | Netlify (`netlify.toml`, `netlify/functions/api.js`), Local Express server (`server/index.js`) |
+| **Hosting & Deploy** | Vercel (`vercel.json`, `api/index.js`), Local Express server (`server/index.js`) |
+
+---
+
+## Architecture
+
+```text
+Browser Client (Desktop / Mobile)
+  │
+  ├──> Static Pages (index.html, screening.html, admin.html, contact.html)
+  │
+  └──> REST API (Vercel Serverless Function via Express)
+         │
+         ├──> Supabase PostgreSQL (Movies, Showings, Locked Seats, Bookings)
+         ├──> Cryptographic Signer (HMAC-SHA256 QR Tokens)
+         └──> Resend Email API (Automated PDF/Image Passes)
+```
 
 ---
 
@@ -124,27 +138,48 @@ PORT=8000
 
 ```text
 .
+├── 404.html            # Branded sequence-not-found error page
 ├── admin.html          # Admin CMS, seat locker, bookings roster, and door QR scanner
 ├── contact.html        # Contact, institutional inquiry, and legal information page
 ├── index.html          # Society landing page, film archive, and interactive glass menu
 ├── menu.html           # Standalone sweep-wall transition reference
 ├── screening.html      # Film bill, interactive 70-seat reservation, and pass generator
+├── api/                # Vercel Serverless Function entry point (api/index.js)
 ├── assets/             # Curated showcase posters, WebP backgrounds, and branding
 ├── css/                # Vanilla design tokens, components, and responsive stylesheets
+├── docs/               # Architecture, issue logs, and technical specifications
 ├── fonts/              # Self-hosted Gilroy typefaces (Bebas Neue / Playfair via Google Fonts CDN)
 ├── js/                 # Client ES modules (core router, screening, admin, Three.js)
-├── netlify/            # Serverless function bridge (netlify/functions/api.js)
+├── playground/         # Isolated test workbenches and prototypes
 ├── server/             # Express API, PostgreSQL pool, HMAC crypto, and email dispatch
-├── src/                # Reference-only React Native mirror (not built in web deployment)
+├── specs/mobile/       # React-Native/TypeScript architecture reference (not built)
 ├── textures/           # WebGL canvas noise, normal maps, and grain overlays
 ├── .env.example        # Environment variable blueprint
 ├── LICENSE             # GNU General Public License v3.0
-├── netlify.toml        # Netlify deployment, redirect, and caching rules
 ├── package.json        # Node.js project metadata and backend dependencies
+├── vercel.json         # Vercel deployment, redirect, rewrite, and caching rules
 └── README.md           # Repository documentation and architecture guide
 ```
 
 > **Note**: `test-hero-demo.html` and `test-lens.html` are dev-only test fixtures omitted from the tree.
+
+---
+
+## Deployment to Vercel
+
+The repository is configured for zero-configuration, continuous deployment with **Vercel**:
+
+1. **Import Project**: In the [Vercel Dashboard](https://vercel.com/new), import the repository `DAYDREAMERS-FILM-COLLECTIVE/DayDreamers-Film-Direction`.
+2. **Framework Preset**: Select **Other** (Root directory `./`).
+3. **Environment Variables**: Add your production variables in **Settings &rarr; Environment Variables**:
+   - `DATABASE_URL` (Supabase PostgreSQL pooled URI)
+   - `TICKET_SECRET` (HMAC pass signing key)
+   - `ADMIN_ACCESS_KEY` (Door admin passkey)
+   - `ADMIN_PASSWORD` (Admin credential)
+   - `ADMIN_JWT_SECRET` (Session signing secret)
+   - `RESEND_API_KEY` (Resend email API key)
+   - `SENDER_EMAIL` (Sender address)
+4. **Deploy**: Push to `main` branch to trigger an automatic production deployment. Vercel automatically routes static assets from the repository root via global CDN edge caching, and proxies all `/api/*` traffic to the serverless function in `api/index.js` as defined in `vercel.json`.
 
 ---
 

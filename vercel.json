@@ -1,0 +1,88 @@
+{
+  "version": 2,
+  "cleanUrls": true,
+  "redirects": [
+    {
+      "source": "/booking/(.*)",
+      "destination": "/$1",
+      "permanent": true
+    },
+    {
+      "source": "/css/burger-menu/burger-menu.css",
+      "destination": "/css/components/burger-menu.css",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/server/(.*)",
+      "destination": "/404.html"
+    },
+    {
+      "source": "/specs/(.*)",
+      "destination": "/404.html"
+    },
+    {
+      "source": "/docs/(.*)",
+      "destination": "/404.html"
+    },
+    {
+      "source": "/(.*)\\.sql",
+      "destination": "/404.html"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/api",
+      "destination": "/api/index.js"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/fonts/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=604800, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=604800, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/textures/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=604800, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    }
+  ]
+}

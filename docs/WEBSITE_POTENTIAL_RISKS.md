@@ -22,8 +22,8 @@ These are **not** today's outages. Each lists the trigger that would turn it int
 - **Options:** (a) add exclusion/overlap guard — e.g. `SELECT ... FOR UPDATE` on showing row or advisory lock per `showing_id`, + `UNIQUE(showing_id, user_email)`; (b) move to serializable retry loop; (c) pre-reserve seats via `locked_seats`-style hold with TTL.
 
 ### P2. Admin tokens never expire + `Set` leaks + serverless split-brain
-- **Where:** `./server/app.js:19-50` (`adminSessions Set`, `iat` never validated, no `exp`, nonce unchecked, unbounded growth); `./netlify/functions/api.js:1-4`.
-- **Trigger:** token theft, or long-lived Netlify deployment with many logins / cold starts.
+- **Where:** `./server/app.js:19-50` (`adminSessions Set`, `iat` never validated, no `exp`, nonce unchecked, unbounded growth); `./api/index.js`.
+- **Trigger:** token theft, or long-lived Vercel deployment with many logins / cold starts.
 - **Consequence:** stolen token valid forever; logout/revoke impossible without rotating `ADMIN_JWT_SECRET`; memory growth; per-instance `Set` divergence.
 - **Options:** (a) short-lived HMAC tokens with `exp` + server-side denylist; (b) stateless JWT verify-only (drop `Set`); (c) rotate secret + force re-login procedure documented.
 
@@ -68,13 +68,13 @@ These are **not** today's outages. Each lists the trigger that would turn it int
 - **Options:** (a) single source of truth (`checked_in` boolean + timestamp, drop `status`); (b) DB trigger/constraint keeping them in sync.
 
 ### P9. Supply-chain / offline contradiction (esm.sh + unpkg + cdnjs, no SRI)
-- **Where:** `./js/modules/three/menu-glass.js:165-187` (`esm.sh three@0.136.0` loaders + `miroleon.github.io` HDR/FBX fallbacks) vs local `js/vendor/three.module.js`; `index.html:43`, `screening.html:38` (GSAP, no fallback/SRI); `admin.html:13` (unpkg); `netlify.toml` (no CSP/HSTS/Permissions-Policy).
+- **Where:** `./js/modules/three/menu-glass.js:165-187` (`esm.sh three@0.136.0` loaders + `miroleon.github.io` HDR/FBX fallbacks) vs local `js/vendor/three.module.js`; `index.html:43`, `screening.html:38` (GSAP, no fallback/SRI); `admin.html:13` (unpkg); `vercel.json` (no CSP/HSTS/Permissions-Policy).
 - **Trigger:** CDN outage, version skew (`outputColorSpace`/passes API), compromised CDN.
 - **Consequence:** silent 3D downgrade, broken transitions timing, scanner dead (A9), XSS persistence.
 - **Options:** (a) vendor all loaders locally + importmap, add SRI + CSP; (b) keep CDN but add `onerror` local fallback + integrity hashes.
 
 ### P10. `assets/` uncached in prod + router stale-CSS risk
-- **Where:** `./netlify.toml:20-30` (immutable only `/fonts,/textures`, not `/assets` = 60 scrub frames + poster + FBX/HDR); `./server/app.js:927-936` (local does cache them — prod/local diverge).
+- **Where:** `./vercel.json` (caching rules for `/fonts`, `/assets`, `/textures`); `./server/app.js:1790-1798` (local does cache them — prod/local diverge).
 - **Trigger:** repeat visits re-download megabytes of frames; CSS swap staleness on router nav.
 - **Consequence:** slow showcase, bandwidth cost.
 - **Options:** (a) extend immutable caching to `/assets/*` + unify cache-buster scheme; (b) lazy-load frames with `loading`/intersection (partial).
@@ -92,10 +92,10 @@ These are **not** today's outages. Each lists the trigger that would turn it int
 - **Options:** (a) add `src/README.md` "reference-only" banner + keep `CODEBASE_METADATA.md` as canonical map; (b) move `src/` out of deploy root (bigger change).
 
 ### P13. Repo-root static serving over-exposure
-- **Where:** `./server/app.js:926-938` (`express.static(repoRoot)` + `/.netlify/functions/api` prefix strip); `netlify.toml: publish="."`.
+- **Where:** `./server/app.js:1800-1819` (`express.static(repoRoot)` + 404 security guard); `vercel.json` rewrites.
 - **Trigger:** misconfigured deploy/bundling serves `server/` source or dotfiles.
 - **Consequence:** source/secret exposure (`.env` currently gitignored and unpublished — verify per deploy).
-- **Options:** (a) serve only allowlisted dirs (`index.html`, `css/`, `js/`, `assets/`, `fonts/`, `textures/`) + confirm Netlify ignores dotfiles; (b) add explicit deny rules + deploy smoke test.
+- **Options:** (a) serve only allowlisted dirs (`index.html`, `css/`, `js/`, `assets/`, `fonts/`, `textures/`) + confirm Vercel ignores dotfiles; (b) add explicit deny rules + deploy smoke test.
 
 ---
 

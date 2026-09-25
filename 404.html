@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>404 — Sequence Not Found | Daydreamers Film Society</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #0b0a08;
+      color: #f7f4ee;
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      text-align: center;
+      overflow: hidden;
+      position: relative;
+    }
+    body::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(212, 175, 55, 0.05) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .badge {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.25em;
+      color: #d4af37;
+      margin-bottom: 1.5rem;
+      font-weight: 500;
+    }
+    h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(3.5rem, 10vw, 7.5rem);
+      font-weight: 400;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+      color: #f7f4ee;
+    }
+    p {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      color: rgba(247, 244, 238, 0.7);
+      max-width: 480px;
+      line-height: 1.6;
+      margin-bottom: 2.5rem;
+      font-weight: 300;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.85rem 1.75rem;
+      background: transparent;
+      color: #f7f4ee;
+      border: 1px solid rgba(212, 175, 55, 0.5);
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .btn:hover {
+      background: #d4af37;
+      color: #0b0a08;
+      border-color: #d4af37;
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <div class="badge">Missing Reel</div>
+  <h1>404</h1>
+  <p>The sequence you requested could not be located in our archives or projected onto the screen.</p>
+  <a href="/" class="btn">Return to Society &rarr;</a>
+</body>
+</html>

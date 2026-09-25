@@ -4,18 +4,18 @@ root: .
 file: CODEBASE_METADATA.md
 generated: 2026-09-18
 audience: [humans, ai-agents]
-entry_points: [index.html, screening.html, admin.html, menu.html]
+entry_points: [index.html, screening.html, contact.html, admin.html]
 backend_entry: server/index.js
 api_entry: server/app.js
-serverless_entry: netlify/functions/api.js
+serverless_entry: api/index.js
 run: ["npm install", "npm start"]
-urls: ["http://localhost:3000/", "http://localhost:3000/screening.html", "http://localhost:3000/admin.html"]
+urls: ["http://localhost:3000/", "http://localhost:3000/screening.html", "http://localhost:3000/contact.html", "http://localhost:3000/admin.html"]
 status: full-reference
 ---
 
 # CODEBASE_METADATA — Daydreamers Film Society
 
-> Single reference for humans and AI agents. Live implementation is vanilla HTML + modular ES JS + Express + Supabase Postgres. `src/` is a **reference-only** React-Native/TS mirror and is **not** part of the build.
+> Single reference for humans and AI agents. Live implementation is vanilla HTML + modular ES JS + Express + Supabase Postgres. `specs/mobile/` (formerly `src/`) is a **reference-only** React-Native/TS mirror and is **not** part of the build.
 
 ## 1. Overview
 
@@ -73,7 +73,7 @@ Seat states: `available` → `picked` (local) → `booked` (DB) / `locked` (admi
 | Animation | GSAP 3.12.5 CDN (cdnjs) | `index.html` / `screening.html` / `menu.html` head |
 | Scanner | `html5-qrcode` (unpkg, global `Html5Qrcode`) | `./admin.html` head |
 | 3D | Three.js r160 local vendor + importmap, OrbitControls | `./js/vendor/three.module.js` (53,044 lines), `./js/vendor/addons/controls/OrbitControls.js` (1,417 lines) |
-| Serverless | `serverless-http@4`, Netlify Functions + esbuild | `./netlify/functions/api.js`, `./netlify.toml` |
+| Serverless | Vercel Serverless Functions (Node.js runtime) | `./api/index.js`, `./vercel.json` |
 | Fonts | Self-hosted Gilroy Thin/UltraLight `.woff2` + Google Fonts | `./fonts/*`, HTML heads, `./css/base.css` |
 
 `package.json` (`daydreamers-film-backend`, `type: module`):
@@ -83,7 +83,7 @@ Seat states: `available` → `picked` (local) → `booked` (DB) / `locked` (admi
 | `npm start` | `node server/index.js` |
 | `npm run dev` | `node --watch server/index.js` |
 
-Dependencies: `cors, dotenv, express, pg, qrcode, resend, serverless-http`. No `react / react-native / zustand / typescript / vite` — that is why `src/` is not built (§9).
+Dependencies: `cors, dotenv, express, html5-qrcode, pg, qrcode, resend`. No `react / react-native / zustand / typescript / vite` — that is why `src/` is not built (§9).
 
 ### 3.2 Local run
 
@@ -107,20 +107,21 @@ Notes:
 - Must serve over HTTP. Opening HTML via `file://` shows a guard warning and halts module injection (§12.4).
 - After changes, restart the server (`node server/index.js`).
 
-### 3.3 Deploy (Netlify)
+### 3.3 Deploy (Vercel)
 
-`./netlify.toml` (`publish="."`, `functions="netlify/functions"`, `node_bundler="esbuild"`):
+`./vercel.json` (`version=2`, `cleanUrls=true`):
 
 | Rule | Effect |
 |---|---|
-| `/api/* → /.netlify/functions/api/:splat` (200) | API proxied to serverless function |
+| `/api/(.*) → /api/index.js` | API requests proxied to native Vercel serverless function |
 | `/booking/* → /:splat` (301) | Backward-compat redirect |
-| `/fonts/*`, `/textures/*` | Immutable `Cache-Control: public, max-age=604800, immutable` |
+| `/server/*`, `/specs/*`, `/docs/*`, `*.sql → /404.html` | Security rewrites to prevent static exposure |
+| `/fonts/*`, `/assets/*`, `/textures/*` | Immutable `Cache-Control: public, max-age=604800, immutable` |
 | `/*` | `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` |
 
-`./netlify/functions/api.js` (4 lines): `serverless(app)` wrapping the same `./server/app.js`. `server/app.js:73-78` rewrites `/.netlify/functions/api → /api` so local + serverless share routes. Static files are served by Netlify CDN in prod, by `express.static(repoRoot)` locally (`./server/app.js:937-940`).
+`./api/index.js`: `export default app` exporting `./server/app.js` directly into Vercel's Node.js serverless runtime. Static files are served by Vercel Global CDN in prod, and by `express.static(repoRoot)` locally (`./server/app.js:1814-1819`).
 
-Caveat: `adminSessions Set` (`./server/app.js:19`) is in-memory. On serverless it is not shared across invocations — HMAC re-verify path is what survives (§5.2).
+Caveat: `adminSessions Set` (`./server/app.js:19`) is in-memory. On serverless it is not shared across cold-starts — HMAC token verification path is what survives (§5.2).
 
 ### 3.4 Environment variables (names only — never commit values)
 
@@ -154,25 +155,26 @@ Root (this folder only — no subfolder docs):
 ├── MODULARIZATION_PLAN.md    # extraction blueprint (HTML line counts now outdated)
 ├── LICENSE
 ├── package.json / package-lock.json
-├── netlify.toml
+├── vercel.json
+├── 404.html
+├── api/index.js              # Vercel serverless function entrypoint (§3.3)
 ├── index.html                # 820 lines — society landing (live)
 ├── screening.html            # 329 lines — film bill + seat booking (live)
 ├── admin.html                # 362 lines — admin CMS + scanner (live)
+├── contact.html              # contact + legal page
 ├── menu.html                 # 475 lines — standalone sweep-wall workbench (reference)
-├── css/                      # 8 live stylesheets (§8)
-├── js/                       # 22 live JS files: core + modules + local vendor (§7)
-├── src/                      # ~51 files — REFERENCE-ONLY React-Native/TS mirror (§9, not built)
+├── css/                      # live stylesheets (§8)
+├── js/                       # live JS files: core + modules + local vendor (§7)
+├── specs/mobile/             # REFERENCE-ONLY React-Native/TS mirror (§9, not built)
 ├── server/                   # Express backend (§5)
-├── netlify/functions/api.js  # serverless wrapper (§3.3)
 ├── assets/                   # showcase poster + 3D + 60 scrub frames (§10)
 ├── fonts/                    # Gilroy-Thin.woff2, Gilroy-UltraLight.woff2 (§10)
 ├── textures/                 # menu-glass-normal.jpeg (§10)
-├── .agents/rules/dev-server.md  # restart + localhost links reminder
 ├── .env / .env.example      # secrets (gitignored) / template
 └── node_modules/ / .git/    # toolchain (not documented)
 ```
 
-Measured line counts (`wc -l`): `index.html` 820, `screening.html` 329, `admin.html` 362, `menu.html` 475, `server/app.js` 945, `server/index.js` 18, `server/crypto.js` 66, `server/db.js` 45, `server/email.js` 96, `server/schema.sql` 64, `netlify/functions/api.js` 4.
+Measured line counts (`wc -l`): `index.html` 820, `screening.html` 329, `admin.html` 362, `menu.html` 475, `server/app.js` 1817, `server/index.js` 19, `server/crypto.js` 66, `server/db.js` 45, `server/email.js` 96, `server/schema.sql` 64, `api/index.js` 3.
 
 Staleness notes:
 
@@ -332,7 +334,7 @@ Duplication: `sweep-wall` CSS is copy-pasted into `home.css` + `screening.css`; 
 
 `src/` holds ~51 files (47 TS/TSX): `App.tsx`, `index.ts`, `core/*` (Header, StarCursor, SweepWall, `useLayoutStore`), `home/*` (HomeScreen + Hero/Manifesto/Gallery/Activities/Join), `menu/*` (MenuDrawer + BurgerToggle/NavList/Footer/GlassCanvas), `screening/*` (ScreeningScreen, api, store, schema, types, `theme`/`seatmapConfig`, Seatmap/Viewport/Button, ScrubShowcase, MovieGrid, HeroSection, DateCarousel, ReservationSummary, BookingModal), `admin/*` (AdminScreen, `adminApi`, `useAdminStore`, AuthGate, Sidebar, FilmCatalogue, SeatLocker, BookingsRoster, DoorQrScanner). All import `react-native / react-native-svg / zustand / zod`.
 
-Why reference-only: `package.json` has no React deps or bundler; `netlify.toml: publish="."` and `express.static(rootDir)` serve only root HTML which load only `/css/*.css` + `/js/**/*.js`; live code never imports `src/`. Treat `src/` as a future/native-port spec. For behavior truth, read `js/` + `server/`, not `src/`.
+Why reference-only: `package.json` has no React deps or bundler; `vercel.json` and `express.static(rootDir)` serve only root HTML which load only `/css/*.css` + `/js/**/*.js`; live code never imports `src/`. Treat `src/` as a future/native-port spec. For behavior truth, read `js/` + `server/`, not `src/`.
 
 ## 10. Assets, Fonts, Textures
 
@@ -382,7 +384,7 @@ Drift: live `app.js` also reads/writes `bookings.pass_code/status` and uses `gen
 
 ## 13. Maintenance
 
-- Add endpoint: `server/app.js` (+ `requireAdmin` if admin) → update §5 table → update `js/modules/*/api` or `adminApi` callers → test local + Netlify (`/.netlify/functions/api` rewrite).
+- Add endpoint: `server/app.js` (+ `requireAdmin` if admin) → update §5 table → update `js/modules/*/api` or `adminApi` callers → test local + Vercel (`/api/*` rewrite).
 - Add page section: edit the page HTML → page module in §7 → page CSS in §8 (check palette first).
 - Add JS module: place under `js/modules/<area>/`, import via page `main.js` orchestrator, use `data-action` delegation, handle `file://` + no-WebGL fallbacks.
 - DB change: migrate live Supabase first, then backport `./server/schema.sql` (§11 drift).

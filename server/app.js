@@ -101,12 +101,6 @@ function getAdminRole(req) {
 
 // Middleware
 app.use(cors());
-app.use((req, res, next) => {
-    if (req.url.startsWith('/.netlify/functions/api')) {
-        req.url = req.url.replace('/.netlify/functions/api', '/api');
-    }
-    next();
-});
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
@@ -1796,6 +1790,21 @@ const staticOptions = {
         }
     }
 };
+// Security guard: Prevent static exposure of server files, database schema, specs, and internal documentation
+app.use((req, res, next) => {
+    const p = req.path.toLowerCase();
+    if (
+        p.startsWith('/server') ||
+        p.startsWith('/specs') ||
+        p.startsWith('/docs') ||
+        p.endsWith('.sql') ||
+        p.endsWith('.md')
+    ) {
+        return res.status(404).send('Not Found');
+    }
+    next();
+});
+
 app.use(express.static(rootDir, staticOptions));
 app.use('/booking', express.static(rootDir, staticOptions));
 
