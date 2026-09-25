@@ -28,11 +28,24 @@ let ambientMesh = null;
 let ambientGeom = null;
 let ambientMat = null;
 
-// Target and smoothed mouse coordinates for fluid parallax
+// Floating 35mm Celluloid Frame Shards
+let shardsMesh = null;
+let shardsGeom = null;
+let shardsMat = null;
+let shardData = null;
+
+// Camera follower point light
+let camLight = null;
+
+// Target and smoothed mouse/touch coordinates for fluid parallax
 const mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
+let touchMoveHandler = null;
+let touchStartHandler = null;
+let scrollHandler = null;
+let scrollOffset = 0;
 
 /**
- * 3D Torus Knot Curve Generator for the Hero Film Strip
+ * 3D Torus Knot Curve Generator for the Hero Film Strip (Responsive for Mobile)
  */
 function getHeroKnotPoint(t, p = 2, q = 3, radius = 14, tube = 5.2, out = new THREE.Vector3()) {
   const phi = t * Math.PI * 2;
@@ -44,14 +57,70 @@ function getHeroKnotPoint(t, p = 2, q = 3, radius = 14, tube = 5.2, out = new TH
 }
 
 /**
- * 3D Winding Architectural Curve for Secondary Ambient Film Ribbon
+ * 3D Winding Architectural Curve for Secondary Ambient Film Ribbon (Adaptive Height for Mobile)
  */
-function getAmbientCurvePoint(t, out = new THREE.Vector3()) {
+function getAmbientCurvePoint(t, out = new THREE.Vector3(), isPortrait = false) {
   const phi = t * Math.PI * 2;
-  out.x = 22 * Math.sin(phi * 2.0) * Math.cos(phi);
-  out.y = 16 * Math.cos(phi * 2.0);
+  out.x = (isPortrait ? 15 : 22) * Math.sin(phi * 2.0) * Math.cos(phi);
+  out.y = (isPortrait ? 24 : 16) * Math.cos(phi * 2.0);
   out.z = 18 * Math.sin(phi) - 6;
   return out;
+}
+
+/**
+ * Generate 3D Floating Celluloid Frame Shards / Light Prisms
+ */
+function createCelluloidShards(count = 64) {
+  const geom = new THREE.PlaneGeometry(0.85, 1.25);
+  const mat = new THREE.MeshPhysicalMaterial({
+    color: 0xf5f0e6,
+    roughness: 0.16,
+    metalness: 0.12,
+    clearcoat: 0.95,
+    clearcoatRoughness: 0.1,
+    transmission: 0.5,
+    opacity: 0.7,
+    transparent: true,
+    side: THREE.DoubleSide
+  });
+
+  const instanced = new THREE.InstancedMesh(geom, mat, count);
+  const dummy = new THREE.Object3D();
+  const data = [];
+
+  for (let i = 0; i < count; i++) {
+    const radius = 8 + Math.random() * 16;
+    const theta = Math.random() * Math.PI * 2;
+    const y = (Math.random() - 0.5) * 32;
+    const x = radius * Math.cos(theta);
+    const z = (Math.random() - 0.5) * 20;
+
+    dummy.position.set(x, y, z);
+    dummy.rotation.set(
+      Math.random() * Math.PI,
+      Math.random() * Math.PI,
+      Math.random() * Math.PI
+    );
+    const s = 0.45 + Math.random() * 0.85;
+    dummy.scale.set(s, s, s);
+    dummy.updateMatrix();
+    instanced.setMatrixAt(i, dummy.matrix);
+
+    data.push({
+      x, y, z,
+      rotX: (Math.random() - 0.5) * 0.012,
+      rotY: (Math.random() - 0.5) * 0.015,
+      rotZ: (Math.random() - 0.5) * 0.01,
+      curRotX: dummy.rotation.x,
+      curRotY: dummy.rotation.y,
+      curRotZ: dummy.rotation.z,
+      scale: s,
+      phase: Math.random() * Math.PI * 2
+    });
+  }
+
+  instanced.instanceMatrix.needsUpdate = true;
+  return { mesh: instanced, geom, mat, data };
 }
 
 /**
@@ -317,6 +386,8 @@ export function initContactRibbon(container) {
 
   const width = container.clientWidth || window.innerWidth;
   const height = container.clientHeight || window.innerHeight;
+  const isPortrait = (width / height) < 1.0;
+  const isMobile = width <= 768;
 
   // 1. Renderer setup with high-contrast ACES tone mapping
   renderer = new THREE.WebGLRenderer({
@@ -327,7 +398,7 @@ export function initContactRibbon(container) {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(width, height);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.15;
+  renderer.toneMappingExposure = isMobile ? 1.25 : 1.15;
   renderer.domElement.id = 'contactRibbonCanvas';
   renderer.domElement.style.position = 'absolute';
   renderer.domElement.style.top = '0';
@@ -341,31 +412,35 @@ export function initContactRibbon(container) {
 
   // 2. Scene with gentle atmospheric depth fog (preserves foreground clarity)
   scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0xf4f0e6, 0.009);
+  scene.fog = new THREE.FogExp2(0xf4f0e6, isPortrait ? 0.006 : 0.009);
 
-  // 3. Camera with cinematic focal length
-  camera = new THREE.PerspectiveCamera(54, width / height, 0.1, 160);
-  camera.matrixAutoUpdate = false;
+  // 3. Camera with adaptive portrait/landscape focal length
+  camera = new THREE.PerspectiveCamera(isPortrait ? 74 : 54, width / height, 0.1, 200);
+  camera.matrixAutoUpdate = true;
 
-  // 4. Cinematic 3-Point Studio Lighting
+  // 4. Cinematic 3-Point Studio Lighting + Mobile Specular Focus
   // Hemisphere ambient daylight
-  const hemiLight = new THREE.HemisphereLight(0xfffdf8, 0xd8d0c2, 1.2);
+  const hemiLight = new THREE.HemisphereLight(0xfffdf8, 0xd8d0c2, isMobile ? 1.4 : 1.2);
   scene.add(hemiLight);
 
   // Key Spotlight (crisp directional highlight on celluloid face)
-  const keyLight = new THREE.DirectionalLight(0xfffaea, 2.6);
+  const keyLight = new THREE.DirectionalLight(0xfffaea, isMobile ? 3.0 : 2.6);
   keyLight.position.set(24, 32, 28);
   scene.add(keyLight);
 
   // Backlight / Rim Light (warm amber rim on film edges & sprockets)
-  const rimLight = new THREE.DirectionalLight(0xffb870, 2.2);
+  const rimLight = new THREE.DirectionalLight(0xffb870, isMobile ? 3.2 : 2.2);
   rimLight.position.set(-20, -18, -22);
   scene.add(rimLight);
 
   // Soft Cool Fill Light (subtle studio contrast in shadow crevices)
-  const fillLight = new THREE.DirectionalLight(0xadc4de, 1.1);
+  const fillLight = new THREE.DirectionalLight(0xadc4de, 1.2);
   fillLight.position.set(-18, 20, 15);
   scene.add(fillLight);
+
+  // Golden celluloid camera follow light for dramatic mobile reflections
+  camLight = new THREE.PointLight(0xffab50, isMobile ? 2.8 : 2.0, 35);
+  scene.add(camLight);
 
   // 5. Generate Texture & Materials
   const filmTexture = createCelluloidFilmTexture();
@@ -373,80 +448,137 @@ export function initContactRibbon(container) {
   // MeshPhysicalMaterial gives authentic clearcoat celluloid specular shine
   heroMat = new THREE.MeshPhysicalMaterial({
     map: filmTexture,
-    roughness: 0.18,
+    roughness: 0.16,
     metalness: 0.12,
-    clearcoat: 0.95,
-    clearcoatRoughness: 0.12,
-    reflectivity: 0.85,
+    clearcoat: 0.98,
+    clearcoatRoughness: 0.1,
+    reflectivity: 0.88,
     side: THREE.DoubleSide
   });
 
   // Secondary ambient material with softer presence
   ambientMat = new THREE.MeshPhysicalMaterial({
     map: filmTexture,
-    roughness: 0.32,
+    roughness: 0.3,
     metalness: 0.08,
-    clearcoat: 0.6,
-    clearcoatRoughness: 0.2,
-    opacity: 0.55,
+    clearcoat: 0.7,
+    clearcoatRoughness: 0.18,
+    opacity: isPortrait ? 0.68 : 0.55,
     transparent: true,
     side: THREE.DoubleSide
   });
 
-  // 6. Build Geometry & Meshes
+  // 6. Build Geometry & Meshes with Responsive Mobile Dimensions
+  const heroRadius = isPortrait ? 11.2 : 14.0;
+  const heroTube = isPortrait ? 4.4 : 5.2;
+  const heroWidth = isPortrait ? 3.6 : 4.2;
+
   const heroSegments = 1200;
-  const heroFrames = computeCurveFrames(heroSegments, (t, out) => getHeroKnotPoint(t, 2, 3, 14, 5.2, out));
-  heroGeom = createRibbonGeometry(heroFrames, heroSegments, 4.2, 4.0);
+  const heroFrames = computeCurveFrames(heroSegments, (t, out) => getHeroKnotPoint(t, 2, 3, heroRadius, heroTube, out));
+  heroGeom = createRibbonGeometry(heroFrames, heroSegments, heroWidth, 4.0);
   heroMesh = new THREE.Mesh(heroGeom, heroMat);
   scene.add(heroMesh);
 
   const ambientSegments = 800;
-  const ambientFrames = computeCurveFrames(ambientSegments, (t, out) => getAmbientCurvePoint(t, out));
-  ambientGeom = createRibbonGeometry(ambientFrames, ambientSegments, 3.2, 2.0);
+  const ambientFrames = computeCurveFrames(ambientSegments, (t, out) => getAmbientCurvePoint(t, out, isPortrait));
+  ambientGeom = createRibbonGeometry(ambientFrames, ambientSegments, isPortrait ? 2.8 : 3.2, 2.0);
   ambientMesh = new THREE.Mesh(ambientGeom, ambientMat);
   scene.add(ambientMesh);
 
-  // 7. Interactive Mouse Parallax
+  // 7. Floating 35mm Celluloid Frame Shards
+  const shardsObj = createCelluloidShards(isMobile ? 54 : 72);
+  shardsMesh = shardsObj.mesh;
+  shardsGeom = shardsObj.geom;
+  shardsMat = shardsObj.mat;
+  shardData = shardsObj.data;
+  scene.add(shardsMesh);
+
+  // 8. Interactive Mouse & Touch Parallax
   mouseMoveHandler = (e) => {
     mouse.targetX = (e.clientX / window.innerWidth) * 2 - 1;
     mouse.targetY = -(e.clientY / window.innerHeight) * 2 + 1;
   };
   window.addEventListener('mousemove', mouseMoveHandler, { passive: true });
 
-  // 8. Viewport Resize Handler
+  touchMoveHandler = (e) => {
+    if (e.touches && e.touches[0]) {
+      const touch = e.touches[0];
+      mouse.targetX = (touch.clientX / window.innerWidth) * 2 - 1;
+      mouse.targetY = -(touch.clientY / window.innerHeight) * 2 + 1;
+    }
+  };
+  window.addEventListener('touchmove', touchMoveHandler, { passive: true });
+
+  touchStartHandler = (e) => {
+    if (e.touches && e.touches[0]) {
+      const touch = e.touches[0];
+      mouse.targetX = (touch.clientX / window.innerWidth) * 2 - 1;
+      mouse.targetY = -(touch.clientY / window.innerHeight) * 2 + 1;
+    }
+  };
+  window.addEventListener('touchstart', touchStartHandler, { passive: true });
+
+  // 9. Scroll Interaction (scrolls camera along film strip)
+  scrollHandler = () => {
+    const scrollMax = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    const scrollFrac = (window.scrollY || window.pageYOffset || 0) / scrollMax;
+    scrollOffset = scrollFrac * 1.5;
+  };
+  window.addEventListener('scroll', scrollHandler, { passive: true });
+
+  // 10. Viewport Resize Handler with Dynamic FOV Adaptation
   resizeHandler = () => {
     if (!renderer || !camera || !container) return;
     const w = container.clientWidth || window.innerWidth;
     const h = container.clientHeight || window.innerHeight;
+    const port = (w / h) < 1.0;
     renderer.setSize(w, h);
     camera.aspect = w / h;
+    camera.fov = port ? 74 : 54;
     camera.updateProjectionMatrix();
   };
   window.addEventListener('resize', resizeHandler);
 
-  // 9. 60fps Animation Loop with Fluid Camera Path
+  // 11. 60fps Animation Loop with Fluid Camera Path
   const heroSpeed = 0.000032;
   const camPos = new THREE.Vector3();
   const lookAtPt = new THREE.Vector3();
-  const basisB = new THREE.Vector3();
-  const basisN = new THREE.Vector3();
-  const basisT = new THREE.Vector3();
 
   function animate(t) {
     animFrameId = requestAnimationFrame(animate);
 
-    // Smooth inertia mouse lerp
-    mouse.x += (mouse.targetX - mouse.x) * 0.045;
-    mouse.y += (mouse.targetY - mouse.y) * 0.045;
+    // Smooth inertia mouse lerp with autonomous wave breathing (dynamic presence on mobile)
+    const waveX = Math.sin(t * 0.0011) * 0.75;
+    const waveY = Math.cos(t * 0.00085) * 0.55;
+    mouse.x += (mouse.targetX + waveX - mouse.x) * 0.045;
+    mouse.y += (mouse.targetY + waveY - mouse.y) * 0.045;
 
     // Slowly rotate secondary ambient ribbon for depth
     if (ambientMesh) {
-      ambientMesh.rotation.y = t * 0.00012;
-      ambientMesh.rotation.x = Math.sin(t * 0.00008) * 0.15;
+      ambientMesh.rotation.y = t * 0.00014;
+      ambientMesh.rotation.x = Math.sin(t * 0.00008) * 0.18;
     }
 
-    // Camera travels smoothly along the primary knot curve
-    const ratio = (t * heroSpeed) % 1.0;
+    // Animate floating celluloid frame shards
+    if (shardsMesh && shardData) {
+      const dummy = new THREE.Object3D();
+      for (let i = 0; i < shardData.length; i++) {
+        const d = shardData[i];
+        d.curRotX += d.rotX;
+        d.curRotY += d.rotY;
+        d.curRotZ += d.rotZ;
+        const yOffset = Math.sin(t * 0.0012 + d.phase) * 0.6;
+        dummy.position.set(d.x, d.y + yOffset, d.z);
+        dummy.rotation.set(d.curRotX, d.curRotY, d.curRotZ);
+        dummy.scale.setScalar(d.scale);
+        dummy.updateMatrix();
+        shardsMesh.setMatrixAt(i, dummy.matrix);
+      }
+      shardsMesh.instanceMatrix.needsUpdate = true;
+    }
+
+    // Camera travels smoothly along the primary knot curve, accelerated by scroll
+    const ratio = ((t * heroSpeed) + (scrollOffset * 0.12)) % 1.0;
     const idx = Math.floor(ratio * heroSegments);
     const nextIdx = (idx + 1) % heroSegments;
     const alpha = (ratio * heroSegments) - idx;
@@ -454,22 +586,22 @@ export function initContactRibbon(container) {
     const frameCurrent = heroFrames[idx];
     const frameNext = heroFrames[nextIdx];
 
-    basisB.lerpVectors(frameCurrent.binormal, frameNext.binormal, alpha);
-    basisN.lerpVectors(frameCurrent.normal, frameNext.normal, alpha);
-    basisT.lerpVectors(frameCurrent.tangent, frameNext.tangent, alpha);
-
     camPos.lerpVectors(frameCurrent.point, frameNext.point, alpha);
-    // Offset camera above the ribbon and respond to mouse
-    camPos.addScaledVector(basisN, 3.4 + mouse.y * 1.2);
-    camPos.addScaledVector(basisB, 1.8 + mouse.x * 1.6);
+    const port = (window.innerWidth / window.innerHeight) < 1.0;
+    const normalOffset = port ? 4.8 : 3.4;
+    const binormalOffset = port ? 1.0 : 1.8;
+    camPos.addScaledVector(frameCurrent.normal, normalOffset + mouse.y * 1.4);
+    camPos.addScaledVector(frameCurrent.binormal, binormalOffset + mouse.x * 1.6);
 
-    // Look slightly ahead along the curve for dramatic cinematic perspective
-    const lookAheadIdx = (idx + 42) % heroSegments;
+    const lookAheadIdx = (idx + (port ? 34 : 42)) % heroSegments;
     lookAtPt.copy(heroFrames[lookAheadIdx].point);
 
-    camera.matrix.makeBasis(basisB, basisN, basisT).setPosition(camPos);
+    camera.position.copy(camPos);
     camera.lookAt(lookAtPt);
-    camera.matrixWorldNeedsUpdate = true;
+
+    if (camLight) {
+      camLight.position.copy(camPos).addScaledVector(frameCurrent.normal, 1.2);
+    }
 
     renderer.render(scene, camera);
   }
@@ -496,6 +628,21 @@ export function destroyContactRibbon() {
     mouseMoveHandler = null;
   }
 
+  if (touchMoveHandler) {
+    window.removeEventListener('touchmove', touchMoveHandler);
+    touchMoveHandler = null;
+  }
+
+  if (touchStartHandler) {
+    window.removeEventListener('touchstart', touchStartHandler);
+    touchStartHandler = null;
+  }
+
+  if (scrollHandler) {
+    window.removeEventListener('scroll', scrollHandler);
+    scrollHandler = null;
+  }
+
   if (heroGeom) {
     heroGeom.dispose();
     heroGeom = null;
@@ -516,6 +663,16 @@ export function destroyContactRibbon() {
     if (ambientMat.map) ambientMat.map.dispose();
     ambientMat.dispose();
     ambientMat = null;
+  }
+
+  if (shardsGeom) {
+    shardsGeom.dispose();
+    shardsGeom = null;
+  }
+
+  if (shardsMat) {
+    shardsMat.dispose();
+    shardsMat = null;
   }
 
   if (scene) {
@@ -541,5 +698,8 @@ export function destroyContactRibbon() {
 
   heroMesh = null;
   ambientMesh = null;
+  shardsMesh = null;
+  shardData = null;
+  camLight = null;
   camera = null;
 }

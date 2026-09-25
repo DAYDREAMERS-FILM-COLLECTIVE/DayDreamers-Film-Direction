@@ -252,20 +252,20 @@ export async function initMenuGlass() {
     transitionProgress = 0;
   });
 
-  // 3. Cinematic Lighting (Warm Rosé Gold & Deep Plum Rim)
-  const dirLight = new THREE.DirectionalLight(0xC89BB2, 0.9);
+  // 3. Cinematic Lighting (Anamorphic Icy Cyan & Deep Petrol Rim)
+  const dirLight = new THREE.DirectionalLight(0x38D9D4, 1.1);
   dirLight.position.set(-4, 3, 5);
   scene.add(dirLight);
 
-  const pointLight1 = new THREE.PointLight(0xE6B8CF, 2.4, 22);
+  const pointLight1 = new THREE.PointLight(0x98E4EB, 2.6, 24);
   pointLight1.position.set(0, 3, 2);
   scene.add(pointLight1);
 
-  const pointLight2 = new THREE.PointLight(0x6D3B56, 1.8, 20);
+  const pointLight2 = new THREE.PointLight(0x134852, 2.2, 22);
   pointLight2.position.set(3, -2, -2);
   scene.add(pointLight2);
 
-  const ambientLight = new THREE.AmbientLight(0x3A1F33, 0.7);
+  const ambientLight = new THREE.AmbientLight(0x071e22, 0.85);
   scene.add(ambientLight);
 
   // 4. HDR Environment map (local with remote CDN fallback)
@@ -286,12 +286,12 @@ export async function initMenuGlass() {
 
   // 5. Pristine Satin Metallic Physical Material (Zero scratches / zero fingertip lines)
   const handsMaterial = new THREE.MeshPhysicalMaterial({
-    color: 0x6e5263, // Polished titanium rosé plum
-    roughness: 0.18,  // Smooth, luxurious satin finish
+    color: 0x486b75, // Polished titanium anamorphic cyan-slate
+    roughness: 0.16,  // Smooth, luxurious satin finish
     metalness: 0.94,  // High reflectivity for soft highlights
-    clearcoat: 0.45,
-    clearcoatRoughness: 0.12,
-    envMapIntensity: 1.6
+    clearcoat: 0.55,
+    clearcoatRoughness: 0.10,
+    envMapIntensity: 1.8
   });
 
   // Load 3D Hands FBX model (local first, CDN fallback, procedural sculpture backup)

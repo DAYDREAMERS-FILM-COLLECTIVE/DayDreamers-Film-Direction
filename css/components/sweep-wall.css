@@ -8,11 +8,11 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: #3A1F33;
+  background-color: #0e101a;
   z-index: 999;
   pointer-events: none;
-  border-right: 2px solid rgba(200, 155, 178, 0.4);
-  box-shadow: none !important;
+  border-right: 2px solid rgba(135, 175, 230, 0.45);
+  box-shadow: 0 0 50px rgba(14, 16, 26, 0.8) !important;
   will-change: transform;
   transform: translate3d(-100%, 0, 0);
   backface-visibility: hidden;
@@ -29,9 +29,9 @@
   transform: translate3d(-100%, 0, 0) !important;
 }
 
-/* Unified Pure Purple Cinematic Drawer Overlay */
+/* Unified Obsidian Slate Cinematic Transition Overlay */
 .nav-overlay {
-  background: radial-gradient(circle at 70% 30%, rgba(58, 31, 51, 0.95), rgba(18, 12, 16, 0.98)) !important;
+  background: radial-gradient(circle at 70% 30%, rgba(14, 16, 26, 0.96), rgba(8, 10, 16, 0.98)) !important;
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
 }

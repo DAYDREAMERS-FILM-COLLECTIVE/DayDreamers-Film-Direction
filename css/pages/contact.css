@@ -684,9 +684,20 @@ body.menu-open .brand-logo .mark-svg path {
   }
   .contact-main-panel {
     padding: 32px 22px;
+    background: rgba(255, 255, 255, 0.72) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
   }
   .sidebar-nav-card {
     padding: 18px 16px;
+    background: rgba(255, 255, 255, 0.75) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+  }
+  .contact-ambient-vignette {
+    opacity: 0.65;
   }
 }
 

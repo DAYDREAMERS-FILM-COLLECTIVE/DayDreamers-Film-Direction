@@ -8,15 +8,15 @@
    ========================================================================== */
 
 :root {
-    /* Screening Cinema Palette Tokens */
-    --menu-bg: #1a0b17; /* Screening Deep Midnight Plum */
-    --menu-panel: #3a1f33; /* Screening Rich Plum Panel */
-    --menu-muted: rgba(200, 155, 178, 0.75); /* Dusty Rosé Plum Idle */
-    --menu-ghost: rgba(200, 155, 178, 0.22); /* 10px Counter Lavender/Plum Ghost */
-    --menu-foot: rgba(200, 155, 178, 0.55); /* Sub-navigation & Taglines */
-    --menu-cream: #f2e9ed; /* Screening Luminous Cream White */
-    --menu-accent: #c89bb2; /* Rosé Gold Accent */
-    --menu-border: rgba(109, 59, 86, 0.45); /* Deep Plum Border */
+    /* Menu Palette: Opposite Complementary Contrast of Screening Plum */
+    --menu-bg: #071417; /* Deep Anamorphic Teal Noir */
+    --menu-panel: #0e101a; /* Swatch Obsidian Indigo Transition Wall */
+    --menu-muted: rgba(152, 212, 219, 0.78); /* Iced Cyan/Teal Idle */
+    --menu-ghost: rgba(56, 217, 212, 0.25); /* 10px Counter Electric Cyan Ghost */
+    --menu-foot: rgba(152, 212, 219, 0.6); /* Sub-navigation & Taglines */
+    --menu-cream: #f0fbfb; /* High-Contrast Luminous Arctic White */
+    --menu-accent: #38d9d4; /* Anamorphic Lens Flare Cyan Accent */
+    --menu-border: rgba(56, 217, 212, 0.35); /* Optical Cyan Hairline */
 
     /* Adaptive Burger Menu Button Tokens */
     --burger-bar-color: #FFFFFF;
@@ -225,16 +225,25 @@ body.lock-scroll {
     overflow: hidden;
 }
 
-/* 1. Backdrop Layer: Fullscreen dark plum atmosphere */
+/* 1. Backdrop Layer: Fullscreen deep anamorphic teal atmosphere */
 .site-menu-back {
     position: fixed;
     inset: 0;
-    background: var(--menu-bg, #1a0b17);
+    background: var(--menu-bg, #071417);
     z-index: 990;
     pointer-events: none;
     opacity: 0;
     transition: opacity 0s;
     overflow: hidden;
+}
+
+.site-menu-back::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 65% 45%, rgba(14, 46, 54, 0.7) 0%, rgba(7, 20, 23, 0.95) 70%, #040d10 100%);
+    pointer-events: none;
+    z-index: 0;
 }
 
 .menu-open .site-menu-back,
@@ -259,14 +268,14 @@ body.lock-scroll {
     opacity: 1;
 }
 
-/* 2. Solid Curtain Wipe: 1.6s Hard-drive cubic-bezier in Screening Rich Plum */
+/* 2. Solid Curtain Wipe: 1.6s Hard-drive cubic-bezier in Swatch Obsidian Slate */
 .site-menu-panel {
     position: fixed;
     inset: 0;
-    background: var(--menu-panel, #3a1f33) !important;
+    background: var(--menu-panel, #0e101a) !important;
     opacity: 1 !important;
-    border-right: 2px solid rgba(200, 155, 178, 0.4);
-    box-shadow: none !important;
+    border-right: 2px solid rgba(135, 175, 230, 0.45);
+    box-shadow: 0 0 50px rgba(14, 16, 26, 0.8) !important;
     transform: translateX(-100%);
     pointer-events: none;
     z-index: 999;
@@ -708,10 +717,10 @@ body.menu-running .site-menu-panel {
 .site-loader {
     position: fixed;
     inset: 0;
-    background: var(--menu-panel, #3a1f33) !important;
+    background: var(--menu-panel, #0e101a) !important;
     opacity: 1 !important;
-    border-right: 2px solid rgba(200, 155, 178, 0.4);
-    box-shadow: none !important;
+    border-right: 2px solid rgba(135, 175, 230, 0.45);
+    box-shadow: 0 0 50px rgba(14, 16, 26, 0.8) !important;
     transform: translateX(-100%);
     pointer-events: none !important;
     z-index: 1000;
@@ -772,4 +781,158 @@ body.menu-open .site-menu a,
 body.menu-open .site-menu button {
     pointer-events: auto !important;
     cursor: pointer !important;
+}
+
+/* ==========================================================================
+   Section 6 — Cinematic Visual Elements (Zero text, pure optical artistry)
+   ========================================================================== */
+
+.menu-cinematic-elements {
+    position: absolute;
+    inset: 0;
+    pointer-events: none !important;
+    overflow: hidden;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 1s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.menu-open .menu-cinematic-elements {
+    opacity: 1;
+}
+
+/* 1. Viewfinder Optical Corner Framing Brackets */
+.cinematic-corner {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border-color: var(--menu-accent, #38d9d4);
+    opacity: 0.35;
+    transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.cinematic-corner--tl {
+    top: 40px;
+    left: 40px;
+    border-top: 1.5px solid currentColor;
+    border-left: 1.5px solid currentColor;
+}
+
+.cinematic-corner--tr {
+    top: 40px;
+    right: 40px;
+    border-top: 1.5px solid currentColor;
+    border-right: 1.5px solid currentColor;
+}
+
+.cinematic-corner--bl {
+    bottom: 40px;
+    left: 40px;
+    border-bottom: 1.5px solid currentColor;
+    border-left: 1.5px solid currentColor;
+}
+
+.cinematic-corner--br {
+    bottom: 40px;
+    right: 40px;
+    border-bottom: 1.5px solid currentColor;
+    border-right: 1.5px solid currentColor;
+}
+
+/* 2. Center Optical Reticle / Crosshair Target (Pure geometry) */
+.cinematic-reticle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 240px;
+    height: 240px;
+    border-radius: 50%;
+    border: 1px dashed rgba(56, 217, 212, 0.12);
+    pointer-events: none;
+}
+
+.cinematic-reticle::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -24px;
+    right: -24px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(56, 217, 212, 0.2) 20%, rgba(56, 217, 212, 0.35) 50%, rgba(56, 217, 212, 0.2) 80%, transparent);
+}
+
+.cinematic-reticle::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: -24px;
+    bottom: -24px;
+    width: 1px;
+    background: linear-gradient(180deg, transparent, rgba(56, 217, 212, 0.2) 20%, rgba(56, 217, 212, 0.35) 50%, rgba(56, 217, 212, 0.2) 80%, transparent);
+}
+
+/* 3. Anamorphic 2.39:1 Scope Framing Lines */
+.cinematic-scope-line {
+    position: absolute;
+    left: 40px;
+    right: 40px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(152, 212, 219, 0.18) 12%, rgba(152, 212, 219, 0.18) 88%, transparent);
+    pointer-events: none;
+}
+
+.cinematic-scope-line--top {
+    top: 92px;
+}
+
+.cinematic-scope-line--bottom {
+    bottom: 92px;
+}
+
+/* 4. 35mm Celluloid Sprocket Margin Track (Pure geometric apertures) */
+.cinematic-sprocket-rail {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 16px;
+    width: 14px;
+    background-image: radial-gradient(circle, rgba(56, 217, 212, 0.2) 3.5px, transparent 4px);
+    background-size: 14px 28px;
+    background-repeat: repeat-y;
+    opacity: 0.35;
+    pointer-events: none;
+}
+
+/* 5. Horizontal Anamorphic Lens Flare Streak */
+.cinematic-anamorphic-streak {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    transform: translateY(-50%);
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(56, 217, 212, 0.0) 15%, 
+        rgba(56, 217, 212, 0.2) 40%, 
+        rgba(235, 255, 255, 0.5) 50%, 
+        rgba(56, 217, 212, 0.2) 60%, 
+        rgba(56, 217, 212, 0.0) 85%, 
+        transparent 100%
+    );
+    filter: blur(0.5px);
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+@media (max-width: 768px) {
+    .cinematic-corner--tl { top: 22px; left: 22px; width: 20px; height: 20px; }
+    .cinematic-corner--tr { top: 22px; right: 22px; width: 20px; height: 20px; }
+    .cinematic-corner--bl { bottom: 22px; left: 22px; width: 20px; height: 20px; }
+    .cinematic-corner--br { bottom: 22px; right: 22px; width: 20px; height: 20px; }
+    .cinematic-scope-line--top { top: 76px; left: 20px; right: 20px; }
+    .cinematic-scope-line--bottom { bottom: 76px; left: 20px; right: 20px; }
+    .cinematic-sprocket-rail { left: 8px; width: 10px; background-size: 10px 24px; }
+    .cinematic-reticle { width: 170px; height: 170px; }
 }
