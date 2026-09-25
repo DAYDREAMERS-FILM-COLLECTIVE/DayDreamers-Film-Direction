@@ -1,13 +1,17 @@
 /**
  * js/core/cursor.js
- * Unified Custom Cursor & Sparkling Particle Engine.
- * Shared across Home, Screening, and all DayDreamers pages:
- * - Responsive RAF lerp position tracking for #star-cursor
- * - Continuous sparkling particle trail emission during cursor motion
- * - Radial 360-degree sparkle particle burst on click/pointerdown
- * - Interactive hover states for links, buttons, date cards, and .seat elements
- * - Strict modal safety guards: hides custom cursor & restores native cursors on body.modal-open
- * - Touch device & reduced motion safety guards
+ * Advanced Multi-State Animated Custom Cursor Engine.
+ * Shared across Home, Screening, Contact, and Menu:
+ * - Dual-layer physics: precision core dot (instant tracking) + smooth trailing aura ring (fluid inertia)
+ * - Autonomous organic aura breathing and rotation
+ * - Context-aware interactive hover states:
+ *   • Links / Buttons (.c-link-hover): magnetic expanded glowing lens
+ *   • Text Inputs (.c-text-hover): sleek animated optical I-beam with cross-ticks
+ *   • Seats (.c-seat-hover): 4-quadrant targeting reticle with pulsed rose glow
+ *   • Media / Cards (.c-media-hover): cinematic expanded aperture ring
+ * - Spring scale compression, shockwave ripple, and radial sparkle burst on pointerdown
+ * - Continuous sparkling particle trail emission during swift motion
+ * - Strict modal safety guards and touch device auto-detection
  */
 
 let isInitialized = false;
@@ -43,36 +47,52 @@ const SPARKLE_COLORS = [
   '#fff4fa',
   '#c89bb2',
   '#ffd700',
+  '#38d9d4',
   '#e8ecf5',
-  '#ead5e0',
-  '#f4b8da',
+  '#98e4eb',
   '#fdf6e2'
 ];
 
-const INTERACTIVE_SELECTOR = [
+const LINK_SELECTOR = [
   'a',
   'button',
   '[role="button"]',
   '[data-cursor]',
-  '.seat',
-  '.date-card',
-  '.movie',
   '.btn',
   '.btn-solid',
   '.btn-line',
   '.reserve-seats-btn',
-  '.showcase-cta',
-  '.book-bar',
-  '.film-card',
-  '.carousel-arrow',
-  '.menu-item',
-  '.menu-action',
   '.burger-toggle',
+  '.site-header-button',
+  '.menu-camera-icon-btn',
+  '.menu-item a',
+  '.menu-action',
   '.round-link',
   '.text-link',
+  '.faq-question',
+  '.faq-cat-btn',
+  '.sidebar-nav-btn',
+  '.contact-scroll-top'
+].join(', ');
+
+const TEXT_SELECTOR = [
   'input',
+  'textarea',
   'select',
-  'label'
+  '[contenteditable="true"]',
+  '.contact-input',
+  '.form-control'
+].join(', ');
+
+const MEDIA_SELECTOR = [
+  '.movie',
+  '.film-card',
+  '.movie-thumb',
+  '.showcase-cta',
+  '.carousel-arrow',
+  '.carousel-card',
+  '[data-cursor="PLAY"]',
+  '[data-cursor="CAMERA"]'
 ].join(', ');
 
 export function initCursor() {
@@ -89,30 +109,31 @@ export function initCursor() {
 
   isInitialized = true;
 
-  // Cleanup any legacy viewfinder elements
-  const oldFrame = document.getElementById('cursor-frame');
-  if (oldFrame) oldFrame.style.display = 'none';
-  const oldLabel = document.getElementById('cursor-label');
-  if (oldLabel) oldLabel.style.display = 'none';
-
-  // Ensure #star-cursor DOM element exists
-  let star = document.getElementById('star-cursor');
-  if (!star) {
-    star = document.createElement('div');
-    star.id = 'star-cursor';
-    star.className = 'star-cursor';
-    star.setAttribute('aria-hidden', 'true');
-    star.innerHTML = '&#10022;';
-    document.body.appendChild(star);
-  } else if (!star.textContent.trim()) {
-    star.innerHTML = '&#10022;';
+  // Create or upgrade #star-cursor container with dot + ring
+  let container = document.getElementById('star-cursor');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'star-cursor';
+    container.className = 'star-cursor custom-cursor-container';
+    container.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(container);
   }
+
+  container.innerHTML = `
+    <div class="cursor-ring" aria-hidden="true"></div>
+    <div class="cursor-dot" aria-hidden="true"></div>
+  `;
+
+  const dot = container.querySelector('.cursor-dot');
+  const ring = container.querySelector('.cursor-ring');
 
   // Mouse & RAF Lerp state
   let targetX = -100;
   let targetY = -100;
-  let currentX = -100;
-  let currentY = -100;
+  let dotX = -100;
+  let dotY = -100;
+  let ringX = -100;
+  let ringY = -100;
   let hasMovedOnce = false;
 
   // Particle emission state
@@ -120,11 +141,11 @@ export function initCursor() {
   let lastTrailY = -1000;
   let lastTrailTime = 0;
   let liveParticleCount = 0;
-  const MAX_PARTICLES = 60;
+  const MAX_PARTICLES = 50;
 
   function spawnParticle(x, y, isBurst = false, angle = 0, speed = 0) {
     if (isModalActive()) return;
-    if (liveParticleCount >= MAX_PARTICLES + (isBurst ? 15 : 0)) return;
+    if (liveParticleCount >= MAX_PARTICLES + (isBurst ? 16 : 0)) return;
 
     liveParticleCount++;
     const p = document.createElement('div');
@@ -143,12 +164,12 @@ export function initCursor() {
       p.style.setProperty('--rot', `${(Math.random() * 720 - 360).toFixed(0)}deg`);
       p.style.fontSize = `${10 + Math.random() * 12}px`;
     } else {
-      const dx = (Math.random() - 0.5) * 26;
-      const dy = 20 + Math.random() * 45;
+      const dx = (Math.random() - 0.5) * 24;
+      const dy = 16 + Math.random() * 38;
       p.style.setProperty('--dx', `${dx.toFixed(1)}px`);
       p.style.setProperty('--dy', `${dy.toFixed(1)}px`);
       p.style.setProperty('--rot', `${(Math.random() * 360 - 180).toFixed(0)}deg`);
-      p.style.fontSize = `${8 + Math.random() * 9}px`;
+      p.style.fontSize = `${7 + Math.random() * 8}px`;
     }
 
     document.body.appendChild(p);
@@ -166,7 +187,7 @@ export function initCursor() {
     const dy = y - lastTrailY;
     const dist = Math.hypot(dx, dy);
 
-    if (dist >= 8 && (now - lastTrailTime) >= 45) {
+    if (dist >= 12 && (now - lastTrailTime) >= 50) {
       lastTrailTime = now;
       lastTrailX = x;
       lastTrailY = y;
@@ -179,32 +200,42 @@ export function initCursor() {
     const count = 12;
     for (let i = 0; i < count; i++) {
       const angle = (i / count) * (Math.PI * 2) + (Math.random() - 0.5) * 0.35;
-      const speed = 42 + Math.random() * 58;
+      const speed = 40 + Math.random() * 55;
       spawnParticle(x, y, true, angle, speed);
     }
 
-    if (star) {
-      star.classList.add('active');
+    if (container) {
+      container.classList.add('is-clicking');
       setTimeout(() => {
-        if (star) star.classList.remove('active');
-      }, 150);
+        if (container) container.classList.remove('is-clicking');
+      }, 200);
     }
   }
 
   // RAF position lerp loop
   function render() {
-    if (hasMovedOnce && star) {
-      currentX += (targetX - currentX) * 0.35;
-      currentY += (targetY - currentY) * 0.35;
+    if (hasMovedOnce && container) {
+      // Snappy core dot lerp
+      dotX += (targetX - dotX) * 0.65;
+      dotY += (targetY - dotY) * 0.65;
+
+      // Smooth fluid trailing aura ring lerp
+      ringX += (targetX - ringX) * 0.18;
+      ringY += (targetY - ringY) * 0.18;
 
       if (isModalActive()) {
-        star.style.opacity = '0';
-        star.style.visibility = 'hidden';
+        container.style.opacity = '0';
+        container.style.visibility = 'hidden';
       } else {
-        star.style.opacity = '1';
-        star.style.visibility = 'visible';
-        star.style.left = `${currentX.toFixed(2)}px`;
-        star.style.top = `${currentY.toFixed(2)}px`;
+        container.style.opacity = '1';
+        container.style.visibility = 'visible';
+
+        if (dot) {
+          dot.style.transform = `translate3d(${dotX.toFixed(1)}px, ${dotY.toFixed(1)}px, 0)`;
+        }
+        if (ring) {
+          ring.style.transform = `translate3d(${ringX.toFixed(1)}px, ${ringY.toFixed(1)}px, 0)`;
+        }
       }
     }
 
@@ -225,14 +256,12 @@ export function initCursor() {
       targetY = e.clientY;
 
       if (!hasMovedOnce) {
-        currentX = targetX;
-        currentY = targetY;
+        dotX = ringX = targetX;
+        dotY = ringY = targetY;
         hasMovedOnce = true;
-        if (star) {
-          star.style.left = `${currentX}px`;
-          star.style.top = `${currentY}px`;
-          star.style.opacity = '1';
-          star.style.visibility = 'visible';
+        if (container) {
+          container.style.opacity = '1';
+          container.style.visibility = 'visible';
         }
       }
 
@@ -243,51 +272,76 @@ export function initCursor() {
 
   // Window leave & enter guards
   document.addEventListener('mouseleave', () => {
-    if (star) star.style.opacity = '0';
+    if (container) container.style.opacity = '0';
   });
 
   document.addEventListener('mouseenter', () => {
-    if (star && !isModalActive() && hasMovedOnce) {
-      star.style.opacity = '1';
+    if (container && !isModalActive() && hasMovedOnce) {
+      container.style.opacity = '1';
     }
   });
 
-  // Click / pointerdown burst
+  // Pointer down / click burst
   window.addEventListener('pointerdown', (e) => {
     if (isModalActive()) return;
     emitRadialBurst(e.clientX, e.clientY);
   });
 
-  // Interactive element hover state detection
+  // Comprehensive Context-Aware Hover Detection
+  function clearAllHoverClasses() {
+    document.body.classList.remove('c-link-hover', 'c-text-hover', 'c-seat-hover', 'c-media-hover');
+    if (container) {
+      container.classList.remove('c-link-hover', 'c-text-hover', 'c-seat-hover', 'c-media-hover');
+    }
+  }
+
   document.addEventListener(
     'mouseover',
     (e) => {
       if (isModalActive()) {
-        document.body.classList.remove('c-hover', 'c-seat');
-        if (star) star.classList.remove('c-hover', 'c-seat');
+        clearAllHoverClasses();
         return;
       }
       if (!e.target || !e.target.closest) return;
 
-      const seatEl = e.target.closest('.seat');
+      // 1. Seat selection hover
+      const seatEl = e.target.closest('.seat:not(.occupied)');
       if (seatEl) {
-        document.body.classList.add('c-hover', 'c-seat');
-        if (star) star.classList.add('c-hover', 'c-seat');
+        clearAllHoverClasses();
+        document.body.classList.add('c-seat-hover');
+        if (container) container.classList.add('c-seat-hover');
         return;
       }
 
-      const interactiveEl = e.target.closest(INTERACTIVE_SELECTOR);
-      if (interactiveEl) {
-        document.body.classList.add('c-hover');
-        document.body.classList.remove('c-seat');
-        if (star) {
-          star.classList.add('c-hover');
-          star.classList.remove('c-seat');
-        }
-      } else {
-        document.body.classList.remove('c-hover', 'c-seat');
-        if (star) star.classList.remove('c-hover', 'c-seat');
+      // 2. Text input / text selection hover
+      const textEl = e.target.closest(TEXT_SELECTOR);
+      if (textEl) {
+        clearAllHoverClasses();
+        document.body.classList.add('c-text-hover');
+        if (container) container.classList.add('c-text-hover');
+        return;
       }
+
+      // 3. Media / cards hover
+      const mediaEl = e.target.closest(MEDIA_SELECTOR);
+      if (mediaEl) {
+        clearAllHoverClasses();
+        document.body.classList.add('c-media-hover');
+        if (container) container.classList.add('c-media-hover');
+        return;
+      }
+
+      // 4. Links / Buttons interactive hover
+      const linkEl = e.target.closest(LINK_SELECTOR);
+      if (linkEl) {
+        clearAllHoverClasses();
+        document.body.classList.add('c-link-hover');
+        if (container) container.classList.add('c-link-hover');
+        return;
+      }
+
+      // Default: clear
+      clearAllHoverClasses();
     },
     { passive: true }
   );
@@ -296,8 +350,7 @@ export function initCursor() {
     'mouseout',
     (e) => {
       if (!e.relatedTarget) {
-        document.body.classList.remove('c-hover', 'c-seat');
-        if (star) star.classList.remove('c-hover', 'c-seat');
+        clearAllHoverClasses();
       }
     },
     { passive: true }

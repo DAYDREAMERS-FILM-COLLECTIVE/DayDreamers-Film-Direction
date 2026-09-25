@@ -16,7 +16,6 @@ let scene = null;
 let camera = null;
 let animFrameId = null;
 let resizeHandler = null;
-let mouseMoveHandler = null;
 
 // Primary hero film strip
 let heroMesh = null;
@@ -37,12 +36,7 @@ let shardData = null;
 // Camera follower point light
 let camLight = null;
 
-// Target and smoothed mouse/touch coordinates for fluid parallax
-const mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
-let touchMoveHandler = null;
-let touchStartHandler = null;
-let scrollHandler = null;
-let scrollOffset = 0;
+
 
 /**
  * 3D Torus Knot Curve Generator for the Hero Film Strip (Responsive for Mobile)
@@ -493,40 +487,7 @@ export function initContactRibbon(container) {
   shardData = shardsObj.data;
   scene.add(shardsMesh);
 
-  // 8. Interactive Mouse & Touch Parallax
-  mouseMoveHandler = (e) => {
-    mouse.targetX = (e.clientX / window.innerWidth) * 2 - 1;
-    mouse.targetY = -(e.clientY / window.innerHeight) * 2 + 1;
-  };
-  window.addEventListener('mousemove', mouseMoveHandler, { passive: true });
-
-  touchMoveHandler = (e) => {
-    if (e.touches && e.touches[0]) {
-      const touch = e.touches[0];
-      mouse.targetX = (touch.clientX / window.innerWidth) * 2 - 1;
-      mouse.targetY = -(touch.clientY / window.innerHeight) * 2 + 1;
-    }
-  };
-  window.addEventListener('touchmove', touchMoveHandler, { passive: true });
-
-  touchStartHandler = (e) => {
-    if (e.touches && e.touches[0]) {
-      const touch = e.touches[0];
-      mouse.targetX = (touch.clientX / window.innerWidth) * 2 - 1;
-      mouse.targetY = -(touch.clientY / window.innerHeight) * 2 + 1;
-    }
-  };
-  window.addEventListener('touchstart', touchStartHandler, { passive: true });
-
-  // 9. Scroll Interaction (scrolls camera along film strip)
-  scrollHandler = () => {
-    const scrollMax = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-    const scrollFrac = (window.scrollY || window.pageYOffset || 0) / scrollMax;
-    scrollOffset = scrollFrac * 1.5;
-  };
-  window.addEventListener('scroll', scrollHandler, { passive: true });
-
-  // 10. Viewport Resize Handler with Dynamic FOV Adaptation
+  // 8. Viewport Resize Handler with Dynamic FOV Adaptation
   resizeHandler = () => {
     if (!renderer || !camera || !container) return;
     const w = container.clientWidth || window.innerWidth;
@@ -539,7 +500,7 @@ export function initContactRibbon(container) {
   };
   window.addEventListener('resize', resizeHandler);
 
-  // 11. 60fps Animation Loop with Fluid Camera Path
+  // 9. Autonomous 60fps/120fps Animation Loop (Zero input overhead, zero scroll lag)
   const heroSpeed = 0.000032;
   const camPos = new THREE.Vector3();
   const lookAtPt = new THREE.Vector3();
@@ -547,11 +508,9 @@ export function initContactRibbon(container) {
   function animate(t) {
     animFrameId = requestAnimationFrame(animate);
 
-    // Smooth inertia mouse lerp with autonomous wave breathing (dynamic presence on mobile)
-    const waveX = Math.sin(t * 0.0011) * 0.75;
-    const waveY = Math.cos(t * 0.00085) * 0.55;
-    mouse.x += (mouse.targetX + waveX - mouse.x) * 0.045;
-    mouse.y += (mouse.targetY + waveY - mouse.y) * 0.045;
+    // Smooth autonomous harmonic wave breathing (zero mouse/touch calculations)
+    const waveX = Math.sin(t * 0.0009) * 0.7;
+    const waveY = Math.cos(t * 0.0007) * 0.5;
 
     // Slowly rotate secondary ambient ribbon for depth
     if (ambientMesh) {
@@ -577,8 +536,8 @@ export function initContactRibbon(container) {
       shardsMesh.instanceMatrix.needsUpdate = true;
     }
 
-    // Camera travels smoothly along the primary knot curve, accelerated by scroll
-    const ratio = ((t * heroSpeed) + (scrollOffset * 0.12)) % 1.0;
+    // Camera travels smoothly along the primary knot curve purely on time
+    const ratio = (t * heroSpeed) % 1.0;
     const idx = Math.floor(ratio * heroSegments);
     const nextIdx = (idx + 1) % heroSegments;
     const alpha = (ratio * heroSegments) - idx;
@@ -590,8 +549,8 @@ export function initContactRibbon(container) {
     const port = (window.innerWidth / window.innerHeight) < 1.0;
     const normalOffset = port ? 4.8 : 3.4;
     const binormalOffset = port ? 1.0 : 1.8;
-    camPos.addScaledVector(frameCurrent.normal, normalOffset + mouse.y * 1.4);
-    camPos.addScaledVector(frameCurrent.binormal, binormalOffset + mouse.x * 1.6);
+    camPos.addScaledVector(frameCurrent.normal, normalOffset + waveY * 1.2);
+    camPos.addScaledVector(frameCurrent.binormal, binormalOffset + waveX * 1.4);
 
     const lookAheadIdx = (idx + (port ? 34 : 42)) % heroSegments;
     lookAtPt.copy(heroFrames[lookAheadIdx].point);
@@ -621,26 +580,6 @@ export function destroyContactRibbon() {
   if (resizeHandler) {
     window.removeEventListener('resize', resizeHandler);
     resizeHandler = null;
-  }
-
-  if (mouseMoveHandler) {
-    window.removeEventListener('mousemove', mouseMoveHandler);
-    mouseMoveHandler = null;
-  }
-
-  if (touchMoveHandler) {
-    window.removeEventListener('touchmove', touchMoveHandler);
-    touchMoveHandler = null;
-  }
-
-  if (touchStartHandler) {
-    window.removeEventListener('touchstart', touchStartHandler);
-    touchStartHandler = null;
-  }
-
-  if (scrollHandler) {
-    window.removeEventListener('scroll', scrollHandler);
-    scrollHandler = null;
   }
 
   if (heroGeom) {

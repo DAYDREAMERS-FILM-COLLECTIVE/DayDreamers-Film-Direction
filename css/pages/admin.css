@@ -309,10 +309,12 @@ body.authenticated #adminAuthGate {
     letter-spacing: 0.16em;
 }
 
-.admin-auth-header .mark-svg {
-    width: 24px;
-    height: 24px;
+.admin-auth-header .mark-svg,
+.admin-auth-header .club-logo-svg {
+    width: 26px;
+    height: 21px;
     flex-shrink: 0;
+    color: currentColor;
 }
 
 .admin-auth-header .nav-back-link {

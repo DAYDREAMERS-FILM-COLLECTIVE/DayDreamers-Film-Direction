@@ -111,11 +111,20 @@ a#brandLink {
 }
 
 .brand-logo .mark-svg,
-.brand .mark-svg {
+.brand .mark-svg,
+.brand-logo .club-logo-svg,
+.brand .club-logo-svg {
   width: 26px;
-  height: 26px;
+  height: 21px;
   flex: none;
   display: block;
+  color: #151619 !important;
+  transition: color 0.4s ease, transform 0.3s ease;
+}
+
+.brand-logo:hover .club-logo-svg,
+.brand:hover .club-logo-svg {
+  transform: scale(1.08);
 }
 
 .burger-toggle,
@@ -156,6 +165,11 @@ body.menu-open a#brandLink {
 body.menu-active .brand-logo .mark-svg path,
 body.menu-open .brand-logo .mark-svg path {
   fill: #FFFFFF !important;
+}
+
+body.menu-active .brand-logo .club-logo-svg,
+body.menu-open .brand-logo .club-logo-svg {
+  color: #FFFFFF !important;
 }
 
 /* -------------------------------------------------------------

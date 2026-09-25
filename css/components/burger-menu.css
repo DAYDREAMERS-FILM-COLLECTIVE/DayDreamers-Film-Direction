@@ -8,15 +8,16 @@
    ========================================================================== */
 
 :root {
-    /* Menu Palette: Opposite Complementary Contrast of Screening Plum */
-    --menu-bg: #071417; /* Deep Anamorphic Teal Noir */
+    /* Menu Palette: Atmospheric Cinema Noir Matching Reference */
+    --menu-bg: #07161b; /* Deep Cinema Teal Noir */
     --menu-panel: #0e101a; /* Swatch Obsidian Indigo Transition Wall */
-    --menu-muted: rgba(152, 212, 219, 0.78); /* Iced Cyan/Teal Idle */
-    --menu-ghost: rgba(56, 217, 212, 0.25); /* 10px Counter Electric Cyan Ghost */
-    --menu-foot: rgba(152, 212, 219, 0.6); /* Sub-navigation & Taglines */
-    --menu-cream: #f0fbfb; /* High-Contrast Luminous Arctic White */
+    --menu-muted: #527982; /* Muted Atmospheric Teal for Inactive Items */
+    --menu-ghost: rgba(82, 121, 130, 0.45); /* Muted Rail & Dotted Perforations */
+    --menu-foot: #527982; /* Sub-navigation, Editorial & Brackets */
+    --menu-cream: #ffffff; /* Luminous Pure White for Active Item & Headings */
     --menu-accent: #38d9d4; /* Anamorphic Lens Flare Cyan Accent */
-    --menu-border: rgba(56, 217, 212, 0.35); /* Optical Cyan Hairline */
+    --menu-gold: #e6c875; /* Glowing Sparkle Star Gold */
+    --menu-border: rgba(82, 121, 130, 0.4); /* Optical Capsule Pill Border */
 
     /* Adaptive Burger Menu Button Tokens */
     --burger-bar-color: #FFFFFF;
@@ -274,7 +275,8 @@ body.lock-scroll {
     inset: 0;
     background: var(--menu-panel, #0e101a) !important;
     opacity: 1 !important;
-    border-right: 2px solid rgba(135, 175, 230, 0.45);
+    border: none !important;
+    border-right: none !important;
     box-shadow: 0 0 50px rgba(14, 16, 26, 0.8) !important;
     transform: translateX(-100%);
     pointer-events: none;
@@ -397,15 +399,229 @@ body.menu-running .site-menu-panel {
 }
 
 /* ==========================================================================
-   Section 3 — Layout, Typography & Optical Counter System
+   Section 3 — Cinematic Layout, Atmospheric Beam & Reference Components
    ========================================================================== */
 
-/* Main Navigation List: Dogstudio ListRow — fixed 119px indent, 15px top */
+/* 1. Volumetric Cinema Projection Beam (Diagonal spotlight from top-left) */
+.menu-volumetric-beam {
+    position: absolute;
+    top: -80px;
+    left: 8%;
+    width: 62vw;
+    height: 125vh;
+    background: linear-gradient(
+        138deg,
+        rgba(152, 212, 219, 0.16) 0%,
+        rgba(110, 168, 178, 0.09) 25%,
+        rgba(56, 110, 120, 0.03) 55%,
+        transparent 75%
+    );
+    clip-path: polygon(0% 0%, 25% 0%, 100% 100%, 35% 100%);
+    filter: blur(24px);
+    pointer-events: none;
+    z-index: 2;
+    mix-blend-mode: screen;
+    opacity: 0;
+    transition: opacity 1.2s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.menu-open .menu-volumetric-beam {
+    opacity: 1;
+}
+
+/* 2. Ambient Studio Floor Pool & Raking Shadow */
+.menu-ambient-floor {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 38vh;
+    background: radial-gradient(
+        ellipse 75% 45% at 50% 100%,
+        rgba(85, 140, 150, 0.18) 0%,
+        rgba(25, 55, 65, 0.08) 55%,
+        transparent 100%
+    );
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 1s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.menu-open .menu-ambient-floor {
+    opacity: 1;
+}
+
+/* 3. Top Bar: ☾✦ DAYDREAMERS and Close Button */
+.menu-top-bar {
+    position: absolute;
+    top: 2rem;
+    left: 2.5rem;
+    right: 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 30;
+    pointer-events: auto;
+}
+
+.menu-brand-header {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    color: #FFFFFF;
+    text-decoration: none;
+    font-family: 'DM Mono', monospace, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    transition: opacity 0.3s ease;
+}
+
+.menu-brand-header:hover {
+    opacity: 0.85;
+}
+
+.menu-brand-icon {
+    font-size: 16px;
+    color: var(--menu-gold, #e6c875);
+    letter-spacing: 2px;
+}
+
+.menu-brand-text {
+    color: #FFFFFF;
+}
+
+.menu-close-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.25s ease, transform 0.3s ease;
+}
+
+.menu-close-btn:hover {
+    color: #FFFFFF;
+    transform: rotate(90deg);
+}
+
+/* 4. Left Rail Track: Dotted Sprocket Holes, Glowing Star, Editorial Details */
+.menu-left-rail {
+    position: absolute;
+    left: 32px;
+    top: 6rem;
+    bottom: 5rem;
+    width: 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 25;
+    pointer-events: none;
+}
+
+.left-rail-sprockets {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 14px;
+    width: 4px;
+    background-image: radial-gradient(circle, rgba(82, 121, 130, 0.45) 1.5px, transparent 2px);
+    background-size: 4px 18px;
+    opacity: 0.65;
+}
+
+.left-rail-star {
+    font-size: 16px;
+    color: var(--menu-gold, #e6c875);
+    text-shadow: 0 0 10px rgba(230, 200, 117, 0.9), 0 0 20px rgba(56, 217, 212, 0.6);
+    margin: 40px 0 24px 0;
+    z-index: 2;
+    animation: pulse-glow 3s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-glow {
+    0% { transform: scale(1); filter: brightness(1); }
+    100% { transform: scale(1.15); filter: brightness(1.3); }
+}
+
+.left-rail-editorial {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-family: 'DM Mono', monospace, sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    color: var(--menu-muted, #527982);
+    text-transform: uppercase;
+    z-index: 2;
+}
+
+.rail-divider {
+    width: 12px;
+    height: 1px;
+    background: var(--menu-muted, #527982);
+    opacity: 0.6;
+    margin: 8px 0;
+}
+
+/* 5. Right Rail Track: 01 / 05 Counter & A SPACE FOR STORIES */
+.menu-right-rail {
+    position: absolute;
+    right: 3.5rem;
+    top: 45%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    z-index: 25;
+    pointer-events: none;
+}
+
+.right-rail-counter {
+    font-family: 'DM Mono', monospace, sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    color: var(--menu-muted, #527982);
+}
+
+.right-rail-divider {
+    width: 14px;
+    height: 1px;
+    background: var(--menu-muted, #527982);
+    opacity: 0.5;
+}
+
+.right-rail-motto {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    font-family: 'DM Mono', monospace, sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    color: var(--menu-muted, #527982);
+    text-transform: uppercase;
+    line-height: 1.4;
+}
+
+/* 6. Main Navigation List: Reference 01 | Home Layout with Active Laser Beam */
 .site-menu-list {
-    margin: 15px 0 0 7.4375rem;
+    margin: 0 0 0 10vw;
     padding: 0;
     list-style: none;
-    counter-reset: b;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    z-index: 10;
 }
 
 .site-menu-item {
@@ -414,189 +630,167 @@ body.menu-running .site-menu-panel {
     padding: 0;
 }
 
-/* Links: Dogstudio ListRow sizing — Gilroy UltraLight 200, 45px/41px/-0.9px desktop */
 .site-menu-item a {
-    display: inline-block;
-    padding: 10px 0;
+    display: inline-flex;
+    align-items: baseline;
     position: relative;
-    font-family: 'Gilroy', 'Heebo', -apple-system, sans-serif;
-    font-weight: 200;
-    font-style: normal;
-    font-size: 2.8125rem;
-    line-height: 2.5625rem;
-    letter-spacing: -0.9px;
-    color: var(--menu-muted);
     text-decoration: none;
-    transition: color 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+    color: var(--menu-muted, #527982);
+    transition: color 0.35s ease, transform 0.35s cubic-bezier(0.165, 0.84, 0.44, 1);
+    white-space: nowrap;
 }
 
-.site-menu-item a:hover,
-.site-menu-item a:focus-visible {
-    color: var(--menu-cream, #f2e9ed);
-}
-
-/* Numbers: Dogstudio 01-05 sizing — 10px/700/9.2px +3.6px, 47px gap left, 20px top */
-.site-menu-item a::before {
-    content: '0' counter(b);
-    counter-increment: b;
-    position: absolute;
-    top: 20px;
-    right: calc(100% + 47px);
-    font-family: 'Gilroy', 'Heebo', 'Plus Jakarta Sans', -apple-system, sans-serif;
-    font-weight: 200;
-    font-size: 10px;
-    line-height: 9.2px;
-    letter-spacing: 3.6px;
-    color: var(--menu-ghost);
-    pointer-events: none;
-    transition: color 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
-}
-
-.site-menu-item a:hover::before,
-.site-menu-item a:focus-visible::before {
-    color: var(--menu-cream, #f2e9ed);
-}
-
-/* "You Are Here" Active Page Indicator */
-.site-menu-item.is-current a,
-.site-menu-item a[aria-current='page'] {
-    color: var(--menu-cream, #f2e9ed) !important;
-    cursor: default;
-}
-
-.site-menu-item.is-current a::before,
-.site-menu-item a[aria-current='page']::before {
-    color: var(--menu-cream, #f2e9ed) !important;
-}
-
-.site-menu-item.is-current a:hover,
-.site-menu-item a[aria-current='page']:hover {
-    color: var(--menu-cream, #f2e9ed) !important;
-}
-
-.site-menu-item.is-current a:hover::before,
-.site-menu-item a[aria-current='page']:hover::before {
-    color: var(--menu-cream, #f2e9ed) !important;
-}
-
-/* Pinned Footer: Left/right split (Showreel removed) */
-.site-menu-footer {
-    position: absolute;
-    left: 45px;
-    right: 45px;
-    bottom: 45px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    pointer-events: none;
-    box-sizing: border-box;
-}
-
-.site-menu-footer a,
-.site-menu-footer ul {
-    pointer-events: auto;
-}
-
-/* Footer Tagline */
-.site-menu-footer .site-menu-tagline {
-    font-family: 'Gilroy', 'Heebo', -apple-system, sans-serif;
-    font-weight: 200;
-    font-size: 11px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--menu-foot);
-    margin: 0;
-}
-
-/* Menu Content Right Block */
-.site-menu-content {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-}
-
-.site-menu-content img {
-    width: 52px;
-    height: auto;
-    margin-left: auto;
-    margin-bottom: 24px;
-    display: block;
-}
-
-/* Socials: Gilroy 200, 11px with / separators */
-.site-menu-content ul {
-    display: flex;
-    align-items: center;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    font-family: 'Gilroy', 'Heebo', -apple-system, sans-serif;
-    font-weight: 200;
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    color: var(--menu-foot);
-}
-
-.site-menu-content ul li + li::before {
-    content: '/';
-    margin: 0 10px;
-    color: var(--menu-ghost);
-}
-
-.site-menu-content ul li a {
-    color: var(--menu-foot);
-    text-decoration: none;
+.site-menu-item .item-num {
+    font-family: 'DM Mono', monospace, sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    color: var(--menu-muted, #527982);
+    margin-right: 18px;
     transition: color 0.3s ease;
 }
 
-.site-menu-content ul li a:hover,
-.site-menu-content ul li a:focus-visible {
-    color: var(--menu-cream, #f2e9ed);
+.site-menu-item .item-pipe {
+    font-family: 'DM Mono', monospace, sans-serif;
+    font-size: 16px;
+    font-weight: 300;
+    color: rgba(82, 121, 130, 0.4);
+    margin-right: 28px;
+    transition: color 0.3s ease;
 }
 
-/* Boxless Camera Icon Button in Burger Menu */
-.site-menu-content ul li .menu-camera-icon-btn,
-.menu-camera-icon-btn {
-    background: transparent !important;
-    border: none !important;
-    outline: none !important;
-    box-shadow: none !important;
-    padding: 2px 4px !important;
-    margin: 0 !important;
-    color: var(--menu-foot, #a88698);
-    cursor: pointer;
+.site-menu-item .item-title {
+    font-family: 'Gilroy', 'Heebo', -apple-system, sans-serif;
+    font-size: clamp(2.4rem, 5.5vw, 4.4rem);
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    color: var(--menu-muted, #527982);
+    transition: color 0.35s ease, text-shadow 0.35s ease;
+}
+
+/* Hover and Active Current States */
+.site-menu-item a:hover .item-num,
+.site-menu-item.is-current a .item-num {
+    color: #FFFFFF;
+}
+
+.site-menu-item a:hover .item-pipe,
+.site-menu-item.is-current a .item-pipe {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.site-menu-item a:hover .item-title,
+.site-menu-item.is-current a .item-title {
+    color: #FFFFFF;
+    text-shadow: 0 0 28px rgba(255, 255, 255, 0.4), 0 0 50px rgba(56, 217, 212, 0.2);
+}
+
+/* Luminous Anamorphic Horizontal Laser Beam */
+.site-menu-item .item-laser-beam {
+    position: absolute;
+    top: 55%;
+    left: 100%;
+    margin-left: 24px;
+    width: calc(100vw - 100% - 22vw);
+    max-width: 600px;
+    height: 1.5px;
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.95) 0%,
+        rgba(210, 245, 250, 0.85) 12%,
+        rgba(56, 217, 212, 0.45) 45%,
+        transparent 100%
+    );
+    box-shadow: 0 0 10px rgba(210, 245, 250, 0.8), 0 0 20px rgba(56, 217, 212, 0.45);
+    opacity: 0;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+    pointer-events: none;
+}
+
+.site-menu-item.is-current .item-laser-beam,
+.site-menu-item a:hover .item-laser-beam {
+    opacity: 1;
+    transform: scaleX(1);
+}
+
+/* 7. Bottom Framing Bar & Pill Buttons Matching Reference */
+.site-menu-footer {
+    position: absolute;
+    left: 2.5rem;
+    right: 2.5rem;
+    bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    pointer-events: none;
+    box-sizing: border-box;
+    z-index: 30;
+}
+
+.footer-left-bracket {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.bracket-glyph {
+    font-size: 24px;
+    line-height: 1;
+    color: rgba(82, 121, 130, 0.55);
+}
+
+.footer-society-title {
+    font-family: 'DM Mono', monospace, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--menu-muted, #527982);
+}
+
+.footer-right-bracket {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.menu-pill-buttons {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    pointer-events: auto;
+}
+
+.menu-pill-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    line-height: 1;
-    vertical-align: middle;
-    transition: color 0.25s ease, transform 0.25s ease, filter 0.25s ease;
+    height: 32px;
+    padding: 0 16px;
+    border: 1px solid rgba(82, 121, 130, 0.4);
+    border-radius: 9999px;
+    background: rgba(6, 20, 24, 0.6);
+    backdrop-filter: blur(8px);
+    color: var(--menu-muted, #527982);
+    text-decoration: none;
+    font-family: 'DM Mono', monospace, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    transition: all 0.25s ease;
+    cursor: pointer;
 }
 
-.site-menu-content ul li .menu-camera-icon-btn svg,
-.menu-camera-icon-btn svg {
-    display: block;
-    width: 17px;
-    height: 17px;
+.menu-pill-btn:hover {
+    color: #FFFFFF;
+    border-color: var(--menu-accent, #38d9d4);
+    background: rgba(56, 217, 212, 0.14);
+    box-shadow: 0 0 12px rgba(56, 217, 212, 0.3);
 }
 
-.site-menu-content ul li .menu-camera-icon-btn:hover,
-.menu-camera-icon-btn:hover {
-    color: var(--gold, #C89BB2) !important;
-    transform: scale(1.18);
-}
-
-.site-menu-content ul li .menu-camera-icon-btn.is-active,
-.menu-camera-icon-btn.is-active {
-    color: #FFFFFF !important;
-    filter: drop-shadow(0 0 6px rgba(200, 155, 178, 0.85));
-}
-
-@media (max-width: 1024px) {
-    .menu-camera-icon-btn,
-    .site-menu-content ul li:has(.menu-camera-icon-btn) {
-        display: none !important;
-    }
+.menu-pill-btn--camera {
+    width: 34px;
+    height: 32px;
+    padding: 0;
 }
 
 /* ==========================================================================
@@ -616,10 +810,31 @@ body.menu-running .site-menu-panel {
     }
 }
 
+/* <= 1024px: Tablet adjustments */
+@media (max-width: 1024px) {
+    .menu-right-rail {
+        display: none !important;
+    }
+    .site-menu-list {
+        margin-left: 6vw;
+    }
+    .site-menu-item .item-laser-beam {
+        width: calc(100vw - 100% - 14vw);
+    }
+}
+
 /* <= 815px: Dedicated No-Scroll Mobile Viewport Fit */
 @media (max-width: 815px) {
     .site-menu {
         overflow: hidden !important;
+    }
+    .menu-left-rail,
+    .menu-right-rail {
+        display: none !important;
+    }
+    .menu-volumetric-beam {
+        width: 100vw;
+        filter: blur(18px);
     }
     .site-menu .center {
         display: flex !important;
@@ -627,7 +842,7 @@ body.menu-running .site-menu-panel {
         justify-content: space-between !important;
         height: 100% !important;
         height: 100dvh !important;
-        padding: 84px 28px 20px 28px !important;
+        padding: 84px 24px 24px 24px !important;
         overflow: hidden !important;
         box-sizing: border-box !important;
     }
@@ -635,15 +850,42 @@ body.menu-running .site-menu-panel {
         margin: auto 0;
         display: flex;
         flex-direction: column;
-        gap: 6px;
-    }
-    .site-menu-item a::before {
-        display: none;
+        gap: 12px;
     }
     .site-menu-item a {
-        padding: 6px 0;
-        font-size: clamp(2.2rem, 8vw, 3.2rem);
-        line-height: 1.1;
+        padding: 4px 0;
+    }
+    .site-menu-item .item-num {
+        font-size: 11px;
+        margin-right: 10px;
+    }
+    .site-menu-item .item-pipe {
+        font-size: 14px;
+        margin-right: 14px;
+    }
+    .site-menu-item .item-title {
+        font-size: clamp(2rem, 8vw, 3rem);
+    }
+    .site-menu-item .item-laser-beam {
+        display: none !important;
+    }
+    .footer-left-bracket {
+        display: none !important;
+    }
+    .footer-right-bracket {
+        width: 100%;
+        justify-content: center;
+    }
+    .menu-pill-buttons {
+        gap: 6px;
+    }
+    .menu-pill-btn {
+        height: 28px;
+        padding: 0 12px;
+        font-size: 10px;
+    }
+    .bracket-glyph {
+        display: none;
     }
     .site-menu-footer {
         position: relative;
@@ -652,43 +894,30 @@ body.menu-running .site-menu-panel {
         bottom: 0;
         margin-top: 0;
         padding-bottom: env(safe-area-inset-bottom, 12px);
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-    }
-    .site-menu-content {
-        align-items: flex-start;
+        justify-content: center;
     }
 }
 
-/* <= 571px: Small mobile tier — optimized proportions */
-@media (max-width: 571px) {
+/* <= 480px: Small mobile tier — compact pills */
+@media (max-width: 480px) {
     .site-menu .center {
-        padding: 76px 20px 16px 20px !important;
+        padding: 76px 18px 18px 18px !important;
     }
-    .site-menu-item a {
-        font-size: clamp(1.85rem, 8vw, 2.4rem);
-        line-height: 1.15;
-        letter-spacing: -0.5px;
+    .site-menu-item .item-title {
+        font-size: clamp(1.85rem, 8vw, 2.3rem);
     }
-        line-height: 2.3125rem;
-        letter-spacing: -0.8px;
+    .menu-top-bar {
+        left: 1.25rem;
+        right: 1.25rem;
+        top: 1.25rem;
     }
-    .site-menu-content ul {
-        gap: 12px;
+    .menu-brand-header {
+        font-size: 11px;
+        letter-spacing: 0.16em;
     }
-    .site-menu-content ul li + li::before {
-        display: none;
-    }
-    .site-menu-content ul li a {
-        display: inline-flex;
-        justify-content: center;
-        align-items: center;
-        min-width: 32px;
-        height: 32px;
+    .menu-pill-btn {
         padding: 0 10px;
-        border: 1px solid var(--menu-border);
-        border-radius: 16px;
+        font-size: 9.5px;
     }
 }
 
@@ -719,7 +948,8 @@ body.menu-running .site-menu-panel {
     inset: 0;
     background: var(--menu-panel, #0e101a) !important;
     opacity: 1 !important;
-    border-right: 2px solid rgba(135, 175, 230, 0.45);
+    border: none !important;
+    border-right: none !important;
     box-shadow: 0 0 50px rgba(14, 16, 26, 0.8) !important;
     transform: translateX(-100%);
     pointer-events: none !important;

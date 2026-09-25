@@ -327,6 +327,32 @@ export function initBurgerMenu() {
     });
   }
 
+  // Close button inside cinematic menu top bar
+  const closeBtn = document.getElementById('menuCloseBtn');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      hide();
+    });
+  }
+
+  // Dynamic right rail counter hover tracking (01 / 05)
+  const menuItems = document.querySelectorAll('.site-menu-item');
+  const railCounter = document.getElementById('menuRailCounter');
+  if (menuItems.length && railCounter) {
+    menuItems.forEach((item) => {
+      item.addEventListener('mouseenter', () => {
+        const idx = item.getAttribute('data-index') || '01';
+        railCounter.textContent = `${idx} / 05`;
+      });
+      item.addEventListener('mouseleave', () => {
+        const current = document.querySelector('.site-menu-item.is-current');
+        const idx = current ? (current.getAttribute('data-index') || '01') : '01';
+        railCounter.textContent = `${idx} / 05`;
+      });
+    });
+  }
+
   if (typeof window !== 'undefined' && window.location.search.includes('openMenu')) {
     setTimeout(() => {
       show();

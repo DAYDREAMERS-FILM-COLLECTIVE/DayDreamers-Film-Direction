@@ -71,7 +71,8 @@ h1,h2,h3,.serif{font-family:'Playfair Display',serif}
   background-color:#0e101a;
   z-index:999;
   pointer-events:none;
-  border-right:2px solid rgba(135,175,230,0.45);
+  border:none !important;
+  border-right:none !important;
   box-shadow: 0 0 50px rgba(14, 16, 26, 0.8) !important;
   will-change:transform;
   transform:translateX(-100%);
@@ -123,11 +124,19 @@ a#brandLink {
   align-items: center;
   gap: .7rem;
 }
-.brand .mark-svg {
+.brand .mark-svg,
+.brand .club-logo-svg,
+.brand-logo .club-logo-svg {
   width: 26px;
-  height: 26px;
+  height: 21px;
   flex: none;
   display: block;
+  color: currentColor;
+  transition: transform 0.3s ease;
+}
+.brand-logo:hover .club-logo-svg,
+.brand:hover .club-logo-svg {
+  transform: scale(1.08);
 }
 .brand small {
   color: var(--gold);

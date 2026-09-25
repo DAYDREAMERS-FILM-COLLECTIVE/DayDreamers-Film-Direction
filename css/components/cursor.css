@@ -1,42 +1,191 @@
 /* ==========================================================================
-   Star Sprinkle Custom Cursor & Dynamic Particle System
+   Advanced Multi-State Animated Custom Cursor & Particle Engine
    ========================================================================== */
 
-#star-cursor {
+#star-cursor,
+.custom-cursor-container {
   position: fixed;
-  left: -100px;
-  top: -100px;
-  pointer-events: none;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none !important;
   z-index: 100001;
-  font-size: 26px;
-  line-height: 1;
-  transform: translate(-50%, -50%);
-  transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.2s ease, opacity 0.2s ease;
-  filter: drop-shadow(0 0 6px rgba(200, 155, 178, 0.7)) drop-shadow(0 0 12px rgba(255, 215, 0, 0.5));
   user-select: none;
-  will-change: transform, left, top;
-  color: var(--gold, #C89BB2);
+  transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
-/* Interactive Hover State (Links, Buttons, Date Cards, Seats) */
-body.c-hover #star-cursor,
-#star-cursor.c-hover {
-  transform: translate(-50%, -50%) scale(1.45) rotate(15deg);
-  filter: drop-shadow(0 0 10px rgba(200, 155, 178, 0.95)) drop-shadow(0 0 22px rgba(255, 215, 0, 0.85));
-  color: #ffffff;
+/* 1. Precision Core Dot (Tracks pointer with immediate response) */
+.cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8), 0 0 14px rgba(56, 217, 212, 0.6);
+  pointer-events: none !important;
+  will-change: transform;
+  transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              height 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              margin 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.2s ease,
+              opacity 0.2s ease;
 }
 
-/* Seat Specific Hover */
-body.c-seat #star-cursor,
-#star-cursor.c-seat {
-  transform: translate(-50%, -50%) scale(1.35) rotate(-15deg);
-  filter: drop-shadow(0 0 12px rgba(200, 155, 178, 1)) drop-shadow(0 0 24px rgba(200, 70, 104, 0.8));
-  color: var(--gold, #C89BB2);
+/* 2. Fluid Trailing Aura Ring (Graceful inertia follow & continuous rotation) */
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 0 16px rgba(56, 217, 212, 0.15);
+  pointer-events: none !important;
+  will-change: transform;
+  animation: cursorAuraBreath 4s ease-in-out infinite alternate;
+  transition: width 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+              height 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+              margin 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.22s ease,
+              background-color 0.22s ease,
+              box-shadow 0.22s ease,
+              border-radius 0.26s ease;
 }
 
-/* Click Burst / Active State */
-#star-cursor.active {
-  transform: translate(-50%, -50%) scale(0.85);
+@keyframes cursorAuraBreath {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  100% {
+    transform: scale(1.08) rotate(180deg);
+  }
+}
+
+/* ==========================================================================
+   Context-Aware Animated Hover States
+   ========================================================================== */
+
+/* State A: Links & Buttons (Magnetic Illuminated Lens) */
+body.c-link-hover .cursor-ring,
+#star-cursor.c-link-hover .cursor-ring {
+  width: 52px;
+  height: 52px;
+  margin: -26px 0 0 -26px;
+  border-color: rgba(56, 217, 212, 0.85);
+  background-color: rgba(56, 217, 212, 0.08);
+  box-shadow: 0 0 24px rgba(56, 217, 212, 0.5), inset 0 0 12px rgba(56, 217, 212, 0.2);
+}
+
+body.c-link-hover .cursor-dot,
+#star-cursor.c-link-hover .cursor-dot {
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  background-color: #38d9d4;
+  box-shadow: 0 0 12px #38d9d4;
+}
+
+/* State B: Text Inputs & Selectable Text (Optical Vertical I-Beam) */
+body.c-text-hover .cursor-ring,
+#star-cursor.c-text-hover .cursor-ring {
+  width: 2px;
+  height: 24px;
+  margin: -12px 0 0 -1px;
+  border-radius: 1px;
+  border: none;
+  background-color: #38d9d4;
+  box-shadow: 0 0 12px rgba(56, 217, 212, 0.85);
+  animation: none;
+}
+
+body.c-text-hover .cursor-ring::before,
+#star-cursor.c-text-hover .cursor-ring::before,
+body.c-text-hover .cursor-ring::after,
+#star-cursor.c-text-hover .cursor-ring::after {
+  content: '';
+  position: absolute;
+  left: -4px;
+  width: 10px;
+  height: 2px;
+  background-color: #38d9d4;
+}
+
+body.c-text-hover .cursor-ring::before,
+#star-cursor.c-text-hover .cursor-ring::before {
+  top: 0;
+}
+
+body.c-text-hover .cursor-ring::after,
+#star-cursor.c-text-hover .cursor-ring::after {
+  bottom: 0;
+}
+
+body.c-text-hover .cursor-dot,
+#star-cursor.c-text-hover .cursor-dot {
+  opacity: 0;
+}
+
+/* State C: Screening Seats Selection (Pulsing Reticle Target) */
+body.c-seat-hover .cursor-ring,
+#star-cursor.c-seat-hover .cursor-ring {
+  width: 42px;
+  height: 42px;
+  margin: -21px 0 0 -21px;
+  border: 1.5px dashed #c89bb2;
+  background-color: rgba(200, 155, 178, 0.15);
+  box-shadow: 0 0 24px rgba(200, 155, 178, 0.7);
+  animation: seatReticlePulse 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes seatReticlePulse {
+  0% { transform: scale(1) rotate(0deg); }
+  100% { transform: scale(1.12) rotate(45deg); }
+}
+
+body.c-seat-hover .cursor-dot,
+#star-cursor.c-seat-hover .cursor-dot {
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  background-color: #ffd700;
+  box-shadow: 0 0 12px #ffd700;
+}
+
+/* State D: Media & Film Cards (Cinematic Expanded Aperture) */
+body.c-media-hover .cursor-ring,
+#star-cursor.c-media-hover .cursor-ring {
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 -32px;
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  background-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.35);
+}
+
+body.c-media-hover .cursor-dot,
+#star-cursor.c-media-hover .cursor-dot {
+  width: 4px;
+  height: 4px;
+  margin: -2px 0 0 -2px;
+  background-color: #ffffff;
+}
+
+/* State E: Click / Pointer Down (Spring Shockwave Compression) */
+#star-cursor.is-clicking .cursor-ring {
+  transform: scale(0.72) !important;
+  transition: transform 0.08s ease !important;
+}
+
+#star-cursor.is-clicking .cursor-dot {
+  transform: scale(1.4) !important;
+  background-color: #ffd700 !important;
+  box-shadow: 0 0 18px #ffd700 !important;
 }
 
 /* Sparkling Particle Trail & Radial Bursts */

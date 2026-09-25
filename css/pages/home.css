@@ -67,11 +67,26 @@
             .brand {
                 font: 500 11px var(--mono);
                 letter-spacing: 0.1em;
-                color: inherit;
+                color: #FFFFFF !important;
                 text-decoration: none;
                 display: flex;
-                gap: 9px;
+                gap: 10px;
                 align-items: center;
+                transition: color 0.3s ease;
+            }
+            .brand:hover {
+                color: #E6C875 !important;
+            }
+            .brand .club-logo-svg {
+                width: 26px;
+                height: 21px;
+                color: currentColor;
+                flex: none;
+                display: block;
+                transition: transform 0.3s ease;
+            }
+            .brand:hover .club-logo-svg {
+                transform: scale(1.08);
             }
             .brand span {
                 font-weight: bold;
@@ -97,7 +112,8 @@
                 background-color: #0e101a;
                 z-index: 999;
                 pointer-events: none;
-                border-right: 2px solid rgba(135, 175, 230, 0.45);
+                border: none !important;
+                border-right: none !important;
                 box-shadow: 0 0 50px rgba(14, 16, 26, 0.8) !important;
                 will-change: transform;
             }

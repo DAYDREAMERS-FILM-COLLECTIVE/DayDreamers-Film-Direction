@@ -11,7 +11,8 @@
   background-color: #0e101a;
   z-index: 999;
   pointer-events: none;
-  border-right: 2px solid rgba(135, 175, 230, 0.45);
+  border: none !important;
+  border-right: none !important;
   box-shadow: 0 0 50px rgba(14, 16, 26, 0.8) !important;
   will-change: transform;
   transform: translate3d(-100%, 0, 0);
