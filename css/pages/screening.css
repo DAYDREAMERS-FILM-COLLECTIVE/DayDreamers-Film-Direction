@@ -527,15 +527,41 @@ section.block{padding:40px clamp(20px,6vw,80px);max-width:1300px;margin:0 auto}
 .rowline{display:flex;align-items:center;gap:clamp(4px,.8vw,10px);justify-content:center;margin-bottom:clamp(6px,1vw,12px)}
 .rowlab{width:22px;font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--muted);letter-spacing:.1em;text-align:center}
 .side-aisle{width:clamp(14px,3vw,44px)}
-.seat{width:var(--seat);height:var(--seat);background:none;border:none;padding:0;position:relative;transform:translateZ(var(--tz,0px)) rotateY(var(--ry,0deg)) translateY(var(--ty,0px)) scale(var(--s,1));transition:transform .28s cubic-bezier(.2,.8,.2,1),filter .25s ease;cursor:none}
+.seat{
+  width:var(--seat);
+  height:var(--seat);
+  background:none;
+  border:none;
+  padding:0;
+  position:relative;
+  will-change:transform;
+  transform-style:preserve-3d;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  transform:translate3d(0, var(--ty,0px), var(--tz,0px)) rotateY(var(--ry,0deg)) scale(var(--s,1));
+  transition:transform .18s cubic-bezier(.2,.8,.2,1);
+  cursor:none;
+}
 @media(hover:none),(max-width:768px){.seat{cursor:pointer}}
+.seat::before{
+  content:'';
+  position:absolute;
+  inset:-6px;
+  border-radius:6px;
+  background:radial-gradient(circle, rgba(200,155,178,.65) 0%, rgba(200,155,178,0) 72%);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .18s ease;
+  z-index:-1;
+}
 .seat svg{width:100%;height:100%;display:block;overflow:visible}
-.seat .back{fill:#2a1426;stroke:rgba(109,59,86,.5);stroke-width:1.4;transition:all .25s}
-.seat .base{fill:#200e1d;stroke:rgba(109,59,86,.35);stroke-width:1.4;transition:all .25s}
+.seat .back{fill:#2a1426;stroke:rgba(109,59,86,.5);stroke-width:1.4;transition:fill .18s ease,stroke .18s ease}
+.seat .base{fill:#200e1d;stroke:rgba(109,59,86,.35);stroke-width:1.4;transition:fill .18s ease,stroke .18s ease}
 .seat:not(.occupied):hover{--ty:-4px;--s:1.12;z-index:5}
 .seat:not(.occupied):hover .back{fill:#3A1F33;stroke:var(--gold)}
 .seat:not(.occupied):hover .base{fill:#261223;stroke:var(--gold)}
-.seat.selected{--s:1.06;filter:drop-shadow(0 0 12px rgba(200,155,178,.85))}
+.seat.selected{--s:1.08}
+.seat.selected::before{opacity:1}
 .seat.selected .back{fill:var(--gold);stroke:var(--gold2)}
 .seat.selected .base{fill:#8e5875;stroke:var(--gold2)}
 .seat.occupied{cursor:not-allowed;opacity:.5}
@@ -1739,15 +1765,71 @@ footer p{color:var(--muted);font-size:12px;letter-spacing:.12em}
     top: auto;
     right: auto;
     transform: none;
-    margin-top: 8px;
-    display: flex;
-    flex-direction: column;
+    margin: 12px auto 0;
+    width: fit-content;
+    max-width: 92vw;
+    display: grid;
+    grid-template-columns: auto auto 1px auto;
+    grid-template-rows: auto auto;
     align-items: center;
-    padding: 16px 28px;
-    border: 1px solid rgba(214, 154, 185, 0.25);
-    background: rgba(16, 5, 14, 0.65);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    gap: 3px 12px;
+    padding: 10px 20px;
+    border: 1px solid rgba(214, 154, 185, 0.3);
+    background: rgba(16, 5, 14, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+  .stage-schedule .sched-day {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    font-size: clamp(30px, 7.5vw, 38px);
+    line-height: 1;
+    margin: 0;
+  }
+  .stage-schedule .sched-weekday {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    align-self: end;
+    margin: 0;
+  }
+  .stage-schedule .sched-month {
+    grid-column: 2;
+    grid-row: 2;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    align-self: start;
+    margin: 0;
+  }
+  .stage-schedule .sched-divider {
+    grid-column: 3;
+    grid-row: 1 / 3;
+    width: 1px;
+    height: 30px;
+    background: rgba(214, 154, 185, 0.35);
+    margin: 0 4px;
+  }
+  .stage-schedule .sched-time {
+    grid-column: 4;
+    grid-row: 1;
+    font-size: clamp(16px, 4vw, 19px);
+    font-family: var(--font-editorial-serif);
+    color: #FFFFFF;
+    align-self: end;
+    margin: 0;
+    line-height: 1.1;
+  }
+  .stage-schedule .sched-hint {
+    grid-column: 4;
+    grid-row: 2;
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    color: #D495B1;
+    align-self: start;
+    margin-top: 2px;
   }
 }
 

@@ -134,6 +134,11 @@ export function show() {
     window.dispatchEvent(new CustomEvent('burgerMenu:open'));
 
     body.classList.add('menu-open');
+    if (menu) {
+      menu.scrollTop = 0;
+      const center = menu.querySelector('.center');
+      if (center) center.scrollTop = 0;
+    }
     if (button) {
       try { button.blur(); } catch (e) {}
     }

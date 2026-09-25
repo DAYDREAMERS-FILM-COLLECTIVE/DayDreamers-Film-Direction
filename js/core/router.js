@@ -22,10 +22,27 @@ const pageCache = new Map();
 let isNavigating = false;
 
 /**
+ * Normalize any URL or path to a clean canonical cache key.
+ */
+export function normalizeCacheKey(url) {
+  if (!url) return '/';
+  let clean = url.split('#')[0].split('?')[0].trim();
+  if (clean.endsWith('.html')) clean = clean.slice(0, -5);
+  if (clean === '/index' || clean === 'index' || clean === '') clean = '/';
+  if (!clean.startsWith('/') && !clean.startsWith('http')) clean = '/' + clean;
+  return clean;
+}
+
+/**
  * Fetch and extract routerWrapper content and title from a page.
  */
 async function fetchTargetPage(url) {
   const cleanUrl = url.split('#')[0];
+  const normKey = normalizeCacheKey(cleanUrl);
+
+  if (pageCache.has(normKey)) {
+    return pageCache.get(normKey);
+  }
   if (pageCache.has(cleanUrl)) {
     return pageCache.get(cleanUrl);
   }
@@ -46,6 +63,7 @@ async function fetchTargetPage(url) {
       title: doc.title || document.title
     };
     pageCache.set(cleanUrl, data);
+    pageCache.set(normKey, data);
     return data;
   } catch (err) {
     console.error(`[Router] Failed to fetch ${cleanUrl}:`, err);
@@ -265,37 +283,53 @@ export function initRouter() {
     history.scrollRestoration = 'manual';
   }
 
-  // Cache current initial page wrapper
+  // Cache current initial page wrapper under both path and normalized key
   const curView = getViewFromUrl(window.location.href);
   const curFile = curView === 'screening' ? 'screening.html' : (curView === 'contact' ? 'contact.html' : 'index.html');
   const wrapper = document.getElementById('routerWrapper');
   if (wrapper) {
-    pageCache.set(curFile, {
+    const curData = {
       html: wrapper.innerHTML,
       title: document.title
-    });
+    };
+    pageCache.set(curFile, curData);
+    pageCache.set(normalizeCacheKey(window.location.pathname), curData);
+    pageCache.set(normalizeCacheKey(curFile), curData);
   }
 
-  // Speculatively preload the other pages into cache
-  if (curView !== 'screening') prefetch('screening.html');
-  if (curView !== 'home') prefetch('index.html');
-  if (curView !== 'contact') prefetch('contact.html');
-
-  // High-performance warm-up of screening page assets and data
+  // Speculatively preload the other pages into cache with clean URLs
   if (curView !== 'screening') {
-    fetch('/api/movies').catch(() => {});
-    const warmScreening = () => {
+    prefetch('/screening');
+    prefetch('screening.html');
+  }
+  if (curView !== 'home') {
+    prefetch('/');
+    prefetch('index.html');
+  }
+  if (curView !== 'contact') {
+    prefetch('/contact');
+    prefetch('contact.html');
+  }
+
+  // High-performance background warm-up of other pages, modules, and assets
+  const warmBackground = () => {
+    if (curView !== 'screening') {
+      fetch('/api/movies').catch(() => {});
       import('../modules/screening/main.js').catch(() => {});
-      const img = new Image();
-      img.src = '/assets/hero-arch-bg.webp';
-      const pImg = new Image();
-      pImg.src = '/assets/poster-the-last-reel.webp';
-    };
-    if ('requestIdleCallback' in window) {
-      window.requestIdleCallback(warmScreening, { timeout: 1500 });
-    } else {
-      setTimeout(warmScreening, 800);
+      const archImg = new Image();
+      archImg.src = '/assets/hero-arch-bg.webp';
+      const m1Img = new Image();
+      m1Img.src = 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=800&q=80';
     }
+    if (curView !== 'contact') {
+      import('../modules/contact/main.js').catch(() => {});
+    }
+  };
+
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(warmBackground, { timeout: 1200 });
+  } else {
+    setTimeout(warmBackground, 400);
   }
 
   // Intercept standard internal links

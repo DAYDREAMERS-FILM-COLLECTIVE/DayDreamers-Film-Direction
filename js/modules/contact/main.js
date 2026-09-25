@@ -316,6 +316,25 @@ export function initContact() {
       loadMoreBtn.disabled = true;
     });
   }
+
+  // Floating Back-to-Top Button
+  const topBtn = document.getElementById('contactScrollTopBtn');
+  if (topBtn) {
+    const handleScroll = () => {
+      if (window.scrollY > 300) {
+        topBtn.classList.add('is-visible');
+      } else {
+        topBtn.classList.remove('is-visible');
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+
+    topBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
 }
 
 export function destroyContact() {

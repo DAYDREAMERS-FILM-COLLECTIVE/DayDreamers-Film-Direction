@@ -607,42 +607,61 @@ body.menu-running .site-menu-panel {
     }
 }
 
-/* <= 815px: Vertical scroll room, stacked footer, numbers hidden (Dogstudio mobile/tablet) */
+/* <= 815px: Dedicated No-Scroll Mobile Viewport Fit */
 @media (max-width: 815px) {
+    .site-menu {
+        overflow: hidden !important;
+    }
     .site-menu .center {
-        display: block;
-        height: 100%;
-        padding: 50vh 30px 100px 30px;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        height: 100% !important;
+        height: 100dvh !important;
+        padding: 84px 28px 20px 28px !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
     }
     .site-menu-list {
-        margin-top: 0;
-        margin-left: 0;
+        margin: auto 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
     }
     .site-menu-item a::before {
         display: none;
+    }
+    .site-menu-item a {
+        padding: 6px 0;
+        font-size: clamp(2.2rem, 8vw, 3.2rem);
+        line-height: 1.1;
     }
     .site-menu-footer {
         position: relative;
         left: 0;
         right: 0;
         bottom: 0;
-        margin-top: 48px;
-        padding-bottom: 24px;
+        margin-top: 0;
+        padding-bottom: env(safe-area-inset-bottom, 12px);
         flex-direction: column;
         align-items: flex-start;
-        gap: 20px;
+        gap: 12px;
     }
     .site-menu-content {
         align-items: flex-start;
     }
 }
 
-/* <= 571px: Dogstudio small tier — 40px/37px/-0.8px + circular touchable socials */
+/* <= 571px: Small mobile tier — optimized proportions */
 @media (max-width: 571px) {
+    .site-menu .center {
+        padding: 76px 20px 16px 20px !important;
+    }
     .site-menu-item a {
-        font-size: 2.5rem;
+        font-size: clamp(1.85rem, 8vw, 2.4rem);
+        line-height: 1.15;
+        letter-spacing: -0.5px;
+    }
         line-height: 2.3125rem;
         letter-spacing: -0.8px;
     }

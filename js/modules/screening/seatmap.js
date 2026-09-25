@@ -224,6 +224,9 @@ export async function rebuildSeatsAnimated() {
 
   const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const hasGsap = typeof window !== 'undefined' && typeof window.gsap !== 'undefined';
+  if (hasGsap && window.gsap.ticker && typeof window.gsap.ticker.fps === 'function') {
+    window.gsap.ticker.fps(120);
+  }
 
   if (!reduceMotion && hasGsap && !is2DMode()) {
     const rows = document.querySelectorAll('#seatmap .rowline');
@@ -255,8 +258,21 @@ export function handleSeatToggle(seatId) {
   }
 
   if (seatBtn) {
-    if (isSelected) seatBtn.classList.add('selected');
-    else seatBtn.classList.remove('selected');
+    if (isSelected) {
+      seatBtn.classList.add('selected');
+      if (typeof seatBtn.animate === 'function') {
+        seatBtn.animate([
+          { transform: 'translate3d(0, 0, var(--tz, 0px)) rotateY(var(--ry, 0deg)) scale(1)' },
+          { transform: 'translate3d(0, -6px, var(--tz, 0px)) rotateY(var(--ry, 0deg)) scale(1.22)' },
+          { transform: 'translate3d(0, -2px, var(--tz, 0px)) rotateY(var(--ry, 0deg)) scale(1.08)' }
+        ], {
+          duration: 200,
+          easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
+        });
+      }
+    } else {
+      seatBtn.classList.remove('selected');
+    }
   }
 
   refreshSummary();

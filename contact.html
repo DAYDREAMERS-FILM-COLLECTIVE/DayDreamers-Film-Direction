@@ -27,6 +27,8 @@
 
   <link rel="prefetch" href="/" as="document" />
   <link rel="prefetch" href="/screening" as="document" />
+  <link rel="preload" href="/css/pages/home.css" as="style" />
+  <link rel="preload" href="/css/pages/screening.css" as="style" />
   <link rel="preload" href="/fonts/Gilroy-Thin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="/fonts/Gilroy-UltraLight.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="modulepreload" href="/js/vendor/three.module.js" />
@@ -36,7 +38,6 @@
   <link rel="stylesheet" href="/css/components/cursor.css" />
   <link rel="stylesheet" href="/css/components/footer.css" />
   <link rel="stylesheet" href="/css/components/burger-menu.css" />
-  <link rel="stylesheet" href="/css/components/breadcrumbs.css" />
   <link id="pageStyleContact" rel="stylesheet" href="/css/pages/contact.css" />
   <link id="pageStyleHome" rel="stylesheet" href="/css/pages/home.css" disabled />
   <link id="pageStyleScreening" rel="stylesheet" href="/css/pages/screening.css" disabled />
@@ -138,16 +139,6 @@
       <div class="contact-ambient-vignette" aria-hidden="true"></div>
 
       <div class="contact-page-wrapper" id="contactPageWrapper">
-        
-        <!-- Breadcrumbs Navigation -->
-        <nav aria-label="Breadcrumb" class="breadcrumbs-nav">
-          <ol class="breadcrumbs-list">
-            <li class="breadcrumbs-item"><a href="/">Home</a></li>
-            <li class="breadcrumbs-separator" aria-hidden="true">&#47;</li>
-            <li class="breadcrumbs-item"><span class="breadcrumbs-current" aria-current="page">Contact &amp; Legal Notices</span></li>
-          </ol>
-        </nav>
-
         <!-- Clean Editorial Header -->
         <header class="contact-hero-header">
           <div class="contact-eyebrow">Daydreamers Film Society</div>
@@ -386,6 +377,13 @@
           </div>
           <small style="color: rgba(247, 244, 238, 0.4);">&copy; 2026 DAYDREAMERS FILM SOCIETY</small>
         </footer>
+
+        <!-- Floating Scroll to Top Button (Contact & Legal Notices) -->
+        <button id="contactScrollTopBtn" class="contact-scroll-top" aria-label="Scroll to top of contact page" title="Back to top" data-cursor="TOP">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="18 15 12 9 6 15"></polyline>
+          </svg>
+        </button>
 
       </div>
     </main>
