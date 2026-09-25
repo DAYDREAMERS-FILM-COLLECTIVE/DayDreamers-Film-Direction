@@ -31,16 +31,17 @@ window.addEventListener('unhandledrejection', function(e) {
   }).catch(function(){});
 });
 </script>
+<!-- Source Code: https://github.com/DAYDREAMERS-FILM-COLLECTIVE/DayDreamers-Film-Direction -->
 <title>Daydreamers Box Office, Select Film and Reserve Seats</title>
+<link rel="canonical" href="https://daydreamersfilm.com/screening" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
 <link rel="preconnect" href="https://esm.sh" crossorigin />
 <link rel="preconnect" href="https://miroleon.github.io" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600&family=Heebo:wght@200;300;400;500;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
-<link rel="prefetch" href="index.html" as="document" />
-<link rel="prefetch" href="contact.html" as="document" />
-<link rel="prerender" href="index.html" />
+<link rel="prefetch" href="/" as="document" />
+<link rel="prefetch" href="/contact" as="document" />
 <link rel="preload" href="/fonts/Gilroy-Thin.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="/fonts/Gilroy-UltraLight.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="modulepreload" href="/js/vendor/three.module.js" />
@@ -51,9 +52,30 @@ window.addEventListener('unhandledrejection', function(e) {
 <link rel="stylesheet" href="/css/components/cursor.css?v=fresh3" />
 <link rel="stylesheet" href="/css/components/footer.css?v=fresh3" />
 <link rel="stylesheet" href="/css/components/burger-menu.css?v=fresh3" />
+<link rel="stylesheet" href="/css/components/breadcrumbs.css" />
 <link id="pageStyleHome" rel="stylesheet" href="/css/pages/home.css?v=fresh3" disabled />
 <link id="pageStyleScreening" rel="stylesheet" href="/css/pages/screening.css?v=fresh3" />
 <link id="pageStyleContact" rel="stylesheet" href="/css/pages/contact.css?v=fresh3" disabled />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://daydreamersfilm.com/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Screening",
+      "item": "https://daydreamersfilm.com/screening"
+    }
+  ]
+}
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script>try{if(sessionStorage.getItem('wallEnter')==='1')document.documentElement.classList.add('wall-entering');}catch(e){}</script>
 </head>
@@ -63,7 +85,7 @@ window.addEventListener('unhandledrejection', function(e) {
 <div class="sweep-wall" id="sweepWall"></div>
 
 <header class="site-header header screening-header">
-  <a class="brand logo brand-logo" href="index.html#home" id="brandLink" data-leave data-cursor="TOP">
+  <a class="brand logo brand-logo" href="/#home" id="brandLink" data-leave data-cursor="TOP">
     <svg class="mark-svg" viewBox="0 0 32 32" fill="none" aria-hidden="true">
       <path d="M22.5 19.5A9.5 9.5 0 1 1 12.5 5.8 7.4 7.4 0 0 0 22.5 19.5Z" fill="var(--gold)"/>
       <path d="M24.5 4.5c.5 2.3 1.2 3 3.5 3.5-2.3.5-3 1.2-3.5 3.5-.5-2.3-1.2-3-3.5-3.5 2.3-.5 3-1.2 3.5-3.5Z" fill="var(--gold)"/>
@@ -91,19 +113,19 @@ window.addEventListener('unhandledrejection', function(e) {
 <nav id="site-menu" class="site-menu" aria-hidden="true" inert>
   <div class="center">
     <ul class="site-menu-list">
-      <li class="site-menu-item"><a href="index.html#home" data-nav data-cursor="GO">Home</a></li>
-      <li class="site-menu-item"><a href="screening.html" data-nav data-cursor="GO">Screening</a></li>
-      <li class="site-menu-item"><a href="index.html#gallery" data-nav data-cursor="GO">Past Events</a></li>
-      <li class="site-menu-item"><a href="index.html#about" data-nav data-cursor="GO">About Us</a></li>
-      <li class="site-menu-item"><a href="contact.html" data-nav data-cursor="GO">Contact Us</a></li>
+      <li class="site-menu-item"><a href="/#home" data-nav data-cursor="GO">Home</a></li>
+      <li class="site-menu-item"><a href="/screening" data-nav data-cursor="GO">Screening</a></li>
+      <li class="site-menu-item"><a href="/#gallery" data-nav data-cursor="GO">Past Events</a></li>
+      <li class="site-menu-item"><a href="/#about" data-nav data-cursor="GO">About Us</a></li>
+      <li class="site-menu-item"><a href="/contact" data-nav data-cursor="GO">Contact Us</a></li>
     </ul>
     <div class="site-menu-footer">
       <div class="site-menu-tagline">Daydreamers Film Society</div>
       <div class="site-menu-content">
         <ul>
           <li><a href="mailto:hello@daydreamers.club" data-cursor="OPEN">Email</a></li>
-          <li><a href="admin.html" data-cursor="OPEN" data-no-router="true">Admin</a></li>
-          <li><a href="screening.html#booking" data-cursor="GO">Reserve</a></li>
+          <li><a href="/admin" data-cursor="OPEN" data-no-router="true">Admin</a></li>
+          <li><a href="/screening#booking" data-cursor="GO">Reserve</a></li>
           <li>
             <button class="menu-camera-icon-btn" id="menuCameraBtn" aria-label="Toggle Nitrate Inversion Lens" title="Toggle Nitrate Inversion Lens" data-cursor="CAMERA">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -129,6 +151,13 @@ window.addEventListener('unhandledrejection', function(e) {
 <div id="vignette"></div>
 <div id="tip" aria-hidden="true"><b></b><i></i></div>
 <main id="bookingView" data-router-view="screening">
+<nav aria-label="Breadcrumb" class="breadcrumbs-nav" style="padding: 1.25rem 2rem 0; max-width: 1400px; margin: 0 auto;">
+  <ol class="breadcrumbs-list">
+    <li class="breadcrumbs-item"><a href="/">Home</a></li>
+    <li class="breadcrumbs-separator" aria-hidden="true">&#47;</li>
+    <li class="breadcrumbs-item"><span class="breadcrumbs-current" aria-current="page">Screening</span></li>
+  </ol>
+</nav>
 <section class="cinema-hero-stage" id="details">
   <!-- Widescreen Cinematic Backdrop Plate -->
   <img class="stage-backdrop" src="/assets/hero-arch-bg.webp" alt="Cinematic auditorium entrance with neon arch" loading="eager" />
@@ -136,7 +165,7 @@ window.addEventListener('unhandledrejection', function(e) {
   <div class="stage-content">
     <!-- 1. Left: Framed Movie Poster -->
     <div class="stage-poster" id="detPoster">
-      <img id="detPosterImg" class="stage-poster-img" src="/assets/poster-the-last-reel.webp" alt="Movie Poster" />
+      <img id="detPosterImg" class="stage-poster-img" src="/assets/poster-the-last-reel.webp" alt="Now showing theatrical film poster" />
       <div class="stripes" style="display:none;"></div>
       <div class="glyph" id="detGlyph" style="display:none;">D</div>
       <div class="poster-tag" id="detTag" style="display:none;">Movie Poster</div>
@@ -273,6 +302,12 @@ window.addEventListener('unhandledrejection', function(e) {
 <footer>
   <div class="f-logo">DAYDREAMERS</div>
   <p>An initiative of The Daydreamers Society. Screened by members, for members.</p>
+  <div style="margin-top: 1rem; display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; font-family: 'DM Mono', monospace; font-size: 0.75rem; letter-spacing: 0.08em;">
+    <a href="/" style="color: rgba(247, 244, 238, 0.6); text-decoration: none;">HOME</a>
+    <a href="/screening" style="color: #d4af37; text-decoration: none;">SCREENING</a>
+    <a href="/contact" style="color: rgba(247, 244, 238, 0.6); text-decoration: none;">CONTACT</a>
+    <a href="https://github.com/DAYDREAMERS-FILM-COLLECTIVE/DayDreamers-Film-Direction" target="_blank" rel="noopener noreferrer" style="color: #d4af37; text-decoration: none;" aria-label="View source code on GitHub">VIEW SOURCE &#8599;</a>
+  </div>
 </footer>
 
 <div id="modal" class="attendee-modal" role="dialog" aria-modal="true" aria-label="Reservation ticket">
@@ -312,7 +347,7 @@ window.addEventListener('unhandledrejection', function(e) {
 
       <div class="step1-card">
         <div class="step1-poster-wrap">
-          <img id="confPosterImg" src="/assets/poster-the-last-reel.webp" alt="Movie Poster" />
+          <img id="confPosterImg" src="/assets/poster-the-last-reel.webp" alt="Reserved screening ticket film poster" />
         </div>
         <div class="step1-info">
           <h4 id="confMovieTitle" class="step1-movie-title">The Last Reel</h4>

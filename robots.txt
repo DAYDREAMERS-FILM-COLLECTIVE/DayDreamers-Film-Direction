@@ -1,0 +1,19 @@
+# robots.txt for Daydreamers Film Society
+User-agent: *
+Allow: /
+Allow: /screening
+Allow: /contact
+Allow: /assets/
+Allow: /css/
+Allow: /js/
+Allow: /fonts/
+Allow: /textures/
+
+# Private administration, serverless API, and source directories
+Disallow: /admin
+Disallow: /api/
+Disallow: /server/
+Disallow: /specs/
+Disallow: /docs/
+
+Sitemap: https://daydreamersfilm.com/sitemap.xml

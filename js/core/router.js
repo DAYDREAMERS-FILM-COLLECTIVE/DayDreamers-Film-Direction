@@ -31,7 +31,11 @@ async function fetchTargetPage(url) {
   }
 
   try {
-    const res = await fetch(cleanUrl);
+    let res = await fetch(cleanUrl);
+    if (!res.ok && !cleanUrl.endsWith('.html') && cleanUrl !== '/') {
+      // Fallback for local dev or static servers where html extension is required
+      res = await fetch(`${cleanUrl}.html`);
+    }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const text = await res.text();
     const parser = new DOMParser();
@@ -157,7 +161,7 @@ export async function navigateTo(targetUrl, replace = false, fromMenu = false) {
   }
 
   // Pre-fetch target HTML in parallel while curtain is sweeping
-  const targetFile = targetView === 'screening' ? 'screening.html' : (targetView === 'contact' ? 'contact.html' : 'index.html');
+  const targetFile = targetView === 'screening' ? '/screening' : (targetView === 'contact' ? '/contact' : '/');
   const fetchPromise = fetchTargetPage(targetFile);
 
   // Wait 800ms until screen is 100% blanketed by the solid curtain
@@ -184,15 +188,26 @@ export async function navigateTo(targetUrl, replace = false, fromMenu = false) {
   // 3. Switch stylesheet instantly (preloaded, 0ms lag)
   switchPageStylesheet(targetView);
 
-  // 4. Update title & history pushState (Zero reload!)
+  // 4. Update title & history pushState (Zero reload with Clean URLs!)
   if (targetData && targetData.title) {
     document.title = targetData.title;
   }
+
+  let cleanUrl = targetUrl;
+  if (cleanUrl.endsWith('/screening.html')) cleanUrl = cleanUrl.replace('/screening.html', '/screening');
+  else if (cleanUrl.endsWith('/contact.html')) cleanUrl = cleanUrl.replace('/contact.html', '/contact');
+  else if (cleanUrl.endsWith('/admin.html')) cleanUrl = cleanUrl.replace('/admin.html', '/admin');
+  else if (cleanUrl.endsWith('/index.html')) cleanUrl = cleanUrl.replace('/index.html', '/');
+  else if (cleanUrl === 'screening.html') cleanUrl = '/screening';
+  else if (cleanUrl === 'contact.html') cleanUrl = '/contact';
+  else if (cleanUrl === 'admin.html') cleanUrl = '/admin';
+  else if (cleanUrl === 'index.html') cleanUrl = '/';
+
   try {
     if (replace) {
-      history.replaceState({ view: targetView }, '', targetUrl);
+      history.replaceState({ view: targetView }, '', cleanUrl);
     } else {
-      history.pushState({ view: targetView }, '', targetUrl);
+      history.pushState({ view: targetView }, '', cleanUrl);
     }
   } catch (_) {}
 

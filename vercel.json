@@ -3,6 +3,11 @@
   "cleanUrls": true,
   "redirects": [
     {
+      "source": "/index.html",
+      "destination": "/",
+      "permanent": true
+    },
+    {
       "source": "/booking/(.*)",
       "destination": "/$1",
       "permanent": true
@@ -14,6 +19,14 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/robot.txt",
+      "destination": "/robots.txt"
+    },
+    {
+      "source": "/site.xml",
+      "destination": "/sitemap.xml"
+    },
     {
       "source": "/server/(.*)",
       "destination": "/404.html"

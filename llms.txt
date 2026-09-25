@@ -1,0 +1,24 @@
+# Daydreamers Film Society
+
+> An independent student film collective and cinema exhibition platform based at RV University, Bengaluru.
+
+## About
+Daydreamers Film Society is dedicated to the preservation, exploration, and creation of cinematic storytelling. The society hosts curated screenings, 24-hour and 48-hour filmmaking challenges, direction and cinematography workshops, and student-produced film exhibitions. The society operates a 70-seat cinema auditorium with custom cryptographic QR admission ticketing.
+
+## Canonical Pages & Links
+- [Home](https://daydreamersfilm.com/): Society landing page, artistic manifesto, past exhibitions, filmmaking departments, and student directory.
+- [Screening & Box Office](https://daydreamersfilm.com/screening): Real-time auditorium seat selection, schedule carousel, and student ticket reservations.
+- [Contact & Legal](https://daydreamersfilm.com/contact): Institutional queries, exhibition guidelines, and legal disclosures.
+
+## Admission & Ticketing Guidelines
+- Attendance is exclusively for institutional members with valid `@rvu.edu.in` or `@blr.rvu.edu.in` email credentials.
+- Limit of one ticket per student USN per showing.
+- Group bookings support up to 4 contiguous seats.
+- Each ticket is cryptographically signed with HMAC-SHA256 and verified at the door.
+
+## Technology Stack
+- **Frontend**: Vanilla HTML5, modern CSS3, native ES Modules.
+- **3D Graphics**: Three.js (r160) for interactive 3D WebGL scenes, procedural materials, and optical effects.
+- **Motion**: GSAP for sweeping wall camera transitions.
+- **Backend**: Node.js & Express REST API running serverless on Vercel with Supabase PostgreSQL.
+- **Source Code**: [GitHub Repository](https://github.com/DAYDREAMERS-FILM-COLLECTIVE/DayDreamers-Film-Direction)

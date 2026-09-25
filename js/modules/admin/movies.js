@@ -949,7 +949,7 @@ function renderStagingTable() {
       </td>
       <td>${statusBadge}</td>
       <td>
-        <img src="${escapeHtml(norm.poster_url || '')}" alt="" class="staging-poster-thumb" onerror="this.src='https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800';" />
+        <img src="${escapeHtml(norm.poster_url || '')}" alt="${escapeHtml(norm.title || 'Film')} poster thumbnail" class="staging-poster-thumb" onerror="this.src='https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800';" />
       </td>
       <td style="font-weight: 600; color: #fff;">${escapeHtml(norm.title || '--')}</td>
       <td style="font-family: monospace;">${norm.year || '--'}</td>

@@ -37,7 +37,10 @@
     }
     </script>
 
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="canonical" href="https://daydreamersfilm.com/admin" />
     <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/components/breadcrumbs.css">
     <link rel="stylesheet" href="/css/pages/admin.css">
 </head>
 <body>
@@ -45,7 +48,7 @@
     <div id="adminAuthGate" class="auth-gate-container">
         <!-- Top Cinematic Header -->
         <header class="admin-auth-header">
-            <a class="brand logo brand-logo" href="index.html#home" id="brandLink">
+            <a class="brand logo brand-logo" href="/#home" id="brandLink">
                 <svg class="mark-svg" viewBox="0 0 32 32" fill="none" aria-hidden="true">
                     <path d="M22.5 19.5A9.5 9.5 0 1 1 12.5 5.8 7.4 7.4 0 0 0 22.5 19.5Z" fill="var(--gold)"/>
                     <path d="M24.5 4.5c.5 2.3 1.2 3 3.5 3.5-2.3.5-3 1.2-3.5 3.5-.5-2.3-1.2-3-3.5-3.5 2.3-.5 3-1.2 3.5-3.5Z" fill="var(--gold)"/>
@@ -142,7 +145,7 @@
                     <span class="db-pill-dot pulsing"></span>
                     <span class="db-pill-label">DB: Checking...</span>
                 </div>
-                <a href="screening.html" class="admin-action-btn screening-return-btn">Back to Screening</a>
+                <a href="/screening" class="admin-action-btn screening-return-btn">Back to Screening</a>
                 <button id="adminLogoutBtn" class="admin-action-btn admin-logout-btn">Logout</button>
             </div>
         </header>
@@ -215,7 +218,7 @@
                     <li class="vnav__indicator" aria-hidden="true"></li>
                 </ul>
             </nav>
-            <a class="back-link vnav__back" href="screening.html" data-label="Return to Screening">
+            <a class="back-link vnav__back" href="/screening" data-label="Return to Screening">
                 <svg class="vnav__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <line x1="19" y1="12" x2="5" y2="12"></line>
                     <polyline points="12 19 5 12 12 5"></polyline>
@@ -226,6 +229,15 @@
 
         <!-- Main Content -->
         <main class="main-content">
+            <nav aria-label="Breadcrumb" class="breadcrumbs-nav" style="margin-bottom: 1.25rem;">
+                <ol class="breadcrumbs-list">
+                    <li class="breadcrumbs-item"><a href="/">Home</a></li>
+                    <li class="breadcrumbs-separator" aria-hidden="true">&#47;</li>
+                    <li class="breadcrumbs-item"><a href="/screening">Screening</a></li>
+                    <li class="breadcrumbs-separator" aria-hidden="true">&#47;</li>
+                    <li class="breadcrumbs-item"><span class="breadcrumbs-current" aria-current="page">Administration</span></li>
+                </ol>
+            </nav>
             <!-- 1. Movies Section -->
             <section id="tabCatalogue" class="admin-tab-pane active" data-tab-panel="catalogue" data-section="movies">
                 <div class="section-header" style="gap: 1rem; flex-wrap: wrap;">
@@ -525,7 +537,7 @@
                         <div class="selector-card film-selector-card">
                             <label class="selector-label">Select Film</label>
                             <div class="selector-input-wrap">
-                                <img id="selectedMovieThumb" class="film-thumb-rect" src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800" alt="" onerror="this.src='https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800';" />
+                                <img id="selectedMovieThumb" class="film-thumb-rect" src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800" alt="Selected film thumbnail preview" onerror="this.src='https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800';" />
                                 <select id="seatMovieSelect" class="admin-select-rect" data-action="change-movie"></select>
                             </div>
                         </div>

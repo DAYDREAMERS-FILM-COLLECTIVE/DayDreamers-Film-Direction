@@ -46,4 +46,7 @@ playground/
 !docs/*.md
 !specs/**/*.md
 *.txt
+!robots.txt
+!robot.txt
+!llms.txt
 

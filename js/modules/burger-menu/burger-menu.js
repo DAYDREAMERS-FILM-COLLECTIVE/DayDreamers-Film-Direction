@@ -253,11 +253,11 @@ export function updateCurrentNavItem() {
 
   let selector;
   if (isScreening) {
-    selector = '.site-menu-item a[href*="screening.html"], .site-menu-item a[href="screening.html"]';
+    selector = '.site-menu-item a[href*="screening"], .site-menu-item a[href="/screening"]';
   } else if (isContact) {
-    selector = '.site-menu-item a[href*="contact.html"], .site-menu-item a[href="contact.html"]';
+    selector = '.site-menu-item a[href*="contact"], .site-menu-item a[href="/contact"]';
   } else {
-    selector = '.site-menu-item a[href*="index.html#home"], .site-menu-item a[href="#home"], .site-menu-item:first-child a';
+    selector = '.site-menu-item a[href*="/#home"], .site-menu-item a[href*="index.html#home"], .site-menu-item a[href="#home"], .site-menu-item a[href="/"], .site-menu-item:first-child a';
   }
 
   const activeLink = document.querySelector(selector);
@@ -341,7 +341,7 @@ export function initBurgerMenu() {
     link.setAttribute('data-no-router', 'true');
     link.addEventListener('click', (e) => {
       e.stopPropagation();
-      window.location.href = 'admin.html';
+      window.location.href = '/admin';
     });
   });
 
@@ -377,7 +377,7 @@ export function initBurgerMenu() {
       // Explicit Admin link bypass
       if (href.includes('admin') || link.dataset.noRouter === 'true') {
         e.stopPropagation();
-        window.location.href = 'admin.html';
+        window.location.href = '/admin';
         return;
       }
 
@@ -421,8 +421,8 @@ export function initBurgerMenu() {
         // At 800ms when screen is 100% covered, swap view and stylesheets in-memory!
         e.preventDefault();
         hide();
-        if (href.includes('admin.html') || href.includes('admin') || link.dataset.noRouter === 'true') {
-          window.location.href = 'admin.html';
+        if (href.includes('admin') || link.dataset.noRouter === 'true') {
+          window.location.href = '/admin';
           return;
         }
         if (typeof window.navigateTo === 'function') {

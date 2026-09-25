@@ -1782,6 +1782,7 @@ app.get('/api/admin/bookings', requireAdmin, async (req, res) => {
 const rootDir = path.resolve(__dirname, '..');
 const staticOptions = {
     maxAge: 0,
+    extensions: ['html'],
     setHeaders: (res, filePath) => {
         if (/\.(woff2?|ttf|otf|eot|png|jpe?g|gif|svg|webp|hdr|fbx)$/i.test(filePath)) {
             res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
@@ -1800,16 +1801,30 @@ app.use((req, res, next) => {
         p.endsWith('.sql') ||
         p.endsWith('.md')
     ) {
-        return res.status(404).send('Not Found');
+        return res.status(404).sendFile(path.join(rootDir, '404.html'));
     }
     next();
 });
 
+// SEO & Alias routes
+app.get('/robot.txt', (req, res) => res.sendFile(path.join(rootDir, 'robots.txt')));
+app.get('/robots.txt', (req, res) => res.sendFile(path.join(rootDir, 'robots.txt')));
+app.get('/site.xml', (req, res) => res.sendFile(path.join(rootDir, 'sitemap.xml')));
+app.get('/sitemap.xml', (req, res) => res.sendFile(path.join(rootDir, 'sitemap.xml')));
+app.get('/llms.txt', (req, res) => res.sendFile(path.join(rootDir, 'llms.txt')));
+
+// Clean page routes
+app.get('/', (req, res) => res.sendFile(path.join(rootDir, 'index.html')));
+app.get('/screening', (req, res) => res.sendFile(path.join(rootDir, 'screening.html')));
+app.get('/contact', (req, res) => res.sendFile(path.join(rootDir, 'contact.html')));
+app.get('/admin', (req, res) => res.sendFile(path.join(rootDir, 'admin.html')));
+
 app.use(express.static(rootDir, staticOptions));
 app.use('/booking', express.static(rootDir, staticOptions));
 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(rootDir, 'index.html'));
+// 404 Catch-All
+app.use((req, res) => {
+    res.status(404).sendFile(path.join(rootDir, '404.html'));
 });
 
 export { app };
