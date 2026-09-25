@@ -91,15 +91,15 @@ function drawFrame(frameIndex) {
  * Update text overlay fade and crisp poster image cross-fade.
  */
 function updateOverlays(p) {
-  // Fade showcase text overlay out between p = 0.15 and p = 0.35
+  // Fade showcase text overlay out between p = 0.15 and p = 0.45
   const copyEls = document.querySelectorAll('.showcase-copy, .showcase-content, .featured-presentation');
   let textOpacity = 1;
   if (p <= 0.15) {
     textOpacity = 1;
-  } else if (p >= 0.35) {
+  } else if (p >= 0.45) {
     textOpacity = 0;
   } else {
-    textOpacity = 1 - (p - 0.15) / (0.35 - 0.15);
+    textOpacity = 1 - (p - 0.15) / (0.45 - 0.15);
   }
 
   copyEls.forEach((el) => {
@@ -114,14 +114,14 @@ function updateOverlays(p) {
     canvas.style.display = 'block';
   }
 
-  // Once p >= 0.65, clamp to frame 59 or assets/showcase-poster.jpg
+  // Once p >= 0.90, clamp to frame 59 or assets/showcase-poster.jpg
   const posterEl = document.getElementById('showcasePoster') || document.getElementById('voxelFallback');
   if (posterEl) {
     let posterOpacity = 0;
-    if (p >= 0.65) {
+    if (p >= 0.90) {
       posterOpacity = 1;
-    } else if (p >= 0.50) {
-      posterOpacity = (p - 0.50) / 0.15;
+    } else if (p >= 0.78) {
+      posterOpacity = (p - 0.78) / 0.12;
     } else {
       posterOpacity = 0;
     }
@@ -135,13 +135,13 @@ function updateOverlays(p) {
 function render() {
   const p = scrollProgress;
 
-  // Scrub frames 0 to 59 smoothly across p = 0.0 to p = 0.65:
+  // Scrub frames 0 to 59 smoothly across p = 0.0 to p = 0.90:
   let frameIndex = 0;
-  if (p < 0.65) {
-    const scrubP = p / 0.65;
+  if (p < 0.90) {
+    const scrubP = p / 0.90;
     frameIndex = Math.min(TOTAL_FRAMES - 1, Math.floor(scrubP * TOTAL_FRAMES));
   } else {
-    // Once p >= 0.65, clamp to frame 59 (or assets/showcase-poster.jpg)
+    // Once p >= 0.90, clamp to frame 59 (or assets/showcase-poster.jpg)
     frameIndex = TOTAL_FRAMES - 1;
   }
 

@@ -230,8 +230,8 @@ export async function rebuildSeatsAnimated() {
 
   if (!reduceMotion && hasGsap && !is2DMode()) {
     const rows = document.querySelectorAll('#seatmap .rowline');
-    window.gsap.fromTo('#seatmap', { opacity: 0.35 }, { opacity: 1, duration: 0.35, ease: 'power2.out', clearProps: 'opacity' });
-    window.gsap.fromTo(rows, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.35, stagger: 0.04, ease: 'power3.out', clearProps: 'opacity,transform' });
+    window.gsap.fromTo('#seatmap', { opacity: 0.3 }, { opacity: 1, duration: 0.65, ease: 'power2.out', clearProps: 'opacity' });
+    window.gsap.fromTo(rows, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.65, stagger: 0.07, ease: 'power3.out', clearProps: 'opacity,transform' });
   }
 }
 
@@ -263,11 +263,12 @@ export function handleSeatToggle(seatId) {
       if (typeof seatBtn.animate === 'function') {
         seatBtn.animate([
           { transform: 'translate3d(0, 0, var(--tz, 0px)) rotateY(var(--ry, 0deg)) scale(1)' },
-          { transform: 'translate3d(0, -6px, var(--tz, 0px)) rotateY(var(--ry, 0deg)) scale(1.22)' },
-          { transform: 'translate3d(0, -2px, var(--tz, 0px)) rotateY(var(--ry, 0deg)) scale(1.08)' }
+          { transform: 'translate3d(0, -7px, var(--tz, 0px)) rotateY(var(--ry, 0deg)) scale(1.24)' },
+          { transform: 'translate3d(0, -3px, var(--tz, 0px)) rotateY(var(--ry, 0deg)) scale(1.06)' },
+          { transform: 'translate3d(0, -4px, var(--tz, 0px)) rotateY(var(--ry, 0deg)) scale(1.08)' }
         ], {
-          duration: 200,
-          easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
+          duration: 420,
+          easing: 'cubic-bezier(0.25, 1.4, 0.5, 1)'
         });
       }
     } else {

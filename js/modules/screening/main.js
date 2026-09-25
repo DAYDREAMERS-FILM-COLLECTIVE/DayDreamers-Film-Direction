@@ -38,7 +38,7 @@ export function slowScrollToBooking() {
   const showcaseY = showcaseEl ? (showcaseEl.getBoundingClientRect().top + window.scrollY) : (startY + (bookingY - startY) * 0.3);
   const showcaseEndY = showcaseEl ? (showcaseY + showcaseEl.offsetHeight - window.innerHeight) : (startY + (bookingY - startY) * 0.7);
 
-  const duration = 2400; // 2.4s total
+  const duration = 3600; // 3.6s cinematic glide through showcase
   const startTime = performance.now();
 
   function step(now) {
